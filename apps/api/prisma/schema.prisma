@@ -50,6 +50,7 @@ model Skill {
   authorId      String
   author        User        @relation(fields: [authorId], references: [id])
   status        SkillStatus @default(DRAFT)
+  visibility    Visibility  @default(PUBLIC)
   platforms     Platform[]
   qualityScore  Int?
   installCount  Int         @default(0)
@@ -59,17 +60,43 @@ model Skill {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  versions SkillVersion[]
-  tags     SkillTag[]
-  reviews  Review[]
-  installs Install[]
+  versions           SkillVersion[]
+  tags               SkillTag[]
+  reviews            Review[]
+  installs           Install[]
+  compositionParents CompositionSkill[] @relation("ChildSkill")
+  compositionOf      Composition?       @relation("CompositionRoot")
 
   @@index([categoryId])
   @@index([authorId])
-  @@index([status])
+  @@index([status, visibility])
   @@index([qualityScore(sort: Desc)])
   @@index([installCount(sort: Desc)])
   @@index([createdAt(sort: Desc)])
+}
+
+model Composition {
+  id          String   @id @default(cuid())
+  skillId     String   @unique
+  skill       Skill    @relation("CompositionRoot", fields: [skillId], references: [id], onDelete: Cascade)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  children CompositionSkill[]
+}
+
+model CompositionSkill {
+  id            String  @id @default(cuid())
+  compositionId String
+  composition   Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  childSkillId  String
+  childSkill    Skill   @relation("ChildSkill", fields: [childSkillId], references: [id])
+  sortOrder     Int     @default(0)
+  isParallel    Boolean @default(false)
+
+  @@unique([compositionId, childSkillId])
+  @@index([compositionId])
 }
 
 model SkillVersion {
@@ -182,4 +209,10 @@ enum Platform {
   CURSOR
   CODEX_CLI
   OTHER
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  UNLISTED
 }

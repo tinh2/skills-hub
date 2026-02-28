@@ -39,7 +39,19 @@ export default function SkillDetailPage() {
       <div className="lg:col-span-2">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold">{skill.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">{skill.name}</h1>
+              {skill.isComposition && (
+                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800">
+                  Composition
+                </span>
+              )}
+              {skill.visibility !== "PUBLIC" && (
+                <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                  {skill.visibility === "PRIVATE" ? "Private" : "Unlisted"}
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-[var(--muted)]">
               by{" "}
               <Link
@@ -82,6 +94,46 @@ export default function SkillDetailPage() {
             </button>
           </div>
         </div>
+
+        {/* Composition */}
+        {skill.composition && (
+          <section className="mb-8">
+            <h2 className="mb-4 text-xl font-bold">Composed Skills</h2>
+            {skill.composition.description && (
+              <p className="mb-3 text-sm text-[var(--muted)]">
+                {skill.composition.description}
+              </p>
+            )}
+            <div className="space-y-2">
+              {skill.composition.children.map((child, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-3"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-medium">
+                    {child.sortOrder + 1}
+                  </span>
+                  <Link
+                    href={`/skills/${child.skill.slug}`}
+                    className="font-medium text-[var(--primary)] hover:underline"
+                  >
+                    {child.skill.name}
+                  </Link>
+                  {child.isParallel && (
+                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                      parallel
+                    </span>
+                  )}
+                  {child.skill.qualityScore !== null && (
+                    <span className="ml-auto text-xs text-[var(--muted)]">
+                      Score: {child.skill.qualityScore}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Instructions */}
         <section className="mb-8">
