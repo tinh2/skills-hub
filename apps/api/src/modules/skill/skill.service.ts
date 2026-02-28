@@ -1,8 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { uniqueSlug } from "../../common/slug.js";
-import { NotFoundError, ConflictError, ForbiddenError } from "../../common/errors.js";
+import { NotFoundError, ConflictError, ForbiddenError, ValidationError } from "../../common/errors.js";
 import { computeQualityScore } from "../validation/validation.service.js";
+import { QUALITY_SCORE } from "@skills-hub/shared";
 import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail, CompositionInput } from "@skills-hub/shared";
 
 const skillSummarySelect = {
@@ -303,6 +304,9 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
   if (!skill) throw new NotFoundError("Skill");
   if (skill.authorId !== userId) throw new ForbiddenError("You can only publish your own skills");
   if (skill.status === "PUBLISHED") throw new ConflictError("Skill is already published");
+  if (skill.qualityScore !== null && skill.qualityScore < QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE) {
+    throw new ValidationError(`Quality score must be at least ${QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE} to publish (current: ${skill.qualityScore})`);
+  }
 
   const updated = await prisma.skill.update({
     where: { slug },
