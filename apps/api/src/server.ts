@@ -37,13 +37,8 @@ await app.register(rateLimit, {
   timeWindow: "1 minute",
 });
 
-// Granular rate limits for sensitive endpoints
-const authRateLimit = { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } };
-const writeRateLimit = { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } };
-const searchRateLimit = { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } };
-
-// Export for use in route files
-export { authRateLimit, writeRateLimit, searchRateLimit };
+// Granular rate limits are defined in config/rate-limits.ts
+// and imported directly by route files to avoid circular dependencies.
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { createVersionSchema } from "@skills-hub/shared";
 import { requireAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
+import { writeRateLimit } from "../../config/rate-limits.js";
 import * as versionService from "./version.service.js";
 
 export async function versionRoutes(app: FastifyInstance) {
@@ -19,7 +20,7 @@ export async function versionRoutes(app: FastifyInstance) {
   );
 
   // POST /api/v1/skills/:slug/versions
-  app.post<{ Params: { slug: string } }>("/:slug/versions", async (request) => {
+  app.post<{ Params: { slug: string } }>("/:slug/versions", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = createVersionSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);

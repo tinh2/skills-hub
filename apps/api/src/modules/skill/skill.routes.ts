@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { createSkillSchema, updateSkillSchema, skillQuerySchema, compositionSchema } from "@skills-hub/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
+import { writeRateLimit } from "../../config/rate-limits.js";
 import * as skillService from "./skill.service.js";
 
 export async function skillRoutes(app: FastifyInstance) {
@@ -20,7 +21,7 @@ export async function skillRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/skills — create skill
-  app.post("/", async (request) => {
+  app.post("/", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = createSkillSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -28,7 +29,7 @@ export async function skillRoutes(app: FastifyInstance) {
   });
 
   // PATCH /api/v1/skills/:slug — update skill metadata
-  app.patch<{ Params: { slug: string } }>("/:slug", async (request) => {
+  app.patch<{ Params: { slug: string } }>("/:slug", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = updateSkillSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -36,7 +37,7 @@ export async function skillRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/skills/:slug/publish — publish draft skill
-  app.post<{ Params: { slug: string } }>("/:slug/publish", async (request) => {
+  app.post<{ Params: { slug: string } }>("/:slug/publish", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     return skillService.publishSkill(userId, request.params.slug);
   });
@@ -49,7 +50,7 @@ export async function skillRoutes(app: FastifyInstance) {
   });
 
   // PUT /api/v1/skills/:slug/composition — set composition
-  app.put<{ Params: { slug: string } }>("/:slug/composition", async (request) => {
+  app.put<{ Params: { slug: string } }>("/:slug/composition", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = compositionSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);

@@ -7,6 +7,7 @@ import {
 } from "@skills-hub/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
+import { writeRateLimit } from "../../config/rate-limits.js";
 import * as reviewService from "./review.service.js";
 
 export async function reviewRoutes(app: FastifyInstance) {
@@ -22,7 +23,7 @@ export async function reviewRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/skills/:slug/reviews
-  app.post<{ Params: { slug: string } }>("/:slug/reviews", async (request) => {
+  app.post<{ Params: { slug: string } }>("/:slug/reviews", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = createReviewSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -46,7 +47,7 @@ export async function reviewRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/reviews/:id/vote
-  app.post<{ Params: { id: string } }>("/reviews/:id/vote", async (request) => {
+  app.post<{ Params: { id: string } }>("/reviews/:id/vote", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = reviewVoteSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -55,7 +56,7 @@ export async function reviewRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/reviews/:id/response
-  app.post<{ Params: { id: string } }>("/reviews/:id/response", async (request) => {
+  app.post<{ Params: { id: string } }>("/reviews/:id/response", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = reviewResponseSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);

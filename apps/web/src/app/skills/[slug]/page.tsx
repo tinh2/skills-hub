@@ -120,6 +120,7 @@ export default function SkillDetailPage() {
             </code>
             <button
               onClick={handleCopyInstall}
+              aria-label="Copy install command to clipboard"
               className="rounded bg-[var(--primary)] px-3 py-2 text-sm text-[var(--primary-foreground)]"
             >
               Copy
