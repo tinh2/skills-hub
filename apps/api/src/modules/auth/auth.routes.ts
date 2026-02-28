@@ -4,10 +4,11 @@ import { exchangeGithubCode } from "./auth.service.js";
 import { getPublicProfile } from "../user/user.service.js";
 import { getEnv } from "../../config/env.js";
 import { ValidationError } from "../../common/errors.js";
+import { authRateLimit } from "../../config/rate-limits.js";
 
 export async function authRoutes(app: FastifyInstance) {
   // GET /api/v1/auth/github — redirect to GitHub OAuth
-  app.get("/github", async (_request, reply) => {
+  app.get("/github", authRateLimit, async (_request, reply) => {
     const env = getEnv();
     const params = new URLSearchParams({
       client_id: env.GITHUB_CLIENT_ID,
@@ -18,7 +19,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/auth/github/callback — exchange code for tokens
-  app.post("/github/callback", async (request, reply) => {
+  app.post("/github/callback", authRateLimit, async (request, reply) => {
     const parsed = githubCallbackSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new ValidationError(parsed.error.issues[0].message);

@@ -1,6 +1,7 @@
 import { prisma } from "../../common/db.js";
 import { createAccessToken, createRefreshToken } from "../../common/auth.js";
 import { getEnv } from "../../config/env.js";
+import { AppError } from "../../common/errors.js";
 
 interface GithubUser {
   id: number;
@@ -33,12 +34,12 @@ export async function exchangeGithubCode(code: string) {
   });
 
   if (!tokenRes.ok) {
-    throw new Error("Failed to exchange GitHub code for token");
+    throw new AppError(502, "GITHUB_AUTH_FAILED", "Failed to exchange GitHub code for token");
   }
 
   const tokenData = (await tokenRes.json()) as GithubTokenResponse;
   if (!tokenData.access_token) {
-    throw new Error("GitHub OAuth: no access_token in response");
+    throw new AppError(502, "GITHUB_AUTH_FAILED", "GitHub OAuth: no access token in response");
   }
 
   const userRes = await fetch("https://api.github.com/user", {
@@ -49,7 +50,7 @@ export async function exchangeGithubCode(code: string) {
   });
 
   if (!userRes.ok) {
-    throw new Error("Failed to fetch GitHub user profile");
+    throw new AppError(502, "GITHUB_API_FAILED", "Failed to fetch GitHub user profile");
   }
 
   const githubUser = (await userRes.json()) as GithubUser;

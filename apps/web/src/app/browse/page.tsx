@@ -70,12 +70,14 @@ function BrowseContent() {
         <input
           type="text"
           placeholder="Search skills..."
+          aria-label="Search skills"
           value={searchQuery}
           onChange={(e) => handleFilterChange("q", e.target.value)}
           className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         />
         <select
           value={category}
+          aria-label="Filter by category"
           onChange={(e) => handleFilterChange("category", e.target.value)}
           className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
@@ -88,6 +90,7 @@ function BrowseContent() {
         </select>
         <select
           value={platform}
+          aria-label="Filter by platform"
           onChange={(e) => handleFilterChange("platform", e.target.value)}
           className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
@@ -100,6 +103,7 @@ function BrowseContent() {
         </select>
         <select
           value={sort}
+          aria-label="Sort skills by"
           onChange={(e) => handleFilterChange("sort", e.target.value)}
           className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
