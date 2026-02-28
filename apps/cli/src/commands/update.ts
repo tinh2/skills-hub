@@ -6,6 +6,7 @@ import ora from "ora";
 import { apiRequest } from "../lib/api-client.js";
 import { detectInstallTarget } from "../lib/install-path.js";
 import { compareSemver } from "@skills-hub/skill-parser";
+import { installSkill } from "./install.js";
 import type { SkillDetail } from "@skills-hub/shared";
 
 export const updateCommand = new Command("update")
@@ -41,11 +42,8 @@ export const updateCommand = new Command("update")
         const remote = await apiRequest<SkillDetail>(`/api/v1/skills/${dirName}`);
 
         if (compareSemver(remote.latestVersion, localVersion) > 0) {
-          // Run install command logic to update
-          const { installCommand } = await import("./install.js");
           spinner.text = `Updating ${dirName} ${localVersion} -> ${remote.latestVersion}...`;
-
-          await installCommand.parseAsync(["node", "skills-hub", dirName], { from: "user" });
+          await installSkill(dirName, {});
           spinner.succeed(`${chalk.bold(dirName)} updated to v${remote.latestVersion}`);
           updated++;
         } else {
