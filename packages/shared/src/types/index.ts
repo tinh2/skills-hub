@@ -9,6 +9,8 @@ export type {
   SkillStatus,
   SkillSummary,
   SkillDetail,
+  CompositionDetail,
+  CompositionChild,
   VersionSummary,
   VersionDetail,
   VersionDiff,

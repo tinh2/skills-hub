@@ -17,10 +17,12 @@ export {
   updateSkillSchema,
   importGithubSchema,
   skillQuerySchema,
+  compositionSchema,
   type CreateSkillInput,
   type UpdateSkillInput,
   type ImportGithubInput,
   type SkillQuery,
+  type CompositionInput,
 } from "./skill.js";
 
 export {

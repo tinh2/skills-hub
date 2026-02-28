@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { skills as skillsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
-import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
-import type { Platform } from "@skills-hub/shared";
+import { CATEGORIES, PLATFORMS, PLATFORM_LABELS, VISIBILITY, VISIBILITY_LABELS, VISIBILITY_DESCRIPTIONS } from "@skills-hub/shared";
+import type { Platform, Visibility } from "@skills-hub/shared";
 
 export default function PublishPage() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export default function PublishPage() {
     description: "",
     categorySlug: "",
     platforms: ["CLAUDE_CODE"] as string[],
+    visibility: "PUBLIC" as string,
     instructions: "",
     version: "1.0.0",
     tags: "",
@@ -48,6 +49,7 @@ export default function PublishPage() {
           .map((t) => t.trim())
           .filter(Boolean),
         platforms: form.platforms,
+        visibility: form.visibility,
       });
       router.push(`/skills/${result.slug}`);
     } catch (err) {
@@ -151,6 +153,29 @@ export default function PublishPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium">Visibility</label>
+          <div className="flex flex-wrap gap-2">
+            {VISIBILITY.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setForm({ ...form, visibility: v })}
+                className={`rounded-lg px-3 py-1.5 text-sm ${
+                  form.visibility === v
+                    ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "bg-[var(--accent)] text-[var(--muted)]"
+                }`}
+              >
+                {VISIBILITY_LABELS[v as Visibility]}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {VISIBILITY_DESCRIPTIONS[form.visibility as Visibility]}
+          </p>
         </div>
 
         <div>

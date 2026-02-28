@@ -21,6 +21,7 @@ const app = Fastify({
   logger: {
     level: env.NODE_ENV === "production" ? "info" : "debug",
   },
+  bodyLimit: 8 * 1024 * 1024, // 8MB max upload
 });
 
 // Plugins
@@ -35,6 +36,14 @@ await app.register(rateLimit, {
   max: 300,
   timeWindow: "1 minute",
 });
+
+// Granular rate limits for sensitive endpoints
+const authRateLimit = { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } };
+const writeRateLimit = { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } };
+const searchRateLimit = { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } };
+
+// Export for use in route files
+export { authRateLimit, writeRateLimit, searchRateLimit };
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {

@@ -3,7 +3,7 @@ import { prisma } from "../../common/db.js";
 import { uniqueSlug } from "../../common/slug.js";
 import { NotFoundError, ConflictError, ForbiddenError } from "../../common/errors.js";
 import { computeQualityScore } from "../validation/validation.service.js";
-import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail } from "@skills-hub/shared";
+import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail, CompositionInput } from "@skills-hub/shared";
 
 const skillSummarySelect = {
   id: true,
@@ -13,6 +13,7 @@ const skillSummarySelect = {
   category: { select: { name: true, slug: true } },
   author: { select: { username: true, avatarUrl: true } },
   status: true,
+  visibility: true,
   platforms: true,
   qualityScore: true,
   installCount: true,
@@ -26,6 +27,7 @@ const skillSummarySelect = {
     select: { version: true },
     take: 1,
   },
+  compositionOf: { select: { id: true } },
 } satisfies Prisma.SkillSelect;
 
 function formatSkillSummary(row: any): SkillSummary {
@@ -37,6 +39,7 @@ function formatSkillSummary(row: any): SkillSummary {
     category: row.category,
     author: row.author,
     status: row.status,
+    visibility: row.visibility,
     platforms: row.platforms,
     qualityScore: row.qualityScore,
     installCount: row.installCount,
@@ -44,6 +47,7 @@ function formatSkillSummary(row: any): SkillSummary {
     reviewCount: row.reviewCount,
     latestVersion: row.versions[0]?.version ?? "0.0.0",
     tags: row.tags.map((t: any) => t.tag.name),
+    isComposition: !!row.compositionOf,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -64,6 +68,7 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
         description: input.description,
         categoryId: category.id,
         authorId,
+        visibility: (input.visibility ?? "PUBLIC") as any,
         platforms: input.platforms as any,
         qualityScore,
         githubRepoUrl: input.githubRepoUrl,
@@ -95,7 +100,6 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
     return skill;
   });
 
-  // Re-fetch to get full relations including tags
   const full = await prisma.skill.findUniqueOrThrow({
     where: { id: skill.id },
     include: skillSummarySelect,
@@ -104,7 +108,7 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
   return formatSkillSummary(full);
 }
 
-export async function getSkillBySlug(slug: string): Promise<SkillDetail> {
+export async function getSkillBySlug(slug: string, requesterId?: string | null): Promise<SkillDetail> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
     include: {
@@ -119,15 +123,47 @@ export async function getSkillBySlug(slug: string): Promise<SkillDetail> {
           createdAt: true,
         },
       },
+      compositionOf: {
+        include: {
+          children: {
+            orderBy: { sortOrder: "asc" },
+            include: {
+              childSkill: {
+                select: { slug: true, name: true, qualityScore: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
   if (!skill) throw new NotFoundError("Skill");
 
+  // Visibility check: private skills only visible to their author
+  if (skill.visibility === "PRIVATE" && skill.authorId !== requesterId) {
+    throw new NotFoundError("Skill");
+  }
+
   const latestVersion = await prisma.skillVersion.findFirst({
     where: { skillId: skill.id, isLatest: true },
     select: { instructions: true, version: true },
   });
+
+  const composition = skill.compositionOf
+    ? {
+        description: skill.compositionOf.description,
+        children: skill.compositionOf.children.map((c: any) => ({
+          skill: {
+            slug: c.childSkill.slug,
+            name: c.childSkill.name,
+            qualityScore: c.childSkill.qualityScore,
+          },
+          sortOrder: c.sortOrder,
+          isParallel: c.isParallel,
+        })),
+      }
+    : null;
 
   return {
     ...formatSkillSummary({ ...skill, versions: [{ version: latestVersion?.version ?? "0.0.0" }] }),
@@ -140,11 +176,27 @@ export async function getSkillBySlug(slug: string): Promise<SkillDetail> {
       qualityScore: v.qualityScore,
       createdAt: v.createdAt.toISOString(),
     })),
+    composition,
   };
 }
 
-export async function listSkills(query: SkillQuery) {
+export async function listSkills(query: SkillQuery, requesterId?: string | null) {
   const where: Prisma.SkillWhereInput = { status: "PUBLISHED" };
+
+  // Visibility: public browse only shows PUBLIC skills
+  // If a specific visibility is requested (e.g., user viewing their own private skills),
+  // we add the author filter to enforce ownership
+  if (query.visibility === "PRIVATE") {
+    if (!requesterId) throw new ForbiddenError("Authentication required to view private skills");
+    where.visibility = "PRIVATE";
+    where.authorId = requesterId;
+  } else if (query.visibility === "UNLISTED") {
+    // Unlisted skills are not browsable — they're accessed by direct slug
+    where.visibility = "UNLISTED";
+    if (requesterId) where.authorId = requesterId;
+  } else {
+    where.visibility = "PUBLIC";
+  }
 
   if (query.category) {
     where.category = { slug: query.category };
@@ -156,7 +208,6 @@ export async function listSkills(query: SkillQuery) {
     where.qualityScore = { gte: query.minScore };
   }
 
-  // Full-text search using PostgreSQL
   if (query.q) {
     where.OR = [
       { name: { contains: query.q, mode: "insensitive" } },
@@ -174,7 +225,6 @@ export async function listSkills(query: SkillQuery) {
     }
   })();
 
-  // Cursor-based pagination
   const findArgs: Prisma.SkillFindManyArgs = {
     where,
     orderBy,
@@ -212,6 +262,7 @@ export async function updateSkill(
   if (input.name) updateData.name = input.name;
   if (input.description) updateData.description = input.description;
   if (input.platforms) updateData.platforms = input.platforms as any;
+  if (input.visibility) updateData.visibility = input.visibility as any;
   if (input.githubRepoUrl !== undefined) updateData.githubRepoUrl = input.githubRepoUrl;
 
   if (input.categorySlug) {
@@ -268,4 +319,67 @@ export async function archiveSkill(userId: string, slug: string): Promise<void> 
     where: { slug },
     data: { status: "ARCHIVED" },
   });
+}
+
+// --- Composition ---
+
+export async function setComposition(
+  userId: string,
+  slug: string,
+  input: CompositionInput,
+): Promise<SkillDetail> {
+  const skill = await prisma.skill.findUnique({ where: { slug } });
+  if (!skill) throw new NotFoundError("Skill");
+  if (skill.authorId !== userId) throw new ForbiddenError("You can only edit your own skills");
+
+  // Resolve child skill slugs to IDs
+  const childSlugs = input.children.map((c) => c.skillSlug);
+  const childSkills = await prisma.skill.findMany({
+    where: { slug: { in: childSlugs }, status: "PUBLISHED" },
+    select: { id: true, slug: true },
+  });
+
+  const slugToId = new Map(childSkills.map((s) => [s.slug, s.id]));
+  for (const child of input.children) {
+    if (!slugToId.has(child.skillSlug)) {
+      throw new NotFoundError(`Child skill "${child.skillSlug}"`);
+    }
+  }
+
+  // Prevent self-reference
+  if (childSlugs.includes(slug)) {
+    throw new ConflictError("A composition cannot include itself");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Upsert composition
+    const composition = await tx.composition.upsert({
+      where: { skillId: skill.id },
+      create: { skillId: skill.id, description: input.description },
+      update: { description: input.description },
+    });
+
+    // Replace children
+    await tx.compositionSkill.deleteMany({ where: { compositionId: composition.id } });
+    for (const child of input.children) {
+      await tx.compositionSkill.create({
+        data: {
+          compositionId: composition.id,
+          childSkillId: slugToId.get(child.skillSlug)!,
+          sortOrder: child.sortOrder,
+          isParallel: child.isParallel,
+        },
+      });
+    }
+  });
+
+  return getSkillBySlug(slug, userId);
+}
+
+export async function removeComposition(userId: string, slug: string): Promise<void> {
+  const skill = await prisma.skill.findUnique({ where: { slug } });
+  if (!skill) throw new NotFoundError("Skill");
+  if (skill.authorId !== userId) throw new ForbiddenError("You can only edit your own skills");
+
+  await prisma.composition.deleteMany({ where: { skillId: skill.id } });
 }

@@ -11,7 +11,19 @@ export function SkillCard({ skill }: { skill: SkillSummary }) {
     >
       <div className="mb-3 flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="font-semibold">{skill.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold">{skill.name}</h3>
+            {skill.isComposition && (
+              <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-800">
+                Composition
+              </span>
+            )}
+            {skill.visibility !== "PUBLIC" && (
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                {skill.visibility === "PRIVATE" ? "Private" : "Unlisted"}
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-[var(--muted)]">
             by {skill.author.username}
           </p>

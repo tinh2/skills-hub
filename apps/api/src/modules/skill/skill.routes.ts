@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createSkillSchema, updateSkillSchema, skillQuerySchema } from "@skills-hub/shared";
+import { createSkillSchema, updateSkillSchema, skillQuerySchema, compositionSchema } from "@skills-hub/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import * as skillService from "./skill.service.js";
@@ -9,12 +9,14 @@ export async function skillRoutes(app: FastifyInstance) {
   app.get("/", async (request) => {
     const parsed = skillQuerySchema.safeParse(request.query);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
-    return skillService.listSkills(parsed.data);
+    const auth = await optionalAuth(request);
+    return skillService.listSkills(parsed.data, auth?.userId);
   });
 
   // GET /api/v1/skills/:slug — skill detail
   app.get<{ Params: { slug: string } }>("/:slug", async (request) => {
-    return skillService.getSkillBySlug(request.params.slug);
+    const auth = await optionalAuth(request);
+    return skillService.getSkillBySlug(request.params.slug, auth?.userId);
   });
 
   // POST /api/v1/skills — create skill
@@ -43,6 +45,21 @@ export async function skillRoutes(app: FastifyInstance) {
   app.delete<{ Params: { slug: string } }>("/:slug", async (request) => {
     const { userId } = await requireAuth(request);
     await skillService.archiveSkill(userId, request.params.slug);
+    return { success: true };
+  });
+
+  // PUT /api/v1/skills/:slug/composition — set composition
+  app.put<{ Params: { slug: string } }>("/:slug/composition", async (request) => {
+    const { userId } = await requireAuth(request);
+    const parsed = compositionSchema.safeParse(request.body);
+    if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
+    return skillService.setComposition(userId, request.params.slug, parsed.data);
+  });
+
+  // DELETE /api/v1/skills/:slug/composition — remove composition
+  app.delete<{ Params: { slug: string } }>("/:slug/composition", async (request) => {
+    const { userId } = await requireAuth(request);
+    await skillService.removeComposition(userId, request.params.slug);
     return { success: true };
   });
 }

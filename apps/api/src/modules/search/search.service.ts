@@ -8,7 +8,7 @@ import type { SkillQuery } from "@skills-hub/shared";
  * The SearchService interface stays the same regardless of backend.
  */
 export async function searchSkills(query: SkillQuery) {
-  const where: Prisma.SkillWhereInput = { status: "PUBLISHED" };
+  const where: Prisma.SkillWhereInput = { status: "PUBLISHED", visibility: "PUBLIC" };
 
   if (query.category) {
     where.category = { slug: query.category };
@@ -54,6 +54,7 @@ export async function searchSkills(query: SkillQuery) {
         select: { version: true },
         take: 1,
       },
+      compositionOf: { select: { id: true } },
     },
   };
 
@@ -76,6 +77,7 @@ export async function searchSkills(query: SkillQuery) {
       category: s.category,
       author: s.author,
       status: s.status,
+      visibility: s.visibility,
       platforms: s.platforms,
       qualityScore: s.qualityScore,
       installCount: s.installCount,
@@ -83,6 +85,7 @@ export async function searchSkills(query: SkillQuery) {
       reviewCount: s.reviewCount,
       latestVersion: s.versions[0]?.version ?? "0.0.0",
       tags: s.tags.map((t: any) => t.tag.name),
+      isComposition: !!s.compositionOf,
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
     })),
@@ -98,6 +101,7 @@ export async function getSearchSuggestions(q: string, limit = 5) {
   const skills = await prisma.skill.findMany({
     where: {
       status: "PUBLISHED",
+      visibility: "PUBLIC",
       name: { contains: q, mode: "insensitive" },
     },
     take: limit,
