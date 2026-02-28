@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  githubId    Int      @unique
+  username    String   @unique
+  displayName String?
+  avatarUrl   String?
+  bio         String?
+  githubUrl   String
+  email       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  skills      Skill[]
+  reviews     Review[]
+  reviewVotes ReviewVote[]
+  apiKeys     ApiKey[]
+  installs    Install[]
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Skill {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  description   String
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id])
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id])
+  status        SkillStatus @default(DRAFT)
+  platforms     Platform[]
+  qualityScore  Int?
+  installCount  Int         @default(0)
+  avgRating     Float?
+  reviewCount   Int         @default(0)
+  githubRepoUrl String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  versions SkillVersion[]
+  tags     SkillTag[]
+  reviews  Review[]
+  installs Install[]
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([status])
+  @@index([qualityScore(sort: Desc)])
+  @@index([installCount(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+}
+
+model SkillVersion {
+  id           String   @id @default(cuid())
+  skillId      String
+  skill        Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  version      String
+  instructions String
+  changelog    String?
+  qualityScore Int?
+  isLatest     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@unique([skillId, version])
+  @@index([skillId, isLatest])
+}
+
+model Category {
+  id          String @id @default(cuid())
+  name        String @unique
+  slug        String @unique
+  description String
+  icon        String?
+  sortOrder   Int    @default(0)
+
+  skills Skill[]
+}
+
+model Tag {
+  id     String     @id @default(cuid())
+  name   String     @unique
+  skills SkillTag[]
+
+  @@index([name])
+}
+
+model SkillTag {
+  skillId String
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  tagId   String
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, tagId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  rating    Int
+  title     String?
+  body      String?
+  usedFor   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  votes    ReviewVote[]
+  response ReviewResponse?
+
+  @@unique([skillId, authorId])
+  @@index([skillId])
+  @@index([authorId])
+}
+
+model ReviewResponse {
+  id        String   @id @default(cuid())
+  reviewId  String   @unique
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model ReviewVote {
+  id       String  @id @default(cuid())
+  reviewId String
+  review   Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
+  helpful  Boolean
+
+  @@unique([reviewId, userId])
+}
+
+model Install {
+  id        String   @id @default(cuid())
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  version   String
+  platform  Platform
+  createdAt DateTime @default(now())
+
+  @@index([skillId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum SkillStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Platform {
+  CLAUDE_CODE
+  CURSOR
+  CODEX_CLI
+  OTHER
+}

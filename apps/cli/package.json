@@ -1,0 +1,28 @@
+{
+  "name": "skills-hub",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "skills-hub": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@skills-hub/shared": "workspace:*",
+    "@skills-hub/skill-parser": "workspace:*",
+    "chalk": "^5.0.0",
+    "commander": "^12.0.0",
+    "open": "^10.0.0",
+    "ora": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
+  }
+}

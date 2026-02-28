@@ -1,0 +1,21 @@
+{
+  "name": "skills-hub",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "db:migrate": "pnpm --filter @skills-hub/api exec prisma migrate dev",
+    "db:generate": "pnpm --filter @skills-hub/api exec prisma generate",
+    "db:seed": "pnpm --filter @skills-hub/api exec prisma db seed",
+    "db:studio": "pnpm --filter @skills-hub/api exec prisma studio"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.12"
+  }
+}
