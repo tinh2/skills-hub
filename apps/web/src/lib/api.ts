@@ -35,7 +35,6 @@ async function attemptRefresh(): Promise<string | null> {
     const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
     });
     if (!res.ok) return null;
     const data = (await res.json()) as AuthTokens;
