@@ -2,14 +2,11 @@ import { FastifyInstance } from "fastify";
 import { updateProfileSchema, createApiKeySchema } from "@skills-hub/shared";
 import { requireAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
+import { writeRateLimit } from "../../config/rate-limits.js";
 import * as userService from "./user.service.js";
 
 export async function userRoutes(app: FastifyInstance) {
-  // GET /api/v1/users/:username — public profile
-  app.get<{ Params: { username: string } }>("/:username", async (request) => {
-    return userService.getPublicProfile(request.params.username);
-  });
-
+  // /me routes MUST be registered before /:username to avoid shadowing
   // GET /api/v1/users/me — private profile (auth required)
   app.get("/me", async (request) => {
     const { userId } = await requireAuth(request);
@@ -17,7 +14,7 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // PATCH /api/v1/users/me — update profile (auth required)
-  app.patch("/me", async (request) => {
+  app.patch("/me", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = updateProfileSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -25,7 +22,7 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/users/me/api-keys — create API key
-  app.post("/me/api-keys", async (request) => {
+  app.post("/me/api-keys", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = createApiKeySchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -43,5 +40,10 @@ export async function userRoutes(app: FastifyInstance) {
     const { userId } = await requireAuth(request);
     await userService.deleteApiKey(userId, request.params.id);
     return { success: true };
+  });
+
+  // GET /api/v1/users/:username — public profile (MUST be last — matches any string)
+  app.get<{ Params: { username: string } }>("/:username", async (request) => {
+    return userService.getPublicProfile(request.params.username);
   });
 }
