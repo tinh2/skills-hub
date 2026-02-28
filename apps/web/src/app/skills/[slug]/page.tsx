@@ -1,8 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { skills as skillsApi, reviews as reviewsApi } from "@/lib/api";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { skills as skillsApi, reviews as reviewsApi, installs } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import { PLATFORM_LABELS } from "@skills-hub/shared";
 import type { Platform } from "@skills-hub/shared";
 import Link from "next/link";
@@ -11,6 +13,8 @@ import remarkGfm from "remark-gfm";
 
 export default function SkillDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const { data: skill, isLoading } = useQuery({
     queryKey: ["skill", slug],
@@ -22,6 +26,34 @@ export default function SkillDetailPage() {
     queryFn: () => reviewsApi.list(slug),
     enabled: !!skill,
   });
+
+  // Review form state
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", body: "" });
+  const [reviewError, setReviewError] = useState("");
+
+  const submitReview = useMutation({
+    mutationFn: () => reviewsApi.create(slug, reviewForm),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews", slug] });
+      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
+      setShowReviewForm(false);
+      setReviewForm({ rating: 5, title: "", body: "" });
+      setReviewError("");
+    },
+    onError: (err: Error) => setReviewError(err.message),
+  });
+
+  // Install tracking
+  const trackInstall = useMutation({
+    mutationFn: () => installs.record(slug),
+  });
+
+  function handleCopyInstall() {
+    const cmd = `npx skills-hub install ${skill?.slug}`;
+    navigator.clipboard.writeText(cmd);
+    trackInstall.mutate();
+  }
 
   if (isLoading) {
     return <p className="text-[var(--muted)]">Loading skill...</p>;
@@ -87,7 +119,7 @@ export default function SkillDetailPage() {
               {installCmd}
             </code>
             <button
-              onClick={() => navigator.clipboard.writeText(installCmd)}
+              onClick={handleCopyInstall}
               className="rounded bg-[var(--primary)] px-3 py-2 text-sm text-[var(--primary-foreground)]"
             >
               Copy
@@ -105,9 +137,9 @@ export default function SkillDetailPage() {
               </p>
             )}
             <div className="space-y-2">
-              {skill.composition.children.map((child, i) => (
+              {skill.composition.children.map((child) => (
                 <div
-                  key={i}
+                  key={child.skill.slug}
                   className="flex items-center gap-3 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-3"
                 >
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-medium">
@@ -147,11 +179,82 @@ export default function SkillDetailPage() {
 
         {/* Reviews */}
         <section>
-          <h2 className="mb-4 text-xl font-bold">
-            Reviews ({skill.reviewCount})
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold">
+              Reviews ({skill.reviewCount})
+            </h2>
+            {isAuthenticated && !showReviewForm && (
+              <button
+                onClick={() => setShowReviewForm(true)}
+                className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
+              >
+                Write a Review
+              </button>
+            )}
+          </div>
+
+          {/* Review form */}
+          {showReviewForm && (
+            <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
+              {reviewError && (
+                <p className="mb-3 text-sm text-red-600">{reviewError}</p>
+              )}
+              <div className="mb-3">
+                <label className="mb-1 block text-sm font-medium">Rating</label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setReviewForm({ ...reviewForm, rating: n })}
+                      className={`px-2 py-1 text-lg ${n <= reviewForm.rating ? "text-yellow-500" : "text-gray-300"}`}
+                    >
+                      *
+                    </button>
+                  ))}
+                  <span className="ml-2 self-center text-sm text-[var(--muted)]">{reviewForm.rating}/5</span>
+                </div>
+              </div>
+              <div className="mb-3">
+                <label className="mb-1 block text-sm font-medium">Title (optional)</label>
+                <input
+                  type="text"
+                  value={reviewForm.title}
+                  onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+                  placeholder="Summary of your review"
+                />
+              </div>
+              <div className="mb-3">
+                <label className="mb-1 block text-sm font-medium">Review</label>
+                <textarea
+                  value={reviewForm.body}
+                  onChange={(e) => setReviewForm({ ...reviewForm, body: e.target.value })}
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+                  rows={4}
+                  placeholder="Share your experience with this skill..."
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => submitReview.mutate()}
+                  disabled={submitReview.isPending}
+                  className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+                >
+                  {submitReview.isPending ? "Submitting..." : "Submit Review"}
+                </button>
+                <button
+                  onClick={() => { setShowReviewForm(false); setReviewError(""); }}
+                  className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
           {reviewList?.length === 0 && (
-            <p className="text-[var(--muted)]">No reviews yet.</p>
+            <p className="text-[var(--muted)]">No reviews yet. Be the first to review this skill.</p>
           )}
           {reviewList?.map((review) => (
             <div
@@ -164,8 +267,7 @@ export default function SkillDetailPage() {
                     {review.author.username}
                   </span>
                   <span className="text-sm text-[var(--muted)]">
-                    {"*".repeat(review.rating)}
-                    {"*" === "*" ? `${review.rating}/5` : ""}
+                    {review.rating}/5
                   </span>
                 </div>
                 <span className="text-xs text-[var(--muted)]">
@@ -231,6 +333,10 @@ export default function SkillDetailPage() {
                   .map((p) => PLATFORM_LABELS[p as Platform])
                   .join(", ")}
               </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-[var(--muted)]">Visibility</dt>
+              <dd>{skill.visibility}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-[var(--muted)]">Published</dt>
