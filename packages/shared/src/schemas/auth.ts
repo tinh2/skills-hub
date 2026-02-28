@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const githubCallbackSchema = z.object({
   code: z.string().min(1),
-  state: z.string().optional(),
+  state: z.string().min(1),
 });
 
 export const refreshTokenSchema = z.object({

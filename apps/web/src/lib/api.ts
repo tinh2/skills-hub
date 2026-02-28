@@ -27,13 +27,33 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
+// Deduplicates concurrent refresh attempts
+let refreshPromise: Promise<string | null> | null = null;
+
+async function attemptRefresh(): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as AuthTokens;
+    accessToken = data.accessToken;
+    return data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
 async function apiFetch<T>(
   path: string,
-  options: RequestInit = {},
+  options: RequestInit & { _retried?: boolean } = {},
 ): Promise<T> {
+  const { _retried, ...fetchOptions } = options;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
   if (accessToken) {
@@ -44,11 +64,26 @@ async function apiFetch<T>(
   const timeout = setTimeout(() => controller.abort(), 30_000);
 
   const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
+    ...fetchOptions,
     headers,
     credentials: "include",
     signal: controller.signal,
   }).finally(() => clearTimeout(timeout));
+
+  if (res.status === 401 && accessToken && !_retried) {
+    // Attempt token refresh, deduplicating concurrent calls
+    if (!refreshPromise) {
+      refreshPromise = attemptRefresh().finally(() => {
+        refreshPromise = null;
+      });
+    }
+    const newToken = await refreshPromise;
+    if (newToken) {
+      return apiFetch<T>(path, { ...options, _retried: true });
+    }
+    // Refresh failed — clear token so auth store can react
+    accessToken = null;
+  }
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ApiError | null;
@@ -63,10 +98,10 @@ export const auth = {
   githubLogin: () => {
     window.location.href = `${API_BASE}/api/v1/auth/github`;
   },
-  callback: (code: string) =>
+  callback: (code: string, state: string) =>
     apiFetch<AuthTokens & { user: PublicUser }>("/api/v1/auth/github/callback", {
       method: "POST",
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, state }),
     }),
   logout: () =>
     apiFetch("/api/v1/auth/session", { method: "DELETE" }),

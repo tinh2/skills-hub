@@ -1,7 +1,7 @@
 import { prisma } from "../../common/db.js";
-import { createAccessToken, createRefreshToken } from "../../common/auth.js";
+import { createAccessToken, createRefreshToken, hashToken } from "../../common/auth.js";
 import { getEnv } from "../../config/env.js";
-import { AppError } from "../../common/errors.js";
+import { AppError, UnauthorizedError } from "../../common/errors.js";
 
 interface GithubUser {
   id: number;
@@ -16,6 +16,8 @@ interface GithubTokenResponse {
   access_token: string;
   token_type: string;
 }
+
+const MAX_REFRESH_TOKENS_PER_USER = 5;
 
 export async function exchangeGithubCode(code: string) {
   const env = getEnv();
@@ -75,5 +77,65 @@ export async function exchangeGithubCode(code: string) {
   const accessToken = await createAccessToken(user.id, user.username);
   const refreshToken = await createRefreshToken();
 
+  // Persist hashed refresh token in DB
+  const tokenHash = await hashToken(refreshToken);
+  const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000);
+
+  await prisma.refreshToken.create({
+    data: { tokenHash, userId: user.id, expiresAt },
+  });
+
+  // Clean up old tokens — keep only the most recent ones per user
+  const tokens = await prisma.refreshToken.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+
+  if (tokens.length > MAX_REFRESH_TOKENS_PER_USER) {
+    const idsToDelete = tokens.slice(MAX_REFRESH_TOKENS_PER_USER).map((t) => t.id);
+    await prisma.refreshToken.deleteMany({ where: { id: { in: idsToDelete } } });
+  }
+
   return { user, accessToken, refreshToken };
+}
+
+export async function refreshAccessToken(rawToken: string) {
+  const env = getEnv();
+  const tokenHash = await hashToken(rawToken);
+
+  const stored = await prisma.refreshToken.findUnique({
+    where: { tokenHash },
+    include: { user: { select: { id: true, username: true } } },
+  });
+
+  if (!stored) {
+    throw new UnauthorizedError("Invalid refresh token");
+  }
+
+  if (stored.expiresAt < new Date()) {
+    await prisma.refreshToken.delete({ where: { id: stored.id } });
+    throw new UnauthorizedError("Refresh token expired");
+  }
+
+  // Rotate: delete old token, issue new one
+  const newRawToken = await createRefreshToken();
+  const newTokenHash = await hashToken(newRawToken);
+  const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000);
+
+  await prisma.$transaction([
+    prisma.refreshToken.delete({ where: { id: stored.id } }),
+    prisma.refreshToken.create({
+      data: { tokenHash: newTokenHash, userId: stored.userId, expiresAt },
+    }),
+  ]);
+
+  const accessToken = await createAccessToken(stored.user.id, stored.user.username);
+
+  return { accessToken, refreshToken: newRawToken };
+}
+
+export async function revokeRefreshToken(rawToken: string) {
+  const tokenHash = await hashToken(rawToken);
+  await prisma.refreshToken.deleteMany({ where: { tokenHash } });
 }

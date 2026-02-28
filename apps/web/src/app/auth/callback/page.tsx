@@ -12,13 +12,14 @@ function CallbackContent() {
 
   useEffect(() => {
     const code = searchParams.get("code");
-    if (!code) {
-      router.push("/");
+    const state = searchParams.get("state");
+    if (!code || !state) {
+      router.push("/?error=auth_failed");
       return;
     }
 
     authApi
-      .callback(code)
+      .callback(code, state)
       .then((result) => {
         login(result.user, result.accessToken);
         router.push("/");
