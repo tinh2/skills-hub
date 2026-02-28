@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 
@@ -27,7 +27,11 @@ export function getConfig(): Config {
 export function saveConfig(config: Partial<Config>): void {
   mkdirSync(CONFIG_DIR, { recursive: true });
   const current = getConfig();
-  writeFileSync(CONFIG_FILE, JSON.stringify({ ...current, ...config }, null, 2));
+  const data = JSON.stringify({ ...current, ...config }, null, 2);
+  // Atomic write: write to temp file then rename
+  const tmpFile = CONFIG_FILE + ".tmp";
+  writeFileSync(tmpFile, data);
+  renameSync(tmpFile, CONFIG_FILE);
 }
 
 export function getAuthHeader(): Record<string, string> {
