@@ -123,6 +123,13 @@ export const skills = {
     apiFetch<SkillSummary>(`/api/v1/skills/${slug}/publish`, { method: "POST" }),
   archive: (slug: string) =>
     apiFetch(`/api/v1/skills/${slug}`, { method: "DELETE" }),
+  setComposition: (slug: string, data: { description?: string; children: { skillSlug: string; sortOrder: number; isParallel: boolean }[] }) =>
+    apiFetch<SkillDetail>(`/api/v1/skills/${slug}/composition`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  removeComposition: (slug: string) =>
+    apiFetch(`/api/v1/skills/${slug}/composition`, { method: "DELETE" }),
 };
 
 // Versions
@@ -149,10 +156,22 @@ export const reviews = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  update: (reviewId: string, data: { title?: string; body?: string; rating?: number }) =>
+    apiFetch(`/api/v1/skills/reviews/${reviewId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  remove: (reviewId: string) =>
+    apiFetch(`/api/v1/skills/reviews/${reviewId}`, { method: "DELETE" }),
   vote: (reviewId: string, helpful: boolean) =>
-    apiFetch(`/api/v1/reviews/${reviewId}/vote`, {
+    apiFetch(`/api/v1/skills/reviews/${reviewId}/vote`, {
       method: "POST",
       body: JSON.stringify({ helpful }),
+    }),
+  respond: (reviewId: string, body: string) =>
+    apiFetch(`/api/v1/skills/reviews/${reviewId}/response`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
     }),
 };
 
