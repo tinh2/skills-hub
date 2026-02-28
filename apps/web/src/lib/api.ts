@@ -40,11 +40,15 @@ async function apiFetch<T>(
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
     credentials: "include",
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ApiError | null;

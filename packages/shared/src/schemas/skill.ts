@@ -12,7 +12,7 @@ export const createSkillSchema = z.object({
   visibility: z.enum(VISIBILITY).default("PUBLIC"),
   version: z
     .string()
-    .regex(/^\d+\.\d+\.\d+$/, "Version must follow semver (e.g., 1.0.0)")
+    .regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, "Version must follow semver (e.g., 1.0.0)")
     .default("1.0.0"),
   tags: z.array(z.string().min(1).max(50)).max(10).optional(),
   githubRepoUrl: z.string().url().optional(),
@@ -35,6 +35,7 @@ export const importGithubSchema = z.object({
 
 export const skillQuerySchema = z.object({
   q: z.string().optional(),
+  author: z.string().optional(),
   category: z.enum(CATEGORY_SLUGS as [string, ...string[]]).optional(),
   platform: z.enum(PLATFORMS).optional(),
   visibility: z.enum(VISIBILITY).optional(),
