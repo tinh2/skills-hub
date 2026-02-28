@@ -16,8 +16,7 @@ export default function UserProfilePage() {
 
   const { data: userSkills } = useQuery({
     queryKey: ["user-skills", username],
-    queryFn: () =>
-      skillsApi.list({ sort: "newest", limit: 50 }),
+    queryFn: () => skillsApi.list({ author: username, sort: "newest", limit: 50 }),
     enabled: !!user,
   });
 
@@ -59,12 +58,13 @@ export default function UserProfilePage() {
 
       <h2 className="mb-4 text-xl font-bold">Published Skills</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {userSkills?.data
-          .filter((s) => s.author.username === username)
-          .map((skill) => (
-            <SkillCard key={skill.id} skill={skill} />
-          ))}
+        {userSkills?.data.map((skill) => (
+          <SkillCard key={skill.id} skill={skill} />
+        ))}
       </div>
+      {userSkills && userSkills.data.length === 0 && (
+        <p className="text-[var(--muted)]">No published skills yet.</p>
+      )}
     </div>
   );
 }

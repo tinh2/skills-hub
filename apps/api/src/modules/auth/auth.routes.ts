@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { githubCallbackSchema } from "@skills-hub/shared";
 import { exchangeGithubCode } from "./auth.service.js";
+import { getPublicProfile } from "../user/user.service.js";
 import { getEnv } from "../../config/env.js";
 import { ValidationError } from "../../common/errors.js";
 
@@ -34,15 +35,12 @@ export async function authRoutes(app: FastifyInstance) {
       maxAge: env.REFRESH_TOKEN_EXPIRES_IN_DAYS * 24 * 60 * 60,
     });
 
+    const publicUser = await getPublicProfile(user.username);
+
     return {
       accessToken,
       expiresIn: 900, // 15 minutes
-      user: {
-        id: user.id,
-        username: user.username,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-      },
+      user: publicUser,
     };
   });
 

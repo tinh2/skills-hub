@@ -198,6 +198,9 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
     where.visibility = "PUBLIC";
   }
 
+  if (query.author) {
+    where.author = { username: query.author };
+  }
   if (query.category) {
     where.category = { slug: query.category };
   }
