@@ -19,11 +19,12 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  skills      Skill[]
-  reviews     Review[]
-  reviewVotes ReviewVote[]
-  apiKeys     ApiKey[]
-  installs    Install[]
+  skills        Skill[]
+  reviews       Review[]
+  reviewVotes   ReviewVote[]
+  apiKeys       ApiKey[]
+  installs      Install[]
+  refreshTokens RefreshToken[]
 }
 
 model ApiKey {
@@ -38,6 +39,18 @@ model ApiKey {
   createdAt  DateTime  @default(now())
 
   @@index([userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Skill {
@@ -193,6 +206,7 @@ model Install {
   platform  Platform
   createdAt DateTime @default(now())
 
+  @@unique([skillId, userId])
   @@index([skillId])
   @@index([userId])
   @@index([createdAt])
