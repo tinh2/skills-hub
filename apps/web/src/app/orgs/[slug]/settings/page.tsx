@@ -1,0 +1,201 @@
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { orgs as orgsApi } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
+
+export default function OrgSettingsPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { data: org, isLoading } = useQuery({
+    queryKey: ["org", slug],
+    queryFn: () => orgsApi.get(slug),
+    enabled: isAuthenticated,
+  });
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [initialized, setInitialized] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  if (org && !initialized) {
+    setName(org.name);
+    setDescription(org.description ?? "");
+    setInitialized(true);
+  }
+
+  const updateOrg = useMutation({
+    mutationFn: () => orgsApi.update(slug, { name, description: description || undefined }),
+    onSuccess: () => {
+      setMsg("Settings saved");
+      queryClient.invalidateQueries({ queryKey: ["org", slug] });
+      setTimeout(() => setMsg(""), 3000);
+    },
+    onError: (err: Error) => setMsg(err.message),
+  });
+
+  // GitHub sync
+  const [githubOrgSlug, setGithubOrgSlug] = useState("");
+  const [githubMsg, setGithubMsg] = useState("");
+
+  const connectGithub = useMutation({
+    mutationFn: () => orgsApi.connectGithub(slug, { githubOrgSlug }),
+    onSuccess: (data: any) => {
+      setGithubMsg(`Connected! ${data.membersAdded} members added.`);
+      setGithubOrgSlug("");
+      queryClient.invalidateQueries({ queryKey: ["org", slug] });
+    },
+    onError: (err: Error) => setGithubMsg(err.message),
+  });
+
+  const disconnectGithub = useMutation({
+    mutationFn: () => orgsApi.disconnectGithub(slug),
+    onSuccess: () => {
+      setGithubMsg("Disconnected from GitHub.");
+      queryClient.invalidateQueries({ queryKey: ["org", slug] });
+    },
+  });
+
+  const syncGithub = useMutation({
+    mutationFn: () => orgsApi.syncGithub(slug),
+    onSuccess: (data: any) => {
+      setGithubMsg(`Synced: ${data.synced} members checked, ${data.added} added.`);
+    },
+    onError: (err: Error) => setGithubMsg(err.message),
+  });
+
+  // Danger zone
+  const deleteOrg = useMutation({
+    mutationFn: () => orgsApi.remove(slug),
+    onSuccess: () => router.push("/dashboard"),
+  });
+
+  if (!isAuthenticated) {
+    router.push("/");
+    return null;
+  }
+
+  if (isLoading) return <p className="text-[var(--muted)]">Loading...</p>;
+  if (!org || org.currentUserRole !== "ADMIN") {
+    return <p className="text-red-600">Admin access required.</p>;
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-6 flex items-center gap-3">
+        <Link href={`/orgs/${slug}`} className="text-sm text-[var(--primary)] hover:underline">
+          {org.name}
+        </Link>
+        <span className="text-[var(--muted)]">/</span>
+        <h1 className="text-2xl font-bold">Settings</h1>
+      </div>
+
+      {/* General */}
+      <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
+        <h2 className="mb-4 text-lg font-semibold">General</h2>
+        {msg && (
+          <p className={`mb-3 text-sm ${msg.includes("saved") ? "text-green-600" : "text-red-600"}`}>
+            {msg}
+          </p>
+        )}
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-medium">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-medium">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+            rows={3}
+            maxLength={500}
+          />
+        </div>
+        <button
+          onClick={() => updateOrg.mutate()}
+          disabled={updateOrg.isPending}
+          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+        >
+          Save Changes
+        </button>
+      </section>
+
+      {/* GitHub Integration */}
+      <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
+        <h2 className="mb-4 text-lg font-semibold">GitHub Integration</h2>
+        {githubMsg && <p className="mb-3 text-sm text-[var(--muted)]">{githubMsg}</p>}
+
+        {org.githubOrg ? (
+          <div>
+            <p className="mb-3 text-sm">
+              Connected to <span className="font-medium">{org.githubOrg}</span>
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => syncGithub.mutate()}
+                disabled={syncGithub.isPending}
+                className="rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {syncGithub.isPending ? "Syncing..." : "Sync Members"}
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm("Disconnect GitHub org?")) disconnectGithub.mutate();
+                }}
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700"
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={githubOrgSlug}
+              onChange={(e) => setGithubOrgSlug(e.target.value)}
+              placeholder="GitHub org name"
+              className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+            />
+            <button
+              onClick={() => connectGithub.mutate()}
+              disabled={connectGithub.isPending || !githubOrgSlug.trim()}
+              className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+            >
+              Connect
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* Danger Zone */}
+      <section className="rounded-lg border border-red-200 bg-red-50 p-6">
+        <h2 className="mb-2 text-lg font-semibold text-red-800">Danger Zone</h2>
+        <p className="mb-4 text-sm text-red-700">
+          Deleting this organization will archive all its skills and remove all members.
+        </p>
+        <button
+          onClick={() => {
+            if (confirm(`Delete ${org.name}? This cannot be undone.`)) deleteOrg.mutate();
+          }}
+          disabled={deleteOrg.isPending}
+          className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+        >
+          Delete Organization
+        </button>
+      </section>
+    </div>
+  );
+}
