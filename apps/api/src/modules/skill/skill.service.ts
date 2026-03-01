@@ -362,7 +362,10 @@ export async function updateSkill(
   slug: string,
   input: UpdateSkillInput,
 ): Promise<SkillSummary> {
-  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
+  const skill = await prisma.skill.findUnique({
+    where: { slug },
+    select: { id: true, authorId: true, org: { select: { slug: true } } },
+  });
   if (!skill) throw new NotFoundError("Skill");
 
   // Allow author OR org PUBLISHER+ to edit
@@ -412,7 +415,10 @@ export async function updateSkill(
 }
 
 export async function publishSkill(userId: string, slug: string): Promise<SkillSummary> {
-  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
+  const skill = await prisma.skill.findUnique({
+    where: { slug },
+    select: { id: true, authorId: true, status: true, qualityScore: true, org: { select: { slug: true } } },
+  });
   if (!skill) throw new NotFoundError("Skill");
 
   // Allow author OR org PUBLISHER+ to publish
@@ -438,7 +444,10 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
 }
 
 export async function archiveSkill(userId: string, slug: string): Promise<void> {
-  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
+  const skill = await prisma.skill.findUnique({
+    where: { slug },
+    select: { id: true, authorId: true, org: { select: { slug: true } } },
+  });
   if (!skill) throw new NotFoundError("Skill");
 
   // Allow author OR org PUBLISHER+ to archive
@@ -463,7 +472,10 @@ export async function setComposition(
   slug: string,
   input: CompositionInput,
 ): Promise<SkillDetail> {
-  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
+  const skill = await prisma.skill.findUnique({
+    where: { slug },
+    select: { id: true, authorId: true, org: { select: { slug: true } } },
+  });
   if (!skill) throw new NotFoundError("Skill");
   // Allow author OR org PUBLISHER+ to manage composition
   if (skill.authorId !== userId) {
@@ -519,7 +531,10 @@ export async function setComposition(
 }
 
 export async function removeComposition(userId: string, slug: string): Promise<void> {
-  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
+  const skill = await prisma.skill.findUnique({
+    where: { slug },
+    select: { id: true, authorId: true, org: { select: { slug: true } } },
+  });
   if (!skill) throw new NotFoundError("Skill");
   // Allow author OR org PUBLISHER+ to remove composition
   if (skill.authorId !== userId) {

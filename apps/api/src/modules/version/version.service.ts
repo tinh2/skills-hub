@@ -66,7 +66,15 @@ export async function createVersion(
 ): Promise<VersionSummary> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    include: { org: { select: { slug: true } } },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      authorId: true,
+      categoryId: true,
+      platforms: true,
+      org: { select: { slug: true } },
+    },
   });
   if (!skill) throw new NotFoundError("Skill");
 

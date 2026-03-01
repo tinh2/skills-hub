@@ -33,7 +33,8 @@ export async function recordInstall(
 ): Promise<void> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    include: {
+    select: {
+      id: true,
       versions: { where: { isLatest: true }, select: { version: true }, take: 1 },
     },
   });
