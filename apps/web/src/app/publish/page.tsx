@@ -203,11 +203,13 @@ export default function PublishPage() {
         onGenerate={handleAiGenerate}
       />
 
-      {error && (
-        <div role="alert" className="mb-4 rounded-lg bg-[var(--error-subtle)] p-4 text-sm text-[var(--error)]">
-          {error}
-        </div>
-      )}
+      <div aria-live="polite" aria-atomic="true">
+        {error && (
+          <div role="alert" className="mb-4 rounded-lg bg-[var(--error-subtle)] p-4 text-sm text-[var(--error)]">
+            {error}
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -219,7 +221,7 @@ export default function PublishPage() {
                 onClick={() => handleSuggestField("name")}
                 disabled={suggestingField === "name"}
                 className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
-                aria-label="Suggest name with AI"
+                aria-label={suggestingField === "name" ? "Suggesting name..." : "Suggest name with AI"}
               >
                 {suggestingField === "name" ? "Suggesting..." : "Suggest"}
               </button>
@@ -245,7 +247,7 @@ export default function PublishPage() {
                 onClick={() => handleSuggestField("description")}
                 disabled={suggestingField === "description"}
                 className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
-                aria-label="Suggest description with AI"
+                aria-label={suggestingField === "description" ? "Suggesting description..." : "Suggest description with AI"}
               >
                 {suggestingField === "description" ? "Suggesting..." : "Suggest"}
               </button>
@@ -351,7 +353,7 @@ export default function PublishPage() {
                 onClick={() => handleSuggestField("tags")}
                 disabled={suggestingField === "tags"}
                 className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
-                aria-label="Suggest tags with AI"
+                aria-label={suggestingField === "tags" ? "Suggesting tags..." : "Suggest tags with AI"}
               >
                 {suggestingField === "tags" ? "Suggesting..." : "Suggest"}
               </button>
