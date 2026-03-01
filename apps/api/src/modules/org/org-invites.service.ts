@@ -61,7 +61,9 @@ export async function inviteMember(
       token,
       expiresAt,
     },
-    include: {
+    select: {
+      id: true, token: true, inviteeUsername: true, role: true,
+      status: true, expiresAt: true, createdAt: true,
       invitedBy: { select: { username: true } },
     },
   });
@@ -72,7 +74,7 @@ export async function inviteMember(
 export async function acceptInvite(userId: string, token: string): Promise<void> {
   const invite = await prisma.orgInvite.findUnique({
     where: { token },
-    include: { org: true },
+    select: { id: true, orgId: true, status: true, expiresAt: true, inviteeUserId: true, role: true },
   });
 
   if (!invite) throw new NotFoundError("Invite");
@@ -155,7 +157,11 @@ export async function listInvites(
 
   const invites = await prisma.orgInvite.findMany({
     where: { orgId: org.id, status: "PENDING" },
-    include: { invitedBy: { select: { username: true } } },
+    select: {
+      id: true, token: true, inviteeUsername: true, role: true,
+      status: true, expiresAt: true, createdAt: true,
+      invitedBy: { select: { username: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 

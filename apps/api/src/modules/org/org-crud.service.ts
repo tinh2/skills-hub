@@ -44,7 +44,9 @@ export async function createOrg(userId: string, input: CreateOrgInput): Promise<
 export async function getOrg(slug: string, requesterId?: string | null): Promise<OrgDetail> {
   const org = await prisma.organization.findUnique({
     where: { slug },
-    include: {
+    select: {
+      id: true, slug: true, name: true, description: true, avatarUrl: true,
+      githubOrg: true, createdAt: true, updatedAt: true,
       _count: { select: { memberships: true, skills: true } },
     },
   });
@@ -79,7 +81,8 @@ export async function getOrg(slug: string, requesterId?: string | null): Promise
 export async function listUserOrgs(userId: string): Promise<UserOrgMembership[]> {
   const memberships = await prisma.orgMembership.findMany({
     where: { userId },
-    include: {
+    select: {
+      createdAt: true, role: true,
       org: { select: { slug: true, name: true, avatarUrl: true } },
     },
     orderBy: { createdAt: "desc" },

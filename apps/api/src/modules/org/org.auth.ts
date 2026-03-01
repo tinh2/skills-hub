@@ -18,7 +18,7 @@ export async function requireOrgRole(
       userId,
       org: { slug: orgSlug },
     },
-    include: { org: { select: { id: true, slug: true } } },
+    select: { id: true, role: true, org: { select: { id: true, slug: true } } },
   });
 
   if (!membership) {

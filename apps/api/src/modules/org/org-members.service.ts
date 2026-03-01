@@ -25,7 +25,8 @@ export async function listMembers(
   const findArgs: any = {
     where,
     take: query.limit + 1,
-    include: {
+    select: {
+      id: true, createdAt: true, role: true,
       user: { select: { id: true, username: true, avatarUrl: true } },
     },
     orderBy: { createdAt: "asc" },
@@ -95,7 +96,7 @@ export async function updateMemberRole(
 
   const targetMembership = await prisma.orgMembership.findUnique({
     where: { orgId_userId: { orgId: org.id, userId: targetUserId } },
-    include: { user: { select: { id: true, username: true, avatarUrl: true } } },
+    select: { role: true },
   });
   if (!targetMembership) throw new NotFoundError("Member");
 
@@ -111,7 +112,10 @@ export async function updateMemberRole(
   const updated = await prisma.orgMembership.update({
     where: { orgId_userId: { orgId: org.id, userId: targetUserId } },
     data: { role: role as any },
-    include: { user: { select: { id: true, username: true, avatarUrl: true } } },
+    select: {
+      createdAt: true, role: true,
+      user: { select: { id: true, username: true, avatarUrl: true } },
+    },
   });
 
   return {
