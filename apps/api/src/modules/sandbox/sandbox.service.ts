@@ -1,12 +1,35 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../common/errors.js";
+import { isOrgMember } from "../org/org.auth.js";
 import { SANDBOX_LIMITS } from "@skills-hub/shared";
 import type { RunSandboxInput, CreateTestCaseInput, UpdateTestCaseInput, SandboxRunSummary, TestCaseData } from "@skills-hub/shared";
 import { createHash } from "crypto";
 
 function hashInput(input: string): string {
   return createHash("sha256").update(input).digest("hex");
+}
+
+async function resolveAndCheckVisibility(
+  skillSlug: string,
+  requesterId: string | null,
+): Promise<{ id: string; status: string; authorId: string }> {
+  const skill = await prisma.skill.findUnique({
+    where: { slug: skillSlug },
+    select: { id: true, status: true, visibility: true, authorId: true, orgId: true },
+  });
+  if (!skill) throw new NotFoundError("Skill");
+
+  if (skill.visibility === "PRIVATE" && skill.authorId !== requesterId) {
+    throw new NotFoundError("Skill");
+  }
+  if (skill.visibility === "ORG" && skill.orgId) {
+    if (!requesterId) throw new NotFoundError("Skill");
+    const member = await isOrgMember(requesterId, skill.orgId);
+    if (!member) throw new NotFoundError("Skill");
+  }
+
+  return skill;
 }
 
 // --- Sandbox Runs ---
@@ -16,11 +39,7 @@ export async function runSandbox(
   skillSlug: string,
   input: RunSandboxInput,
 ): Promise<SandboxRunSummary> {
-  const skill = await prisma.skill.findUnique({
-    where: { slug: skillSlug },
-    select: { id: true, status: true },
-  });
-  if (!skill) throw new NotFoundError("Skill");
+  const skill = await resolveAndCheckVisibility(skillSlug, userId);
   if (skill.status !== "PUBLISHED") throw new ValidationError("Can only sandbox published skills");
 
   // Rate limit: check daily runs
@@ -136,7 +155,9 @@ async function executeSandbox(
     });
   } catch (error) {
     const durationMs = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : "Unknown execution error";
+    const errorMessage = error instanceof Error
+      ? (error.message.length <= 200 ? error.message : "Execution failed")
+      : "Execution failed";
 
     return await prisma.sandboxRun.update({
       where: { id: runId },
@@ -186,11 +207,7 @@ export async function getSandboxRuns(
   limit = 20,
   cursor?: string,
 ): Promise<{ data: SandboxRunSummary[]; cursor: string | null; hasMore: boolean }> {
-  const skill = await prisma.skill.findUnique({
-    where: { slug: skillSlug },
-    select: { id: true },
-  });
-  if (!skill) throw new NotFoundError("Skill");
+  const skill = await resolveAndCheckVisibility(skillSlug, userId ?? null);
 
   const where: Prisma.SandboxRunWhereInput = {
     skillId: skill.id,

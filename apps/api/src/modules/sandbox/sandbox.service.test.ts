@@ -28,6 +28,10 @@ vi.mock("../../common/db.js", () => ({
   prisma: mockPrisma,
 }));
 
+vi.mock("../org/org.auth.js", () => ({
+  isOrgMember: vi.fn().mockResolvedValue(false),
+}));
+
 vi.mock("../../common/errors.js", () => ({
   NotFoundError: class NotFoundError extends Error {
     statusCode: number;
@@ -60,26 +64,26 @@ describe("runSandbox", () => {
   });
 
   it("rejects if skill not found", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue(null);
+    mockPrisma.skill.findUnique.mockResolvedValueOnce(null);
     await expect(runSandbox("user-1", "nonexistent", { input: "test" }))
       .rejects.toThrow("not found");
   });
 
   it("rejects if skill is not published", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "DRAFT" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "DRAFT", visibility: "PUBLIC", authorId: "user-1", orgId: null });
     await expect(runSandbox("user-1", "test-skill", { input: "test" }))
       .rejects.toThrow("published");
   });
 
   it("rejects if daily limit exceeded", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED", visibility: "PUBLIC", authorId: "user-1", orgId: null });
     mockPrisma.sandboxRun.count.mockResolvedValue(5);
     await expect(runSandbox("user-1", "test-skill", { input: "test" }))
       .rejects.toThrow("limit");
   });
 
   it("returns cached result if input hash matches", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED", visibility: "PUBLIC", authorId: "user-1", orgId: null });
     mockPrisma.sandboxRun.count.mockResolvedValue(0);
     mockPrisma.sandboxRun.findFirst.mockResolvedValue({
       id: "run-cached",
@@ -102,7 +106,7 @@ describe("runSandbox", () => {
   });
 
   it("creates and executes a sandbox run", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED", visibility: "PUBLIC", authorId: "user-1", orgId: null });
     mockPrisma.sandboxRun.count.mockResolvedValue(0);
     mockPrisma.sandboxRun.findFirst.mockResolvedValue(null); // no cache
 
@@ -150,7 +154,7 @@ describe("getTestCases", () => {
   });
 
   it("returns test cases for a skill", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED", visibility: "PUBLIC", authorId: "user-1", orgId: null });
     mockPrisma.testCase.findMany.mockResolvedValue([
       {
         id: "tc-1",
@@ -169,7 +173,7 @@ describe("getTestCases", () => {
   });
 
   it("rejects if skill not found", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue(null);
+    mockPrisma.skill.findUnique.mockResolvedValueOnce(null);
     await expect(getTestCases("nonexistent")).rejects.toThrow("not found");
   });
 });

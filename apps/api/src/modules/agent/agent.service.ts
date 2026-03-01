@@ -27,7 +27,7 @@ export async function createAgent(
 ): Promise<AgentSummary> {
   // Check agent limit
   const agentCount = await prisma.agent.count({
-    where: { ownerId: userId, status: { not: "STOPPED" } },
+    where: { ownerId: userId },
   });
 
   // TODO: check user tier for pro limits
@@ -40,7 +40,7 @@ export async function createAgent(
   // Resolve skill
   const skill = await prisma.skill.findUnique({
     where: { slug: input.skillSlug },
-    select: { id: true, status: true, name: true },
+    select: { id: true, status: true, name: true, description: true },
   });
   if (!skill) throw new NotFoundError("Skill");
   if (skill.status !== "PUBLISHED") throw new ValidationError("Can only deploy published skills");
@@ -62,7 +62,7 @@ export async function createAgent(
         const handConfig = translateToHand(
           {
             name: skill.name,
-            description: input.name,
+            description: skill.description,
             version: version.version,
             category: undefined,
             platforms: [],
@@ -288,8 +288,8 @@ export async function executeAgent(
   });
   if (!agent) throw new NotFoundError("Agent");
   if (agent.ownerId !== userId) throw new ForbiddenError("You can only execute your own agents");
-  if (agent.status !== "RUNNING" && agent.status !== "PAUSED") {
-    throw new ConflictError("Agent must be running or paused to execute");
+  if (agent.status !== "RUNNING") {
+    throw new ConflictError("Agent must be running to execute");
   }
 
   const execution = await prisma.agentExecution.create({
@@ -333,7 +333,9 @@ export async function executeAgent(
   } catch (err) {
     status = "FAILED";
     output = "";
-    errorMessage = err instanceof Error ? err.message : "Unknown error";
+    errorMessage = err instanceof Error
+      ? (err.message.length <= 200 ? err.message : "Execution failed")
+      : "Execution failed";
   }
 
   const durationMs = Date.now() - startTime;
