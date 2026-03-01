@@ -58,6 +58,7 @@ export default function SkillDetailPage() {
 
   // Download state
   const [isDownloading, setIsDownloading] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   // Install tracking
   const trackInstall = useMutation({
@@ -68,6 +69,8 @@ export default function SkillDetailPage() {
     const cmd = `npx skills-hub install ${skill?.slug}`;
     navigator.clipboard.writeText(cmd);
     trackInstall.mutate();
+    setCopyFeedback(true);
+    setTimeout(() => setCopyFeedback(false), 2000);
   }
 
   function handleDownloadSkillMd() {
@@ -126,7 +129,12 @@ export default function SkillDetailPage() {
   }
 
   if (isLoading) {
-    return <p className="text-[var(--muted)]">Loading skill...</p>;
+    return (
+      <div className="flex items-center justify-center py-16">
+        <span className="loading-spinner" aria-hidden="true" />
+        <span className="ml-3 text-[var(--muted)]">Loading skill...</span>
+      </div>
+    );
   }
 
   if (!skill) {
@@ -168,7 +176,7 @@ export default function SkillDetailPage() {
             {skill.author.username === authUser?.username && (
               <Link
                 href={`/skills/${slug}/edit`}
-                className="rounded-full border border-[var(--card-border)] px-3 py-1 text-sm hover:bg-[var(--accent)]"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-[var(--card-border)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)]"
               >
                 Edit
               </Link>
@@ -177,7 +185,7 @@ export default function SkillDetailPage() {
               <button
                 onClick={() => toggleLike.mutate()}
                 disabled={toggleLike.isPending}
-                className="flex items-center gap-1 rounded-full border border-[var(--card-border)] px-3 py-1 text-sm hover:bg-[var(--accent)] disabled:opacity-50"
+                className="flex min-h-[44px] items-center gap-1 rounded-full border border-[var(--card-border)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
                 aria-label={skill.userLiked ? "Unlike skill" : "Like skill"}
               >
                 <span className={skill.userLiked ? "text-red-500" : ""}>{skill.userLiked ? "\u2665" : "\u2661"}</span>
@@ -218,16 +226,16 @@ export default function SkillDetailPage() {
             <button
               onClick={handleCopyInstall}
               aria-label="Copy install command to clipboard"
-              className="rounded bg-[var(--primary)] px-3 py-2 text-sm text-[var(--primary-foreground)]"
+              className="min-h-[44px] min-w-[44px] rounded bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90"
             >
-              Copy
+              {copyFeedback ? "Copied!" : "Copy"}
             </button>
           </div>
           <div className="mt-3 flex items-center gap-2 border-t border-[var(--card-border)] pt-3">
             <span className="text-xs text-[var(--muted)]">Or download directly:</span>
             <button
               onClick={handleDownloadSkillMd}
-              className="rounded border border-[var(--card-border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--card)]"
+              className="min-h-[44px] rounded border border-[var(--card-border)] bg-[var(--background)] px-3 py-2 text-xs font-medium transition-colors hover:bg-[var(--card)]"
             >
               Download SKILL.md
             </button>
@@ -235,9 +243,16 @@ export default function SkillDetailPage() {
               <button
                 onClick={handleDownloadBundle}
                 disabled={isDownloading}
-                className="rounded border border-[var(--card-border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--card)] disabled:opacity-50"
+                className="min-h-[44px] rounded border border-[var(--card-border)] bg-[var(--background)] px-3 py-2 text-xs font-medium transition-colors hover:bg-[var(--card)] disabled:opacity-50"
               >
-                {isDownloading ? "Bundling..." : "Download All (.zip)"}
+                {isDownloading ? (
+                  <span className="flex items-center gap-1">
+                    <span className="loading-spinner" aria-hidden="true" />
+                    Bundling...
+                  </span>
+                ) : (
+                  "Download All (.zip)"
+                )}
               </button>
             )}
           </div>
@@ -309,7 +324,7 @@ export default function SkillDetailPage() {
             {isAuthenticated && !showReviewForm && !reviewList?.some((r) => r.author.username === authUser?.username) && (
               <button
                 onClick={() => setShowReviewForm(true)}
-                className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
+                className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90"
               >
                 Write a Review
               </button>
@@ -333,7 +348,7 @@ export default function SkillDetailPage() {
                       aria-checked={reviewForm.rating === n}
                       aria-label={`${n} star${n > 1 ? "s" : ""}`}
                       onClick={() => setReviewForm({ ...reviewForm, rating: n })}
-                      className={`px-2 py-1 text-lg ${n <= reviewForm.rating ? "text-yellow-500" : "text-gray-300"}`}
+                      className={`min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xl transition-colors hover:bg-[var(--accent)] ${n <= reviewForm.rating ? "text-yellow-500" : "text-gray-300 dark:text-gray-600"}`}
                     >
                       {"\u2605"}
                     </button>
@@ -367,13 +382,13 @@ export default function SkillDetailPage() {
                 <button
                   onClick={() => submitReview.mutate()}
                   disabled={submitReview.isPending}
-                  className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+                  className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
                 >
                   {submitReview.isPending ? "Submitting..." : "Submit Review"}
                 </button>
                 <button
                   onClick={() => { setShowReviewForm(false); setReviewError(""); }}
-                  className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm"
+                  className="min-h-[44px] rounded-lg bg-[var(--accent)] px-4 py-2 text-sm transition-colors hover:bg-[var(--border)]"
                 >
                   Cancel
                 </button>
@@ -486,11 +501,11 @@ export default function SkillDetailPage() {
                 </div>
                 <button
                   onClick={() => i === 0 ? handleDownloadSkillMd() : handleDownloadVersion(v.version)}
-                  className="ml-2 shrink-0 text-xs text-[var(--primary)] hover:underline"
+                  className="ml-2 min-h-[44px] min-w-[44px] shrink-0 rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] hover:underline"
                   aria-label={`Download version ${v.version}`}
                   title={`Download v${v.version}`}
                 >
-                  .md
+                  Download
                 </button>
               </li>
             ))}
