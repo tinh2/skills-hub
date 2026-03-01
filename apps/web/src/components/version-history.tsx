@@ -74,7 +74,7 @@ export function VersionHistory({ skill }: { skill: SkillDetail }) {
                 </button>
               </div>
             </div>
-            {activeDiff?.version === skill.versions[i - 1]?.version && (
+            {activeDiff !== null && i > 0 && activeDiff.version === skill.versions[i - 1]?.version && (
               <pre className="mt-2 max-h-48 overflow-auto rounded bg-[var(--background)] p-2 text-xs leading-relaxed">
                 {activeDiff.diff.diff.split("\n").map((line, j) => (
                   <span
