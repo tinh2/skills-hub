@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { skills as skillsApi, versions } from "@/lib/api";
@@ -99,10 +100,26 @@ export default function EditSkillPage() {
       <span className="ml-3 text-[var(--muted)]">Loading skill...</span>
     </div>
   );
-  if (!skill) return <p className="text-red-600">Skill not found.</p>;
+  if (!skill) return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <h1 className="mb-2 text-2xl font-bold">Skill not found</h1>
+      <p className="mb-6 text-[var(--muted)]">This skill may have been removed or the URL is incorrect.</p>
+      <Link href="/browse" className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-6 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
+        Browse Skills
+      </Link>
+    </div>
+  );
 
   const isOwner = skill.author.username === authUser?.username;
-  if (!isOwner) return <p className="text-red-600">You can only edit your own skills.</p>;
+  if (!isOwner) return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <h1 className="mb-2 text-2xl font-bold">Access denied</h1>
+      <p className="mb-6 text-[var(--muted)]">You can only edit skills you have authored.</p>
+      <Link href={`/skills/${slug}`} className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-6 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
+        View Skill
+      </Link>
+    </div>
+  );
 
   function togglePlatform(p: string) {
     setSelectedPlatforms((prev) =>

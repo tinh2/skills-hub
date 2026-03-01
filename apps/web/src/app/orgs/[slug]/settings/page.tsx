@@ -88,7 +88,15 @@ export default function OrgSettingsPage() {
     </div>
   );
   if (!org || org.currentUserRole !== "ADMIN") {
-    return <p className="text-red-600">Admin access required.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <h1 className="mb-2 text-2xl font-bold">Access denied</h1>
+        <p className="mb-6 text-[var(--muted)]">Admin access is required to view organization settings.</p>
+        <Link href={`/orgs/${slug}`} className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-6 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
+          Back to Organization
+        </Link>
+      </div>
+    );
   }
 
   return (

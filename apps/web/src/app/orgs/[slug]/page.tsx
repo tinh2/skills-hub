@@ -35,7 +35,15 @@ export default function OrgDetailPage() {
       <span className="ml-3 text-[var(--muted)]">Loading organization...</span>
     </div>
   );
-  if (!org) return <p className="text-red-600">Organization not found.</p>;
+  if (!org) return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <h1 className="mb-2 text-2xl font-bold">Organization not found</h1>
+      <p className="mb-6 text-[var(--muted)]">This organization may have been removed or the URL is incorrect.</p>
+      <Link href="/dashboard" className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-6 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
+        Go to Dashboard
+      </Link>
+    </div>
+  );
 
   const isAdmin = org.currentUserRole === "ADMIN";
   const isMember = !!org.currentUserRole;

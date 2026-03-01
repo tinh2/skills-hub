@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { users, skills as skillsApi } from "@/lib/api";
 import { SkillCard } from "@/components/skill-card";
@@ -30,7 +31,15 @@ export default function UserProfilePage() {
   }
 
   if (!user) {
-    return <p className="text-[var(--error)]">User not found.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <h1 className="mb-2 text-2xl font-bold">User not found</h1>
+        <p className="mb-6 text-[var(--muted)]">This profile may have been removed or the username is incorrect.</p>
+        <Link href="/browse" className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-6 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
+          Browse Skills
+        </Link>
+      </div>
+    );
   }
 
   return (
