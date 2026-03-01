@@ -11,6 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.40.0",
     "@skills-hub/shared": "workspace:*",
     "@skills-hub/skill-parser": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
