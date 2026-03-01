@@ -1,9 +1,52 @@
 "use client";
 
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { likes } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import type { SkillSummary } from "@skills-hub/shared";
 
-export function SkillCard({ skill }: { skill: SkillSummary }) {
+export function SkillCard({
+  skill,
+  isFeatured,
+}: {
+  skill: SkillSummary;
+  isFeatured?: boolean;
+}) {
+  const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const toggleLike = useMutation({
+    mutationFn: () => likes.toggle(skill.slug),
+    onSuccess: (result) => {
+      // Optimistic-style: update all queries that might contain this skill
+      queryClient.setQueriesData(
+        { queryKey: ["skills"] },
+        (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              data: page.data.map((s: SkillSummary) =>
+                s.id === skill.id
+                  ? { ...s, likeCount: result.likeCount, userLiked: result.liked }
+                  : s,
+              ),
+            })),
+          };
+        },
+      );
+    },
+  });
+
+  function handleLikeClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) return;
+    toggleLike.mutate();
+  }
+
   return (
     <Link
       href={`/skills/${skill.slug}`}
@@ -13,6 +56,11 @@ export function SkillCard({ skill }: { skill: SkillSummary }) {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold">{skill.name}</h3>
+            {isFeatured && (
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                Top Liked
+              </span>
+            )}
             {skill.isComposition && (
               <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-800">
                 Composition
@@ -57,6 +105,15 @@ export function SkillCard({ skill }: { skill: SkillSummary }) {
         <div className="flex items-center gap-3">
           {skill.avgRating !== null && <span>{skill.avgRating.toFixed(1)} stars</span>}
           <span>{skill.installCount.toLocaleString()} installs</span>
+          <button
+            type="button"
+            onClick={handleLikeClick}
+            className="flex items-center gap-1 hover:text-red-500"
+            aria-label={skill.userLiked ? "Unlike skill" : "Like skill"}
+          >
+            <span className={skill.userLiked ? "text-red-500" : ""}>{skill.userLiked ? "\u2665" : "\u2661"}</span>
+            <span>{skill.likeCount}</span>
+          </button>
         </div>
       </div>
 

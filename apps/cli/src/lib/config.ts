@@ -9,6 +9,7 @@ interface Config {
   apiUrl: string;
   apiKey?: string;
   accessToken?: string;
+  defaultOrg?: string;
 }
 
 const DEFAULT_CONFIG: Config = {
@@ -39,4 +40,12 @@ export function getAuthHeader(): Record<string, string> {
   if (config.apiKey) return { Authorization: `ApiKey ${config.apiKey}` };
   if (config.accessToken) return { Authorization: `Bearer ${config.accessToken}` };
   return {};
+}
+
+export function ensureAuth(): void {
+  const config = getConfig();
+  if (!config.apiKey && !config.accessToken) {
+    console.error("Not authenticated. Run `skills-hub login` first.");
+    process.exit(1);
+  }
 }

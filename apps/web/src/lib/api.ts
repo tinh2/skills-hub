@@ -224,6 +224,34 @@ export const search = {
     ),
 };
 
+// Categories
+export const categories = {
+  featured: () =>
+    apiFetch<Record<string, SkillSummary | null>>("/api/v1/categories/featured"),
+};
+
+// Likes
+export const likes = {
+  toggle: (slug: string) =>
+    apiFetch<{ liked: boolean; likeCount: number }>(`/api/v1/skills/${slug}/like`, { method: "POST" }),
+};
+
+// Media
+export const media = {
+  add: (slug: string, data: { type: string; url: string; caption?: string; sortOrder?: number }) =>
+    apiFetch(`/api/v1/skills/${slug}/media`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  remove: (slug: string, id: string) =>
+    apiFetch(`/api/v1/skills/${slug}/media/${id}`, { method: "DELETE" }),
+  reorder: (slug: string, mediaIds: string[]) =>
+    apiFetch(`/api/v1/skills/${slug}/media/reorder`, {
+      method: "PUT",
+      body: JSON.stringify({ mediaIds }),
+    }),
+};
+
 // Install
 export const installs = {
   record: (slug: string, platform = "CLAUDE_CODE") =>

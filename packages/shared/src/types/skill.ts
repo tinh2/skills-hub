@@ -15,13 +15,24 @@ export interface SkillSummary {
   platforms: Platform[];
   qualityScore: number | null;
   installCount: number;
+  likeCount: number;
+  userLiked: boolean;
   avgRating: number | null;
   reviewCount: number;
   latestVersion: string;
   tags: string[];
   isComposition: boolean;
+  org: { slug: string; name: string } | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MediaItem {
+  id: string;
+  type: "SCREENSHOT" | "YOUTUBE";
+  url: string;
+  caption: string | null;
+  sortOrder: number;
 }
 
 export interface SkillDetail extends SkillSummary {
@@ -29,6 +40,7 @@ export interface SkillDetail extends SkillSummary {
   githubRepoUrl: string | null;
   versions: VersionSummary[];
   composition: CompositionDetail | null;
+  media: MediaItem[];
 }
 
 export interface CompositionDetail {

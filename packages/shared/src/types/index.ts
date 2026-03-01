@@ -9,6 +9,7 @@ export type {
   SkillStatus,
   SkillSummary,
   SkillDetail,
+  MediaItem,
   CompositionDetail,
   CompositionChild,
   VersionSummary,
@@ -23,3 +24,13 @@ export type {
 } from "./review.js";
 
 export type { ApiError, PaginatedResponse, AuthTokens } from "./api.js";
+
+export type {
+  OrgSummary,
+  OrgDetail,
+  OrgMember,
+  OrgInviteData,
+  OrgSkillTemplateSummary,
+  OrgAnalytics,
+  UserOrgMembership,
+} from "./org.js";

@@ -14,6 +14,10 @@ import { searchRoutes } from "./modules/search/search.routes.js";
 import { categoryRoutes } from "./modules/category/category.routes.js";
 import { tagRoutes } from "./modules/tag/tag.routes.js";
 import { installRoutes } from "./modules/install/install.routes.js";
+import { likeRoutes } from "./modules/like/like.routes.js";
+import { mediaRoutes } from "./modules/media/media.routes.js";
+import { orgRoutes } from "./modules/org/org.routes.js";
+import { inviteRoutes } from "./modules/org/invite.routes.js";
 
 const env = getEnv();
 
@@ -89,9 +93,13 @@ await app.register(
     await api.register(versionRoutes, { prefix: "/skills" });
     await api.register(reviewRoutes, { prefix: "/skills" });
     await api.register(installRoutes, { prefix: "/skills" });
+    await api.register(likeRoutes, { prefix: "/skills" });
+    await api.register(mediaRoutes, { prefix: "/skills" });
     await api.register(searchRoutes, { prefix: "/search" });
     await api.register(categoryRoutes, { prefix: "/categories" });
     await api.register(tagRoutes, { prefix: "/tags" });
+    await api.register(orgRoutes, { prefix: "/orgs" });
+    await api.register(inviteRoutes, { prefix: "/invites" });
   },
   { prefix: "/api/v1" },
 );
