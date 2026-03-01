@@ -26,6 +26,7 @@ const envSchema = z.object({
 
   REDIS_URL: z.string().url().optional(),
   S3_BUCKET_NAME: z.string().optional(),
+  SENTRY_DSN: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -20,6 +20,7 @@
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
     "@prisma/client": "^6.0.0",
+    "@sentry/node": "^10.40.0",
     "@skills-hub/shared": "workspace:*",
     "@skills-hub/skill-parser": "workspace:*",
     "bcrypt": "^5.1.1",

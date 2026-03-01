@@ -17,6 +17,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       API_URL: ${API_URL:-http://api:3000}
       REDIS_URL: redis://redis:6379
+      SENTRY_DSN: ${SENTRY_DSN:-}
       NODE_ENV: production
       HOST: "0.0.0.0"
       PORT: "3000"
@@ -36,6 +37,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${API_URL:-http://api:3000}
       NEXT_PUBLIC_SITE_URL: ${SITE_URL:-https://skills-hub.ai}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     depends_on:
       - api
     restart: unless-stopped

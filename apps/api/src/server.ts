@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import { getEnv } from "./config/env.js";
 import { connectDb, disconnectDb } from "./common/db.js";
 import { AppError } from "./common/errors.js";
+import { initSentry, captureException } from "./common/sentry.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { userRoutes } from "./modules/user/user.routes.js";
 import { skillRoutes } from "./modules/skill/skill.routes.js";
@@ -27,6 +28,9 @@ import { processAgentJob } from "./modules/agent/agent.worker.js";
 import type { Worker } from "bullmq";
 
 const env = getEnv();
+
+// Initialize Sentry (no-op if SENTRY_DSN is not set)
+initSentry();
 
 const app = Fastify({
   logger: {
@@ -85,6 +89,7 @@ app.setErrorHandler((error, _request, reply) => {
     return;
   }
 
+  captureException(error);
   app.log.error(error);
   reply.status(500).send({
     error: { code: "INTERNAL_ERROR", message: "Internal server error" },
