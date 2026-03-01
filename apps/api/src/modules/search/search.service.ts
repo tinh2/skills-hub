@@ -5,9 +5,9 @@ import { batchHasUserLiked } from "../like/like.service.js";
 import type { SkillQuery } from "@skills-hub/shared";
 
 /**
- * Full-text search using PostgreSQL.
- * Uses ILIKE for v1 — will be replaced with tsvector/GIN index for production scale.
- * The SearchService interface stays the same regardless of backend.
+ * Full-text search using PostgreSQL tsvector/GIN index.
+ * Name is weighted A (highest), description weighted B.
+ * Falls back to ILIKE for tag matching (tags are in a separate table).
  */
 export async function searchSkills(query: SkillQuery, requesterId?: string | null) {
   const where: Prisma.SkillWhereInput = { status: "PUBLISHED", visibility: "PUBLIC" };
@@ -34,15 +34,34 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     where.qualityScore = { gte: query.minScore };
   }
 
+  // Use tsvector for name/description search, ILIKE for tag matching
+  let tsvectorIds: string[] | null = null;
   if (query.q) {
     const searchTerm = query.q.trim();
 
-    // Use PostgreSQL full-text search via raw query for ranking
-    // Fall back to ILIKE for broader matching
+    // Use tsvector search for name + description (GIN indexed)
+    const tsQuery = searchTerm
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w.replace(/[^a-zA-Z0-9]/g, ""))
+      .filter(Boolean)
+      .join(" & ");
+
+    if (tsQuery) {
+      const tsvectorResults = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "Skill"
+        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
+          AND status = 'PUBLISHED'
+        ORDER BY ts_rank("searchVector", to_tsquery('english', ${tsQuery + ":*"})) DESC
+        LIMIT 200
+      `;
+      tsvectorIds = tsvectorResults.map((r) => r.id);
+    }
+
+    // Also match by tag name (tags not in tsvector)
     where.OR = [
-      { name: { contains: searchTerm, mode: "insensitive" } },
-      { description: { contains: searchTerm, mode: "insensitive" } },
-      { tags: { some: { tag: { name: { contains: searchTerm.toLowerCase(), mode: "insensitive" } } } } },
+      ...(tsvectorIds ? [{ id: { in: tsvectorIds } }] : []),
+      { tags: { some: { tag: { name: { contains: searchTerm.toLowerCase(), mode: "insensitive" as const } } } } },
     ];
   }
 

@@ -7,6 +7,7 @@ const mockPrisma = vi.hoisted(() => ({
   organization: {
     findUnique: vi.fn(),
   },
+  $queryRaw: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../../common/db.js", () => ({
@@ -88,18 +89,22 @@ describe("search.service", () => {
       expect(result.cursor).toBe("s2");
     });
 
-    it("applies query filter to where clause", async () => {
+    it("applies query filter using tsvector + tag fallback", async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ id: "s1" }, { id: "s2" }]);
       mockPrisma.skill.findMany.mockResolvedValue([]);
 
       await searchSkills({ q: "deploy", limit: 20 } as any);
 
+      // Tsvector raw query should be called
+      expect(mockPrisma.$queryRaw).toHaveBeenCalled();
+
       const callArgs = mockPrisma.skill.findMany.mock.calls[0][0];
       expect(callArgs.where.OR).toBeDefined();
-      expect(callArgs.where.OR).toHaveLength(3);
-      // First OR clause is name ILIKE
-      expect(callArgs.where.OR[0]).toEqual({
-        name: { contains: "deploy", mode: "insensitive" },
-      });
+      expect(callArgs.where.OR).toHaveLength(2);
+      // First OR clause is tsvector ID matches
+      expect(callArgs.where.OR[0]).toEqual({ id: { in: ["s1", "s2"] } });
+      // Second OR clause is tag name ILIKE fallback
+      expect(callArgs.where.OR[1].tags).toBeDefined();
     });
 
     it("applies most_liked sort", async () => {
