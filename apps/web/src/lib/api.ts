@@ -19,6 +19,11 @@ import type {
   OrgSkillTemplateSummary,
   OrgAnalytics,
   UserOrgMembership,
+  AgentSummary,
+  AgentDetail,
+  AgentExecutionSummary,
+  SandboxRunSummary,
+  TestCaseData,
 } from "@skills-hub/shared";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -357,4 +362,69 @@ export const installs = {
       method: "POST",
       body: JSON.stringify({ platform }),
     }),
+};
+
+// Agents
+export const agents = {
+  create: (data: { name: string; skillSlug: string; triggerType?: string; triggerConfig?: Record<string, unknown>; channelType?: string; channelConfig?: Record<string, unknown>; modelProvider?: string; modelId?: string }) =>
+    apiFetch<AgentSummary>("/api/v1/agents", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  list: (query?: { status?: string; cursor?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (query) {
+      for (const [k, v] of Object.entries(query)) {
+        if (v !== undefined) params.set(k, String(v));
+      }
+    }
+    return apiFetch<PaginatedResponse<AgentSummary>>(`/api/v1/agents?${params}`);
+  },
+  get: (agentId: string) =>
+    apiFetch<AgentDetail>(`/api/v1/agents/${agentId}`),
+  update: (agentId: string, data: { name?: string; triggerType?: string; triggerConfig?: Record<string, unknown>; channelType?: string | null; channelConfig?: Record<string, unknown>; modelProvider?: string; modelId?: string }) =>
+    apiFetch<AgentDetail>(`/api/v1/agents/${agentId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  pause: (agentId: string) =>
+    apiFetch<AgentSummary>(`/api/v1/agents/${agentId}/pause`, { method: "POST" }),
+  resume: (agentId: string) =>
+    apiFetch<AgentSummary>(`/api/v1/agents/${agentId}/resume`, { method: "POST" }),
+  execute: (agentId: string, input?: string) =>
+    apiFetch<AgentExecutionSummary>(`/api/v1/agents/${agentId}/execute`, {
+      method: "POST",
+      body: JSON.stringify({ input }),
+    }),
+  remove: (agentId: string) =>
+    apiFetch(`/api/v1/agents/${agentId}`, { method: "DELETE" }),
+};
+
+// Sandbox
+export const sandbox = {
+  run: (slug: string, data: { input: string; testCaseId?: string }) =>
+    apiFetch<SandboxRunSummary>(`/api/v1/skills/${slug}/sandbox`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  listRuns: (slug: string, query?: { cursor?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (query?.cursor) params.set("cursor", query.cursor);
+    if (query?.limit) params.set("limit", String(query.limit));
+    return apiFetch<PaginatedResponse<SandboxRunSummary>>(`/api/v1/skills/${slug}/sandbox?${params}`);
+  },
+  listTestCases: (slug: string) =>
+    apiFetch<TestCaseData[]>(`/api/v1/skills/${slug}/test-cases`),
+  createTestCase: (slug: string, data: { label: string; input: string; expectedOutput?: string; sortOrder: number }) =>
+    apiFetch<TestCaseData>(`/api/v1/skills/${slug}/test-cases`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateTestCase: (slug: string, testCaseId: string, data: { label?: string; input?: string; expectedOutput?: string; sortOrder?: number }) =>
+    apiFetch<TestCaseData>(`/api/v1/skills/${slug}/test-cases/${testCaseId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  deleteTestCase: (slug: string, testCaseId: string) =>
+    apiFetch(`/api/v1/skills/${slug}/test-cases/${testCaseId}`, { method: "DELETE" }),
 };
