@@ -32,7 +32,11 @@ export function MediaGallery({
 
   const removeMedia = useMutation({
     mutationFn: (mediaId: string) => mediaApi.remove(slug, mediaId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["skill", slug] }),
+    onSuccess: () => {
+      setError("");
+      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
+    },
+    onError: (err: Error) => setError(err.message),
   });
 
   if (mediaItems.length === 0 && !isAuthor) return null;

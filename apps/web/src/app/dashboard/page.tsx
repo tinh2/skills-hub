@@ -33,18 +33,24 @@ export default function DashboardPage() {
     enabled: isAuthenticated,
   });
 
+  const [actionError, setActionError] = useState("");
+
   const archiveSkill = useMutation({
     mutationFn: (slug: string) => skillsApi.archive(slug),
     onSuccess: () => {
+      setActionError("");
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
+    onError: (err: Error) => setActionError(err.message),
   });
 
   const publishSkill = useMutation({
     mutationFn: (slug: string) => skillsApi.publish(slug),
     onSuccess: () => {
+      setActionError("");
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
+    onError: (err: Error) => setActionError(err.message),
   });
 
   if (!isAuthenticated) {
@@ -74,6 +80,8 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {actionError && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950">{actionError}</p>}
 
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">

@@ -21,15 +21,21 @@ export function ReviewCard({
   const queryClient = useQueryClient();
   const [showResponse, setShowResponse] = useState(false);
   const [responseBody, setResponseBody] = useState("");
+  const [error, setError] = useState("");
 
   const voteReview = useMutation({
     mutationFn: (helpful: boolean) => reviewsApi.vote(review.id, helpful),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reviews", slug] }),
+    onSuccess: () => {
+      setError("");
+      queryClient.invalidateQueries({ queryKey: ["reviews", slug] });
+    },
+    onError: (err: Error) => setError(err.message),
   });
 
   const deleteReview = useMutation({
     mutationFn: () => reviewsApi.remove(review.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reviews", slug] }),
+    onError: (err: Error) => setError(err.message),
   });
 
   const respondToReview = useMutation({
@@ -37,12 +43,15 @@ export function ReviewCard({
     onSuccess: () => {
       setShowResponse(false);
       setResponseBody("");
+      setError("");
       queryClient.invalidateQueries({ queryKey: ["reviews", slug] });
     },
+    onError: (err: Error) => setError(err.message),
   });
 
   return (
     <article className="mb-4 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
+      {error && <p role="alert" className="mb-2 text-sm text-red-600">{error}</p>}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-medium">{review.author.username}</span>
