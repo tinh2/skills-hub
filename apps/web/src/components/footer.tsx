@@ -18,7 +18,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="/docs/getting-started" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Getting Started</Link></li>
               <li><Link href="/docs/cli" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">CLI Reference</Link></li>
-              <li><a href="https://github.com/tinh2/skills-hub" target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">GitHub</a></li>
+
               <li><Link href="/about" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">About</Link></li>
             </ul>
           </nav>
@@ -31,7 +31,7 @@ export function Footer() {
           </nav>
         </div>
         <div className="mt-8 border-t border-[var(--border)] pt-6 text-center text-xs text-[var(--muted)]">
-          &copy; {new Date().getFullYear()} skills-hub.ai
+          &copy; {new Date().getFullYear()} Team Bearie LLC
         </div>
       </div>
     </footer>

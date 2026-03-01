@@ -49,12 +49,10 @@ export default function AboutPage() {
       </p>
       <pre><code>npx skills-hub install &lt;skill-name&gt;</code></pre>
 
-      <h2>Open Source</h2>
+      <h2>Built by Developers</h2>
       <p>
-        skills-hub.ai is built in the open.{" "}
-        <a href="https://github.com/tinh2/skills-hub" target="_blank" rel="noopener noreferrer">
-          View the source on GitHub
-        </a>.
+        skills-hub.ai is built by developers, for developers. We're focused on creating the
+        best possible experience for discovering and sharing AI coding skills.
       </p>
     </div>
   );
