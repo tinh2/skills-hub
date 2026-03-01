@@ -48,17 +48,25 @@ export async function processAgentJob(job: Job<AgentJobData>): Promise<void> {
 
   const durationMs = Date.now() - startTime;
 
-  await prisma.agentExecution.update({
-    where: { id: executionId },
-    data: { status, output, durationMs, tokenCount, errorMessage },
-  });
-
-  await prisma.agent.update({
-    where: { id: agentId },
-    data: {
-      executionCount: { increment: 1 },
-      lastExecutedAt: new Date(),
-      ...(errorMessage && { lastError: errorMessage }),
-    },
-  });
+  // Wrap DB writes in try/catch to prevent double execution on retry
+  // if only the DB write fails (execution already completed)
+  try {
+    await prisma.$transaction([
+      prisma.agentExecution.update({
+        where: { id: executionId },
+        data: { status, output, durationMs, tokenCount, errorMessage },
+      }),
+      prisma.agent.update({
+        where: { id: agentId },
+        data: {
+          executionCount: { increment: 1 },
+          lastExecutedAt: new Date(),
+          ...(errorMessage && { lastError: errorMessage }),
+        },
+      }),
+    ]);
+  } catch (dbErr) {
+    console.error(`[agent-worker] Failed to write execution result for ${executionId}:`, dbErr);
+    throw dbErr; // Re-throw so BullMQ can retry
+  }
 }

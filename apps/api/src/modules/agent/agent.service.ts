@@ -327,23 +327,27 @@ export async function executeAgent(
 
   // Dispatch to job queue if Redis is available, otherwise execute inline
   if (isQueueAvailable()) {
-    const queue = getQueue(AGENT_QUEUE);
-    const jobData: AgentJobData = {
-      executionId: execution.id,
-      agentId,
-      openfangHandId: agent.openfangHandId,
-      input: input.input ?? null,
-    };
-    await queue.add("execute", jobData, {
-      attempts: 2,
-      backoff: { type: "exponential", delay: 1000 },
-      removeOnComplete: 100,
-      removeOnFail: 50,
-    });
-    return formatExecution(execution);
+    try {
+      const queue = getQueue(AGENT_QUEUE);
+      const jobData: AgentJobData = {
+        executionId: execution.id,
+        agentId,
+        openfangHandId: agent.openfangHandId,
+        input: input.input ?? null,
+      };
+      await queue.add("execute", jobData, {
+        attempts: 2,
+        backoff: { type: "exponential", delay: 1000 },
+        removeOnComplete: 100,
+        removeOnFail: 50,
+      });
+      return formatExecution(execution);
+    } catch {
+      // Redis unavailable at runtime — fall through to inline execution
+    }
   }
 
-  // Inline fallback (no Redis)
+  // Inline fallback (no Redis or queue.add failed)
   const startTime = Date.now();
   let output = "";
   let tokenCount = 0;

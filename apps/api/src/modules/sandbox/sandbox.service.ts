@@ -104,18 +104,22 @@ export async function runSandbox(
 
   // Dispatch to job queue if Redis is available, otherwise execute inline
   if (isQueueAvailable()) {
-    const queue = getQueue(SANDBOX_QUEUE);
-    const jobData: SandboxJobData = { runId: run.id, skillId: skill.id, input: input.input };
-    await queue.add("execute", jobData, {
-      attempts: 2,
-      backoff: { type: "exponential", delay: 1000 },
-      removeOnComplete: 100,
-      removeOnFail: 50,
-    });
-    return formatSandboxRun(run);
+    try {
+      const queue = getQueue(SANDBOX_QUEUE);
+      const jobData: SandboxJobData = { runId: run.id, skillId: skill.id, input: input.input };
+      await queue.add("execute", jobData, {
+        attempts: 2,
+        backoff: { type: "exponential", delay: 1000 },
+        removeOnComplete: 100,
+        removeOnFail: 50,
+      });
+      return formatSandboxRun(run);
+    } catch {
+      // Redis unavailable at runtime — fall through to inline execution
+    }
   }
 
-  // Inline fallback (no Redis)
+  // Inline fallback (no Redis or queue.add failed)
   const result = await executeSandbox(run.id, skill.id, input.input);
   return formatSandboxRun(result);
 }

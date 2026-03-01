@@ -145,10 +145,6 @@ describe("createVersion", () => {
       id: "s1", authorId: "u1", name: "Test Skill", description: "desc",
       platforms: ["CLAUDE_CODE"], categoryId: "cat1", org: null,
     });
-    mockPrisma.skillVersion.findUnique.mockResolvedValue(null); // no duplicate
-    mockPrisma.skillVersion.findFirst.mockResolvedValue({
-      version: "1.0.0",
-    });
     mockPrisma.category.findUnique.mockResolvedValue({ id: "cat1", slug: "code-quality" });
 
     const createdVersion = {
@@ -162,6 +158,8 @@ describe("createVersion", () => {
     mockPrisma.$transaction.mockImplementation(async (fn: any) => {
       return fn({
         skillVersion: {
+          findUnique: vi.fn().mockResolvedValue(null), // no duplicate
+          findFirst: vi.fn().mockResolvedValue({ version: "1.0.0" }),
           updateMany: vi.fn(),
           create: vi.fn().mockResolvedValue(createdVersion),
         },
@@ -192,7 +190,18 @@ describe("createVersion", () => {
 
   it("rejects duplicate version", async () => {
     mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", authorId: "u1", org: null });
-    mockPrisma.skillVersion.findUnique.mockResolvedValue({ id: "existing" });
+    mockPrisma.category.findUnique.mockResolvedValue({ id: "cat1", slug: "other" });
+    mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+      return fn({
+        skillVersion: {
+          findUnique: vi.fn().mockResolvedValue({ id: "existing" }),
+          findFirst: vi.fn(),
+          updateMany: vi.fn(),
+          create: vi.fn(),
+        },
+        skill: { update: vi.fn() },
+      });
+    });
 
     await expect(
       createVersion("u1", "test-skill", { version: "1.0.0", instructions: "test" }),
@@ -201,8 +210,18 @@ describe("createVersion", () => {
 
   it("rejects version lower than current latest", async () => {
     mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", authorId: "u1", org: null });
-    mockPrisma.skillVersion.findUnique.mockResolvedValue(null); // no duplicate
-    mockPrisma.skillVersion.findFirst.mockResolvedValue({ version: "2.0.0" });
+    mockPrisma.category.findUnique.mockResolvedValue({ id: "cat1", slug: "other" });
+    mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+      return fn({
+        skillVersion: {
+          findUnique: vi.fn().mockResolvedValue(null), // no duplicate
+          findFirst: vi.fn().mockResolvedValue({ version: "2.0.0" }),
+          updateMany: vi.fn(),
+          create: vi.fn(),
+        },
+        skill: { update: vi.fn() },
+      });
+    });
 
     await expect(
       createVersion("u1", "test-skill", { version: "1.5.0", instructions: "test" }),

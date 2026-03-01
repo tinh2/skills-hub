@@ -78,20 +78,6 @@ export async function createVersion(
     }
   }
 
-  // Check version doesn't already exist
-  const existing = await prisma.skillVersion.findUnique({
-    where: { skillId_version: { skillId: skill.id, version: input.version } },
-  });
-  if (existing) throw new ConflictError(`Version ${input.version} already exists`);
-
-  // Verify new version is higher than current latest
-  const latest = await prisma.skillVersion.findFirst({
-    where: { skillId: skill.id, isLatest: true },
-  });
-  if (latest && compareSemver(input.version, latest.version) <= 0) {
-    throw new ConflictError(`Version ${input.version} must be higher than current ${latest.version}`);
-  }
-
   // Fetch actual category slug for quality scoring
   const category = await prisma.category.findUnique({ where: { id: skill.categoryId } });
   const qualityScore = computeQualityScore({
@@ -103,7 +89,23 @@ export async function createVersion(
     version: input.version,
   });
 
+  // All version checks and creation inside a single transaction to prevent
+  // race conditions (concurrent requests creating versions simultaneously)
   const version = await prisma.$transaction(async (tx) => {
+    // Check version doesn't already exist
+    const existing = await tx.skillVersion.findUnique({
+      where: { skillId_version: { skillId: skill.id, version: input.version } },
+    });
+    if (existing) throw new ConflictError(`Version ${input.version} already exists`);
+
+    // Verify new version is higher than current latest
+    const latest = await tx.skillVersion.findFirst({
+      where: { skillId: skill.id, isLatest: true },
+    });
+    if (latest && compareSemver(input.version, latest.version) <= 0) {
+      throw new ConflictError(`Version ${input.version} must be higher than current ${latest.version}`);
+    }
+
     // Mark all existing versions as not latest
     await tx.skillVersion.updateMany({
       where: { skillId: skill.id, isLatest: true },
