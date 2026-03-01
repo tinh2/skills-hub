@@ -65,7 +65,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/auth/refresh — exchange refresh token for new access token
-  app.post("/refresh", async (request, reply) => {
+  app.post("/refresh", authRateLimit, async (request, reply) => {
     const rawToken = (request.cookies as Record<string, string>).refreshToken;
     if (!rawToken) {
       throw new UnauthorizedError("No refresh token");

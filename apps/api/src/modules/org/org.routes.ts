@@ -46,7 +46,7 @@ export async function orgRoutes(app: FastifyInstance) {
   });
 
   // DELETE /api/v1/orgs/:slug — delete org (admin)
-  app.delete<{ Params: { slug: string } }>("/:slug", async (request) => {
+  app.delete<{ Params: { slug: string } }>("/:slug", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     await orgService.deleteOrg(userId, request.params.slug);
     return { success: true };
@@ -80,6 +80,7 @@ export async function orgRoutes(app: FastifyInstance) {
   // DELETE /api/v1/orgs/:slug/members/:userId — remove member (admin or self)
   app.delete<{ Params: { slug: string; userId: string } }>(
     "/:slug/members/:userId",
+    writeRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       await orgService.removeMember(userId, request.params.slug, request.params.userId);
@@ -108,6 +109,7 @@ export async function orgRoutes(app: FastifyInstance) {
   // DELETE /api/v1/orgs/:slug/invites/:inviteId — revoke invite (admin)
   app.delete<{ Params: { slug: string; inviteId: string } }>(
     "/:slug/invites/:inviteId",
+    writeRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       await orgService.revokeInvite(userId, request.params.slug, request.params.inviteId);
@@ -178,6 +180,7 @@ export async function orgRoutes(app: FastifyInstance) {
   // DELETE /api/v1/orgs/:slug/templates/:id — delete (admin)
   app.delete<{ Params: { slug: string; id: string } }>(
     "/:slug/templates/:id",
+    writeRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       await orgService.deleteTemplate(userId, request.params.slug, request.params.id);
@@ -236,7 +239,7 @@ export async function orgRoutes(app: FastifyInstance) {
   );
 
   // DELETE /api/v1/orgs/:slug/github — disconnect GitHub org (admin)
-  app.delete<{ Params: { slug: string } }>("/:slug/github", async (request) => {
+  app.delete<{ Params: { slug: string } }>("/:slug/github", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const { disconnectGithubOrg } = await import("./github-sync.service.js");
     await disconnectGithubOrg(userId, request.params.slug);

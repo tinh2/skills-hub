@@ -36,7 +36,7 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // DELETE /api/v1/users/me/api-keys/:id — revoke API key
-  app.delete<{ Params: { id: string } }>("/me/api-keys/:id", async (request) => {
+  app.delete<{ Params: { id: string } }>("/me/api-keys/:id", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     await userService.deleteApiKey(userId, request.params.id);
     return { success: true };
