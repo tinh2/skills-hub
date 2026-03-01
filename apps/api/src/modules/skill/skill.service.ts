@@ -489,6 +489,37 @@ export async function setComposition(
     throw new ConflictError("A composition cannot include itself");
   }
 
+  // Prevent transitive cycles (A→B→A, A→B→C→A, etc.)
+  const childIds = [...slugToId.values()];
+  if (childIds.length > 0) {
+    const descendantCompositions = await prisma.compositionSkill.findMany({
+      where: {
+        composition: { skillId: { in: childIds } },
+      },
+      select: {
+        composition: { select: { skillId: true } },
+        childSkillId: true,
+      },
+    });
+    // Check if any child (direct or transitive) points back to the parent
+    const visited = new Set<string>();
+    const queue = descendantCompositions.map((d) => d.childSkillId);
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      if (id === skill.id) {
+        throw new ConflictError("Circular composition detected — a child skill already includes this skill");
+      }
+      if (visited.has(id)) continue;
+      visited.add(id);
+      // Look for further descendants
+      const further = await prisma.compositionSkill.findMany({
+        where: { composition: { skillId: id } },
+        select: { childSkillId: true },
+      });
+      for (const f of further) queue.push(f.childSkillId);
+    }
+  }
+
   await prisma.$transaction(async (tx) => {
     // Upsert composition
     const composition = await tx.composition.upsert({
