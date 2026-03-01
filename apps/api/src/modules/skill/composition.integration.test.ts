@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { setupIntegrationTest, createTestUser, createTestSkill } from "../../test/setup.js";
+import { setupIntegrationTest, createTestUser, createTestSkill, testPrisma } from "../../test/setup.js";
 import * as skillService from "./skill.service.js";
 import { QUALITY_SCORE } from "@skills-hub/shared";
 
@@ -100,14 +100,9 @@ describe("skill edge cases (integration)", () => {
 
   it("rejects publish when quality score is below threshold", async () => {
     const user = await createTestUser();
-    // Create skill with low quality score
-    const skill = await createTestSkill(user.id, "build", { status: "DRAFT" });
-
-    // Manually set a very low quality score
-    const { testPrisma } = await import("../../test/setup.js");
-    await testPrisma.skill.update({
-      where: { id: skill.id },
-      data: { qualityScore: QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE - 1 },
+    const skill = await createTestSkill(user.id, "build", {
+      status: "DRAFT",
+      qualityScore: QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE - 1,
     });
 
     await expect(skillService.publishSkill(user.id, skill.slug)).rejects.toThrow("Quality score");

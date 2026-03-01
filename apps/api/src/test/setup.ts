@@ -1,10 +1,13 @@
-import { PrismaClient } from "@prisma/client";
 import { beforeAll, afterAll, afterEach } from "vitest";
+// Use the same PrismaClient as the service layer to ensure consistent
+// pool config, middleware, and connection. env.ts (setupFiles) has already
+// set DATABASE_URL to the test database before any imports.
+import { prisma as testPrisma } from "../common/db.js";
 
-// env.ts (setupFiles) already set DATABASE_URL before this file loads
-export const testPrisma = new PrismaClient();
+export { testPrisma };
 
-// Tables to truncate between tests — single TRUNCATE with CASCADE handles FK order
+// Tables to truncate between tests — single TRUNCATE with CASCADE handles FK order.
+// Update this list when adding new Prisma models.
 const TABLES = [
   "SkillMedia",
   "CompositionSkill",
@@ -52,6 +55,8 @@ export async function seedCategories() {
   }
 }
 
+// IMPORTANT: This counter is safe ONLY because vitest.integration.config.ts
+// uses singleFork: true. If tests are ever parallelized, switch to UUIDs.
 let counter = 0;
 
 export async function createTestUser(overrides: Partial<{
@@ -83,6 +88,7 @@ export async function createTestSkill(
     platforms: string[];
     likeCount: number;
     installCount: number;
+    qualityScore: number;
   }> = {},
 ) {
   counter++;
@@ -102,7 +108,7 @@ export async function createTestSkill(
       platforms: (overrides.platforms ?? ["CLAUDE_CODE"]) as any,
       likeCount: overrides.likeCount ?? 0,
       installCount: overrides.installCount ?? 0,
-      qualityScore: 75,
+      qualityScore: overrides.qualityScore ?? 75,
     },
   });
 
@@ -112,7 +118,7 @@ export async function createTestSkill(
       skillId: skill.id,
       version: "1.0.0",
       instructions: `Instructions for ${name}`,
-      qualityScore: 75,
+      qualityScore: overrides.qualityScore ?? 75,
       isLatest: true,
     },
   });
