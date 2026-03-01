@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { setupIntegrationTest, createTestUser, createTestSkill, testPrisma } from "../../test/setup.js";
 import * as skillService from "./skill.service.js";
-import { QUALITY_SCORE } from "@skills-hub/shared";
 
 setupIntegrationTest();
 
@@ -98,13 +97,18 @@ describe("skill edge cases (integration)", () => {
     expect(s2.slug).toMatch(/^duplicate-name-/);
   });
 
-  it("rejects publish when quality score is below threshold", async () => {
+  it("rejects publish when validation fails", async () => {
     const user = await createTestUser();
     const skill = await createTestSkill(user.id, "build", {
       status: "DRAFT",
-      qualityScore: QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE - 1,
     });
 
-    await expect(skillService.publishSkill(user.id, skill.slug)).rejects.toThrow("Quality score");
+    // Inject a TODO marker to trigger the structure.no_todos error check
+    await testPrisma.skillVersion.updateMany({
+      where: { skillId: skill.id },
+      data: { instructions: "TODO: This skill needs real instructions. Placeholder content that is long enough to pass the minimum length check but contains a TODO marker." },
+    });
+
+    await expect(skillService.publishSkill(user.id, skill.slug)).rejects.toThrow("Cannot publish");
   });
 });

@@ -117,7 +117,7 @@ export async function createTestSkill(
     data: {
       skillId: skill.id,
       version: "1.0.0",
-      instructions: `Instructions for ${name}`,
+      instructions: `Instructions for ${name}. This skill provides detailed guidance for completing the task. Follow the documented process and apply consistent methods throughout your work.`,
       qualityScore: overrides.qualityScore ?? 75,
       isLatest: true,
     },
