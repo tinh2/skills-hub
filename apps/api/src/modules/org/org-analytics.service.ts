@@ -50,21 +50,23 @@ export async function getOrgAnalytics(
     select: { slug: true, name: true, installCount: true },
   });
 
-  // Recent installs (last 30 days, grouped by day)
-  const recentInstalls = await prisma.install.groupBy({
-    by: ["createdAt"],
-    where: {
-      skill: { orgId: org.id },
-      createdAt: { gte: thirtyDaysAgo },
-    },
-    _count: true,
-  });
+  // Recent installs (last 30 days, grouped by day) — use raw SQL for DATE() truncation
+  const dailyInstalls = await prisma.$queryRaw<{ date: Date; count: bigint }[]>`
+    SELECT DATE("Install"."createdAt") as date, COUNT(*)::bigint as count
+    FROM "Install"
+    JOIN "Skill" ON "Skill"."id" = "Install"."skillId"
+    WHERE "Skill"."orgId" = ${org.id}
+      AND "Install"."createdAt" >= ${thirtyDaysAgo}
+    GROUP BY DATE("Install"."createdAt")
+    ORDER BY date
+  `;
 
-  // Aggregate by date
   const dateCountMap = new Map<string, number>();
-  for (const entry of recentInstalls) {
-    const date = entry.createdAt.toISOString().split("T")[0];
-    dateCountMap.set(date, (dateCountMap.get(date) ?? 0) + entry._count);
+  for (const entry of dailyInstalls) {
+    const dateStr = entry.date instanceof Date
+      ? entry.date.toISOString().split("T")[0]
+      : String(entry.date);
+    dateCountMap.set(dateStr, Number(entry.count));
   }
 
   return {

@@ -5,6 +5,7 @@ import type { CreateReviewInput, UpdateReviewInput, ReviewSummary, ReviewStats }
 export async function listReviews(
   slug: string,
   currentUserId: string | null,
+  limit = 50,
 ): Promise<ReviewSummary[]> {
   const skill = await prisma.skill.findUnique({ where: { slug } });
   if (!skill) throw new NotFoundError("Skill");
@@ -12,35 +13,58 @@ export async function listReviews(
   const reviews = await prisma.review.findMany({
     where: { skillId: skill.id },
     orderBy: { createdAt: "desc" },
+    take: limit,
     include: {
       author: { select: { username: true, avatarUrl: true } },
-      votes: true,
+      _count: { select: { votes: true } },
       response: true,
     },
   });
 
-  return reviews.map((r) => {
-    const helpfulCount = r.votes.filter((v) => v.helpful).length;
-    const notHelpfulCount = r.votes.filter((v) => !v.helpful).length;
-    const userVote = currentUserId
-      ? r.votes.find((v) => v.userId === currentUserId)?.helpful ?? null
-      : null;
+  if (reviews.length === 0) return [];
 
-    return {
-      id: r.id,
-      rating: r.rating,
-      title: r.title,
-      body: r.body,
-      usedFor: r.usedFor,
-      author: r.author,
-      helpfulCount,
-      notHelpfulCount,
-      userVote,
-      response: r.response ? { body: r.response.body, createdAt: r.response.createdAt.toISOString() } : null,
-      createdAt: r.createdAt.toISOString(),
-      updatedAt: r.updatedAt.toISOString(),
-    };
+  // Batch compute vote counts per review using groupBy
+  const reviewIds = reviews.map((r) => r.id);
+  const voteCounts = await prisma.reviewVote.groupBy({
+    by: ["reviewId", "helpful"],
+    where: { reviewId: { in: reviewIds } },
+    _count: true,
   });
+
+  const helpfulMap = new Map<string, number>();
+  const notHelpfulMap = new Map<string, number>();
+  for (const vc of voteCounts) {
+    if (vc.helpful) {
+      helpfulMap.set(vc.reviewId, vc._count);
+    } else {
+      notHelpfulMap.set(vc.reviewId, vc._count);
+    }
+  }
+
+  // Batch check current user's votes
+  let userVoteMap = new Map<string, boolean>();
+  if (currentUserId) {
+    const userVotes = await prisma.reviewVote.findMany({
+      where: { reviewId: { in: reviewIds }, userId: currentUserId },
+      select: { reviewId: true, helpful: true },
+    });
+    userVoteMap = new Map(userVotes.map((v) => [v.reviewId, v.helpful]));
+  }
+
+  return reviews.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    title: r.title,
+    body: r.body,
+    usedFor: r.usedFor,
+    author: r.author,
+    helpfulCount: helpfulMap.get(r.id) ?? 0,
+    notHelpfulCount: notHelpfulMap.get(r.id) ?? 0,
+    userVote: userVoteMap.get(r.id) ?? null,
+    response: r.response ? { body: r.response.body, createdAt: r.response.createdAt.toISOString() } : null,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  }));
 }
 
 export async function getReviewStats(slug: string): Promise<ReviewStats> {
