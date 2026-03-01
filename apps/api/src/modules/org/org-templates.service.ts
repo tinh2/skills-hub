@@ -48,6 +48,15 @@ export async function listTemplates(
   const templates = await prisma.orgSkillTemplate.findMany({
     where: { orgId: org.id },
     orderBy: { createdAt: "desc" },
+    take: ORG_LIMITS.MAX_TEMPLATES,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      categorySlug: true,
+      platforms: true,
+      createdAt: true,
+    },
   });
 
   return templates.map(formatTemplate);

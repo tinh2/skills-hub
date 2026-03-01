@@ -163,6 +163,7 @@ export async function listInvites(
       invitedBy: { select: { username: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: ORG_LIMITS.MAX_PENDING_INVITES,
   });
 
   return invites.map(formatInvite);

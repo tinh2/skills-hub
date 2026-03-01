@@ -86,6 +86,7 @@ export async function listUserOrgs(userId: string): Promise<UserOrgMembership[]>
       org: { select: { slug: true, name: true, avatarUrl: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 100,
   });
 
   return memberships.map((m) => ({
