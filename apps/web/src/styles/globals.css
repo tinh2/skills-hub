@@ -38,6 +38,19 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* Form input minimum touch targets (WCAG 2.5.5) */
+input[type="text"],
+input[type="search"],
+input[type="url"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="tel"],
+select,
+textarea {
+  min-height: 44px;
+}
+
 /* Focus indicators for a11y */
 a:focus-visible,
 button:focus-visible,
