@@ -91,7 +91,7 @@ export default function SettingsPage() {
         <h2 className="mb-4 text-lg font-semibold">Profile</h2>
         <div aria-live="polite" aria-atomic="true">
           {profileMsg && (
-            <p role="status" className={`mb-3 text-sm ${profileMsg.includes("updated") ? "text-green-600" : "text-red-600"}`}>
+            <p role="status" className={`mb-3 text-sm ${profileMsg.includes("updated") ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
               {profileMsg}
             </p>
           )}
@@ -147,7 +147,7 @@ export default function SettingsPage() {
         </p>
 
         {keyError && (
-          <p role="alert" className="mb-3 text-sm text-red-600">{keyError}</p>
+          <p role="alert" className="mb-3 text-sm text-[var(--error)]">{keyError}</p>
         )}
 
         {newKey && (
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                     if (confirm(`Revoke API key "${key.name}"? This cannot be undone.`)) deleteKey.mutate(key.id);
                   }}
                   disabled={deleteKey.isPending}
-                  className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
+                  className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-[var(--error)] transition-colors hover:bg-[var(--error-subtle)] hover:underline disabled:opacity-50"
                   aria-label={`Revoke API key ${key.name}`}
                 >
                   Revoke
@@ -207,7 +207,9 @@ export default function SettingsPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-[var(--muted)]">No API keys yet.</p>
+          <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
+            <p className="text-[var(--muted)]">No API keys yet.</p>
+          </div>
         )}
       </section>
     </div>
