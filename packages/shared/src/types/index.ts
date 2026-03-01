@@ -29,7 +29,6 @@ export type {
   SandboxStatus,
   TestCaseData,
   SandboxRunSummary,
-  SandboxRunDetail,
 } from "./sandbox.js";
 
 export type {

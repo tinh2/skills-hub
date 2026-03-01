@@ -44,7 +44,7 @@ export async function runSandbox(
 
   // Rate limit: check daily runs
   const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  todayStart.setUTCHours(0, 0, 0, 0);
 
   const runsToday = await prisma.sandboxRun.count({
     where: {
@@ -277,12 +277,8 @@ export async function createTestCase(
   return formatTestCase(testCase);
 }
 
-export async function getTestCases(skillSlug: string): Promise<TestCaseData[]> {
-  const skill = await prisma.skill.findUnique({
-    where: { slug: skillSlug },
-    select: { id: true },
-  });
-  if (!skill) throw new NotFoundError("Skill");
+export async function getTestCases(skillSlug: string, requesterId: string | null = null): Promise<TestCaseData[]> {
+  const skill = await resolveAndCheckVisibility(skillSlug, requesterId);
 
   const cases = await prisma.testCase.findMany({
     where: { skillId: skill.id },

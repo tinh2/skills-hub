@@ -33,9 +33,10 @@ export async function sandboxRoutes(app: FastifyInstance) {
     },
   );
 
-  // GET /api/v1/skills/:slug/test-cases — list test cases
+  // GET /api/v1/skills/:slug/test-cases — list test cases (respects visibility)
   app.get<{ Params: { slug: string } }>("/:slug/test-cases", async (request) => {
-    return sandboxService.getTestCases(request.params.slug);
+    const auth = await optionalAuth(request);
+    return sandboxService.getTestCases(request.params.slug, auth?.userId ?? null);
   });
 
   // POST /api/v1/skills/:slug/test-cases — create test case (author only)

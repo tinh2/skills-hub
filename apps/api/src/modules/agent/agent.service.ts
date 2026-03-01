@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, TriggerType } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError, ConflictError } from "../../common/errors.js";
 import { AGENT_LIMITS } from "@skills-hub/shared";
@@ -11,6 +11,7 @@ import type {
   AgentDetail,
   AgentExecutionSummary,
 } from "@skills-hub/shared";
+import { isOrgMember } from "../org/org.auth.js";
 import { getOpenFangClient } from "./openfang.client.js";
 import { translateToHand, serializeHandToml } from "@skills-hub/skill-parser/openfang";
 
@@ -37,12 +38,21 @@ export async function createAgent(
     );
   }
 
-  // Resolve skill
+  // Resolve skill with visibility check
   const skill = await prisma.skill.findUnique({
     where: { slug: input.skillSlug },
-    select: { id: true, status: true, name: true, description: true },
+    select: { id: true, status: true, visibility: true, authorId: true, orgId: true, name: true, description: true },
   });
   if (!skill) throw new NotFoundError("Skill");
+
+  if (skill.visibility === "PRIVATE" && skill.authorId !== userId) {
+    throw new NotFoundError("Skill");
+  }
+  if (skill.visibility === "ORG" && skill.orgId) {
+    const member = await isOrgMember(userId, skill.orgId);
+    if (!member) throw new NotFoundError("Skill");
+  }
+
   if (skill.status !== "PUBLISHED") throw new ValidationError("Can only deploy published skills");
 
   // Spawn in OpenFang (if available)
@@ -91,8 +101,8 @@ export async function createAgent(
         }
       }
     }
-  } catch {
-    // OpenFang not available — agent created but not running
+  } catch (err) {
+    console.warn("[agent] OpenFang unavailable during agent creation:", err instanceof Error ? err.message : err);
   }
 
   const agent = await prisma.agent.create({
@@ -101,7 +111,7 @@ export async function createAgent(
       skillId: skill.id,
       ownerId: userId,
       status: openfangHandId ? "RUNNING" : "STOPPED",
-      triggerType: input.triggerType as any,
+      triggerType: input.triggerType as TriggerType,
       triggerConfig: toJsonInput(input.triggerConfig),
       channelType: input.channelType,
       channelConfig: toJsonInput(input.channelConfig),
@@ -212,8 +222,8 @@ export async function pauseAgent(userId: string, agentId: string): Promise<Agent
     try {
       const client = getOpenFangClient();
       await client.pauseHand(agent.openfangHandId);
-    } catch {
-      // Log but don't fail — update status anyway
+    } catch (err) {
+      console.warn("[agent] OpenFang pause failed:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -241,8 +251,8 @@ export async function resumeAgent(userId: string, agentId: string): Promise<Agen
     try {
       const client = getOpenFangClient();
       await client.resumeHand(agent.openfangHandId);
-    } catch {
-      // Log but don't fail
+    } catch (err) {
+      console.warn("[agent] OpenFang resume failed:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -269,8 +279,8 @@ export async function deleteAgent(userId: string, agentId: string): Promise<void
     try {
       const client = getOpenFangClient();
       await client.killHand(agent.openfangHandId);
-    } catch {
-      // Log but don't fail — delete agent record anyway
+    } catch (err) {
+      console.warn("[agent] OpenFang kill failed:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -290,6 +300,25 @@ export async function executeAgent(
   if (agent.ownerId !== userId) throw new ForbiddenError("You can only execute your own agents");
   if (agent.status !== "RUNNING") {
     throw new ConflictError("Agent must be running to execute");
+  }
+
+  // Check monthly execution limit
+  const monthStart = new Date();
+  monthStart.setUTCDate(1);
+  monthStart.setUTCHours(0, 0, 0, 0);
+
+  const executionsThisMonth = await prisma.agentExecution.count({
+    where: {
+      agent: { ownerId: userId },
+      createdAt: { gte: monthStart },
+    },
+  });
+
+  // TODO: check user tier for pro limits
+  if (executionsThisMonth >= AGENT_LIMITS.FREE_EXECUTIONS_PER_MONTH) {
+    throw new ForbiddenError(
+      `Monthly execution limit reached (${AGENT_LIMITS.FREE_EXECUTIONS_PER_MONTH} executions/month). Upgrade to Pro for ${AGENT_LIMITS.PRO_EXECUTIONS_PER_MONTH} executions/month.`,
+    );
   }
 
   const execution = await prisma.agentExecution.create({

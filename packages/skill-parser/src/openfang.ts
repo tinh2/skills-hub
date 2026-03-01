@@ -190,7 +190,7 @@ function tomlMultilineString(value: string): string {
   if (value.length > 200 || value.includes("\n")) {
     const escaped = value
       .replace(/\\/g, "\\\\")
-      .replace(/"""/g, '\\"\\"\\"\\"')
+      .replace(/"""/g, '\\"\\"\\"')
       // eslint-disable-next-line no-control-regex
       .replace(/[\x00-\x08\x0e-\x1f\x7f]/g, (ch) =>
         `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,

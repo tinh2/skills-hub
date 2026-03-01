@@ -21,8 +21,3 @@ export interface SandboxRunSummary {
   testCaseId: string | null;
   createdAt: string;
 }
-
-export interface SandboxRunDetail extends SandboxRunSummary {
-  skill: { slug: string; name: string };
-  user: { username: string };
-}

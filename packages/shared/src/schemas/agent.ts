@@ -1,11 +1,19 @@
 import { z } from "zod";
 
-const triggerConfigSchema = z.record(z.unknown()).optional();
-const channelConfigSchema = z.record(z.unknown()).optional();
+const MAX_JSON_CONFIG_SIZE = 10_000; // 10KB max for JSON config fields
+
+const triggerConfigSchema = z.record(z.unknown()).optional().refine(
+  (val) => !val || JSON.stringify(val).length <= MAX_JSON_CONFIG_SIZE,
+  { message: `Trigger config must be under ${MAX_JSON_CONFIG_SIZE} characters` },
+);
+const channelConfigSchema = z.record(z.unknown()).optional().refine(
+  (val) => !val || JSON.stringify(val).length <= MAX_JSON_CONFIG_SIZE,
+  { message: `Channel config must be under ${MAX_JSON_CONFIG_SIZE} characters` },
+);
 
 export const createAgentSchema = z.object({
   name: z.string().min(1).max(100),
-  skillSlug: z.string().min(1),
+  skillSlug: z.string().min(1).max(200),
   triggerType: z.enum(["MANUAL", "SCHEDULE", "WEBHOOK", "CHANNEL"]).default("MANUAL"),
   triggerConfig: triggerConfigSchema,
   channelType: z.string().max(50).optional(),

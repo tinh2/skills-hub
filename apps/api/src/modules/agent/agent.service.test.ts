@@ -17,6 +17,7 @@ const mockPrisma = vi.hoisted(() => ({
     findFirst: vi.fn(),
   },
   agentExecution: {
+    count: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
   },
@@ -69,7 +70,11 @@ vi.mock("@skills-hub/skill-parser/openfang", () => ({
   serializeHandToml: vi.fn().mockReturnValue("[hand]\nname = \"test\""),
 }));
 
-import { createAgent, listAgents, getAgent, pauseAgent, resumeAgent, deleteAgent } from "./agent.service.js";
+vi.mock("../org/org.auth.js", () => ({
+  isOrgMember: vi.fn().mockResolvedValue(false),
+}));
+
+import { createAgent, listAgents, getAgent, updateAgent, pauseAgent, resumeAgent, deleteAgent, executeAgent } from "./agent.service.js";
 
 const NOW = new Date("2026-02-28T12:00:00Z");
 
@@ -100,7 +105,7 @@ describe("createAgent", () => {
 
   it("creates an agent for a published skill", async () => {
     mockPrisma.agent.count.mockResolvedValue(0);
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED", name: "Test" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "PUBLISHED", visibility: "PUBLIC", authorId: "user-1", orgId: null, name: "Test", description: "A test skill" });
     mockPrisma.agent.create.mockResolvedValue({ id: "agent-new" });
     mockPrisma.agent.findUniqueOrThrow.mockResolvedValue(makeAgentRow({ id: "agent-new" }));
 
@@ -133,7 +138,7 @@ describe("createAgent", () => {
 
   it("rejects if skill not found", async () => {
     mockPrisma.agent.count.mockResolvedValue(0);
-    mockPrisma.skill.findUnique.mockResolvedValue(null);
+    mockPrisma.skill.findUnique.mockResolvedValueOnce(null);
     await expect(
       createAgent("user-1", {
         name: "Agent",
@@ -147,7 +152,7 @@ describe("createAgent", () => {
 
   it("rejects if skill is not published", async () => {
     mockPrisma.agent.count.mockResolvedValue(0);
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "DRAFT", name: "Test" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", status: "DRAFT", visibility: "PUBLIC", authorId: "user-1", orgId: null, name: "Test", description: "A test skill" });
     await expect(
       createAgent("user-1", {
         name: "Agent",
@@ -314,5 +319,151 @@ describe("deleteAgent", () => {
   it("rejects if agent not found", async () => {
     mockPrisma.agent.findUnique.mockResolvedValue(null);
     await expect(deleteAgent("user-1", "nonexistent")).rejects.toThrow("not found");
+  });
+});
+
+describe("createAgent visibility", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects PRIVATE skill for non-author", async () => {
+    mockPrisma.agent.count.mockResolvedValue(0);
+    mockPrisma.skill.findUnique.mockResolvedValue({
+      id: "s1", status: "PUBLISHED", visibility: "PRIVATE", authorId: "other-user", orgId: null, name: "Secret", description: "Private skill",
+    });
+    await expect(
+      createAgent("user-1", {
+        name: "Agent",
+        skillSlug: "private-skill",
+        triggerType: "MANUAL",
+        modelProvider: "anthropic",
+        modelId: "claude-sonnet-4-5-20250514",
+      }),
+    ).rejects.toThrow("not found");
+  });
+
+  it("allows PRIVATE skill for the author", async () => {
+    mockPrisma.agent.count.mockResolvedValue(0);
+    mockPrisma.skill.findUnique.mockResolvedValue({
+      id: "s1", status: "PUBLISHED", visibility: "PRIVATE", authorId: "user-1", orgId: null, name: "My Skill", description: "My private skill",
+    });
+    mockPrisma.agent.create.mockResolvedValue({ id: "agent-new" });
+    mockPrisma.agent.findUniqueOrThrow.mockResolvedValue(makeAgentRow({ id: "agent-new" }));
+
+    const result = await createAgent("user-1", {
+      name: "Agent",
+      skillSlug: "my-private-skill",
+      triggerType: "MANUAL",
+      modelProvider: "anthropic",
+      modelId: "claude-sonnet-4-5-20250514",
+    });
+    expect(result.id).toBe("agent-new");
+  });
+});
+
+describe("updateAgent", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("updates agent config for owner", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue({ ownerId: "user-1" });
+    mockPrisma.agent.update.mockResolvedValue({});
+    mockPrisma.agent.findUniqueOrThrow.mockResolvedValue(
+      makeAgentRow({ name: "Updated Agent" }),
+    );
+
+    const result = await updateAgent("user-1", "agent-1", { name: "Updated Agent" });
+    expect(result.name).toBe("Updated Agent");
+  });
+
+  it("rejects if not the owner", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue({ ownerId: "other-user" });
+    await expect(updateAgent("user-1", "agent-1", { name: "New" })).rejects.toThrow("own");
+  });
+
+  it("rejects if agent not found", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue(null);
+    await expect(updateAgent("user-1", "missing", { name: "New" })).rejects.toThrow("not found");
+  });
+});
+
+describe("executeAgent", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("executes an agent and returns result", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue({
+      ownerId: "user-1",
+      status: "RUNNING",
+      openfangHandId: null,
+      skillId: "s1",
+    });
+    mockPrisma.agentExecution.count.mockResolvedValue(0);
+
+    const execRow = {
+      id: "exec-1",
+      status: "RUNNING",
+      input: "test input",
+      output: null,
+      durationMs: null,
+      tokenCount: null,
+      errorMessage: null,
+      triggeredBy: "manual",
+      createdAt: NOW,
+    };
+    mockPrisma.agentExecution.create.mockResolvedValue(execRow);
+    mockPrisma.agentExecution.update.mockResolvedValue({
+      ...execRow,
+      status: "COMPLETED",
+      output: "[Agent Execution Preview]",
+      durationMs: 5,
+      tokenCount: 3,
+    });
+    mockPrisma.agent.update.mockResolvedValue({});
+
+    const result = await executeAgent("user-1", "agent-1", { input: "test input" });
+    expect(result.status).toBe("COMPLETED");
+    expect(result.output).toContain("Agent Execution Preview");
+  });
+
+  it("rejects if agent is not running", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue({
+      ownerId: "user-1",
+      status: "PAUSED",
+      openfangHandId: null,
+      skillId: "s1",
+    });
+    await expect(executeAgent("user-1", "agent-1", {})).rejects.toThrow("running");
+  });
+
+  it("rejects if not the owner", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue({
+      ownerId: "other-user",
+      status: "RUNNING",
+      openfangHandId: null,
+      skillId: "s1",
+    });
+    await expect(executeAgent("user-1", "agent-1", {})).rejects.toThrow("own");
+  });
+
+  it("rejects if monthly execution limit reached", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue({
+      ownerId: "user-1",
+      status: "RUNNING",
+      openfangHandId: null,
+      skillId: "s1",
+    });
+    mockPrisma.agentExecution.count.mockResolvedValue(100);
+
+    await expect(executeAgent("user-1", "agent-1", { input: "test" }))
+      .rejects.toThrow("Monthly execution limit");
+  });
+
+  it("rejects if agent not found", async () => {
+    mockPrisma.agent.findUnique.mockResolvedValue(null);
+    await expect(executeAgent("user-1", "missing", {})).rejects.toThrow("not found");
   });
 });

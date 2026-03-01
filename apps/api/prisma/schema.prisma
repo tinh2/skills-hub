@@ -385,7 +385,7 @@ model SandboxRun {
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   testCaseId   String?
-  testCase     TestCase?     @relation(fields: [testCaseId], references: [id])
+  testCase     TestCase?     @relation(fields: [testCaseId], references: [id], onDelete: SetNull)
   input        String
   output       String?
   status       SandboxStatus @default(PENDING)

@@ -54,7 +54,7 @@ vi.mock("../../common/errors.js", () => ({
   },
 }));
 
-import { runSandbox, getTestCases, createTestCase, deleteTestCase } from "./sandbox.service.js";
+import { runSandbox, getTestCases, createTestCase, updateTestCase, deleteTestCase } from "./sandbox.service.js";
 
 const NOW = new Date("2026-02-28T12:00:00Z");
 
@@ -66,6 +66,14 @@ describe("runSandbox", () => {
   it("rejects if skill not found", async () => {
     mockPrisma.skill.findUnique.mockResolvedValueOnce(null);
     await expect(runSandbox("user-1", "nonexistent", { input: "test" }))
+      .rejects.toThrow("not found");
+  });
+
+  it("rejects if PRIVATE skill and not the author", async () => {
+    mockPrisma.skill.findUnique.mockResolvedValue({
+      id: "s1", status: "PUBLISHED", visibility: "PRIVATE", authorId: "other-user", orgId: null,
+    });
+    await expect(runSandbox("user-1", "private-skill", { input: "test" }))
       .rejects.toThrow("not found");
   });
 
@@ -176,6 +184,23 @@ describe("getTestCases", () => {
     mockPrisma.skill.findUnique.mockResolvedValueOnce(null);
     await expect(getTestCases("nonexistent")).rejects.toThrow("not found");
   });
+
+  it("rejects if PRIVATE skill and not the author", async () => {
+    mockPrisma.skill.findUnique.mockResolvedValue({
+      id: "s1", status: "PUBLISHED", visibility: "PRIVATE", authorId: "other-user", orgId: null,
+    });
+    await expect(getTestCases("private-skill", "user-1")).rejects.toThrow("not found");
+  });
+
+  it("allows PRIVATE skill access for the author", async () => {
+    mockPrisma.skill.findUnique.mockResolvedValue({
+      id: "s1", status: "PUBLISHED", visibility: "PRIVATE", authorId: "user-1", orgId: null,
+    });
+    mockPrisma.testCase.findMany.mockResolvedValue([]);
+
+    const cases = await getTestCases("private-skill", "user-1");
+    expect(cases).toEqual([]);
+  });
 });
 
 describe("createTestCase", () => {
@@ -218,6 +243,50 @@ describe("createTestCase", () => {
     await expect(
       createTestCase("user-1", "test-skill", { label: "Test", input: "test", sortOrder: 0 }),
     ).rejects.toThrow("Maximum");
+  });
+});
+
+describe("updateTestCase", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("updates a test case for skill author", async () => {
+    mockPrisma.testCase.findUnique.mockResolvedValue({
+      id: "tc-1",
+      skill: { authorId: "user-1" },
+    });
+    mockPrisma.testCase.update.mockResolvedValue({
+      id: "tc-1",
+      label: "Updated label",
+      input: "new input",
+      expectedOutput: null,
+      sortOrder: 1,
+      createdAt: NOW,
+    });
+
+    const result = await updateTestCase("user-1", "tc-1", {
+      label: "Updated label",
+      input: "new input",
+      sortOrder: 1,
+    });
+    expect(result.label).toBe("Updated label");
+    expect(result.sortOrder).toBe(1);
+  });
+
+  it("rejects if not the skill author", async () => {
+    mockPrisma.testCase.findUnique.mockResolvedValue({
+      id: "tc-1",
+      skill: { authorId: "other-user" },
+    });
+    await expect(updateTestCase("user-1", "tc-1", { label: "Updated" }))
+      .rejects.toThrow("author");
+  });
+
+  it("rejects if test case not found", async () => {
+    mockPrisma.testCase.findUnique.mockResolvedValue(null);
+    await expect(updateTestCase("user-1", "tc-missing", { label: "Updated" }))
+      .rejects.toThrow("not found");
   });
 });
 
