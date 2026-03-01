@@ -26,6 +26,22 @@ export type {
 export type { ApiError, PaginatedResponse, AuthTokens } from "./api.js";
 
 export type {
+  SandboxStatus,
+  TestCaseData,
+  SandboxRunSummary,
+  SandboxRunDetail,
+} from "./sandbox.js";
+
+export type {
+  AgentStatus,
+  TriggerType,
+  ExecutionStatus,
+  AgentSummary,
+  AgentDetail,
+  AgentExecutionSummary,
+} from "./agent.js";
+
+export type {
   OrgSummary,
   OrgDetail,
   OrgMember,

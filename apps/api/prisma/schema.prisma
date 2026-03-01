@@ -30,6 +30,8 @@ model User {
   orgMemberships   OrgMembership[]
   invitesSent      OrgInvite[]     @relation("InviteSender")
   invitesReceived  OrgInvite[]     @relation("InviteRecipient")
+  sandboxRuns      SandboxRun[]
+  agents           Agent[]
 }
 
 model ApiKey {
@@ -89,6 +91,9 @@ model Skill {
   media              SkillMedia[]
   compositionParents CompositionSkill[] @relation("ChildSkill")
   compositionOf      Composition?       @relation("CompositionRoot")
+  testCases          TestCase[]
+  sandboxRuns        SandboxRun[]
+  agents             Agent[]
 
   @@index([categoryId])
   @@index([authorId])
@@ -354,4 +359,120 @@ model SkillMedia {
 enum MediaType {
   SCREENSHOT
   YOUTUBE
+}
+
+// --- Behavioral Testing ---
+
+model TestCase {
+  id          String   @id @default(cuid())
+  skillId     String
+  skill       Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  label       String
+  input       String
+  expectedOutput String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sandboxRuns SandboxRun[]
+
+  @@index([skillId])
+}
+
+model SandboxRun {
+  id           String        @id @default(cuid())
+  skillId      String
+  skill        Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testCaseId   String?
+  testCase     TestCase?     @relation(fields: [testCaseId], references: [id])
+  input        String
+  output       String?
+  status       SandboxStatus @default(PENDING)
+  durationMs   Int?
+  tokenCount   Int?
+  errorMessage String?
+  inputHash    String
+  createdAt    DateTime      @default(now())
+
+  @@index([skillId])
+  @@index([userId])
+  @@index([inputHash])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum SandboxStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMEOUT
+}
+
+// --- Agent Execution ---
+
+model Agent {
+  id              String      @id @default(cuid())
+  name            String
+  skillId         String
+  skill           Skill       @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  ownerId         String
+  owner           User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  status          AgentStatus @default(STOPPED)
+  triggerType     TriggerType @default(MANUAL)
+  triggerConfig   Json?
+  channelType     String?
+  channelConfig   Json?
+  modelProvider   String      @default("anthropic")
+  modelId         String      @default("claude-sonnet-4-5-20250514")
+  openfangHandId  String?
+  executionCount  Int         @default(0)
+  lastExecutedAt  DateTime?
+  lastError       String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  executions AgentExecution[]
+
+  @@index([ownerId])
+  @@index([skillId])
+  @@index([status])
+}
+
+model AgentExecution {
+  id           String          @id @default(cuid())
+  agentId      String
+  agent        Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  status       ExecutionStatus @default(RUNNING)
+  input        String?
+  output       String?
+  durationMs   Int?
+  tokenCount   Int?
+  errorMessage String?
+  triggeredBy  String
+  createdAt    DateTime        @default(now())
+
+  @@index([agentId])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum AgentStatus {
+  RUNNING
+  PAUSED
+  STOPPED
+  ERROR
+}
+
+enum TriggerType {
+  MANUAL
+  SCHEDULE
+  WEBHOOK
+  CHANNEL
+}
+
+enum ExecutionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMEOUT
 }
