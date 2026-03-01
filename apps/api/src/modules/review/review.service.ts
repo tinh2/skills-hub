@@ -77,21 +77,24 @@ export async function getReviewStats(slug: string): Promise<ReviewStats> {
   const skill = await prisma.skill.findUnique({ where: { slug } });
   if (!skill) throw new NotFoundError("Skill");
 
-  const reviews = await prisma.review.findMany({
+  const groups = await prisma.review.groupBy({
+    by: ["rating"],
     where: { skillId: skill.id },
-    select: { rating: true },
+    _count: true,
   });
 
   const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<1 | 2 | 3 | 4 | 5, number>;
   let total = 0;
-  for (const r of reviews) {
-    distribution[r.rating as 1 | 2 | 3 | 4 | 5]++;
-    total += r.rating;
+  let count = 0;
+  for (const g of groups) {
+    distribution[g.rating as 1 | 2 | 3 | 4 | 5] = g._count;
+    total += g.rating * g._count;
+    count += g._count;
   }
 
   return {
-    avgRating: reviews.length > 0 ? total / reviews.length : 0,
-    totalReviews: reviews.length,
+    avgRating: count > 0 ? total / count : 0,
+    totalReviews: count,
     distribution,
   };
 }

@@ -6,6 +6,9 @@ const mockPrisma = vi.hoisted(() => ({
     findUniqueOrThrow: vi.fn(),
     update: vi.fn(),
   },
+  skill: {
+    aggregate: vi.fn(),
+  },
   apiKey: {
     count: vi.fn(),
     create: vi.fn(),
@@ -56,8 +59,8 @@ describe("getPublicProfile", () => {
       githubUrl: "https://github.com/testuser",
       createdAt: NOW,
       _count: { skills: 3 },
-      skills: [{ installCount: 10 }, { installCount: 20 }, { installCount: 5 }],
     });
+    mockPrisma.skill.aggregate.mockResolvedValue({ _sum: { installCount: 35 } });
 
     const result = await getPublicProfile("testuser");
     expect(result.username).toBe("testuser");

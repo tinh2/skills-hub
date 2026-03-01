@@ -49,7 +49,7 @@ export async function sandboxRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/skills/:slug/test-cases — create test case (author only)
-  app.post<{ Params: { slug: string } }>("/:slug/test-cases", async (request) => {
+  app.post<{ Params: { slug: string } }>("/:slug/test-cases", sandboxRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = createTestCaseSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -59,6 +59,7 @@ export async function sandboxRoutes(app: FastifyInstance) {
   // PATCH /api/v1/skills/:slug/test-cases/:testCaseId — update test case (author only)
   app.patch<{ Params: { slug: string; testCaseId: string } }>(
     "/:slug/test-cases/:testCaseId",
+    sandboxRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       const parsed = updateTestCaseSchema.safeParse(request.body);
@@ -70,6 +71,7 @@ export async function sandboxRoutes(app: FastifyInstance) {
   // DELETE /api/v1/skills/:slug/test-cases/:testCaseId — delete test case (author only)
   app.delete<{ Params: { slug: string; testCaseId: string } }>(
     "/:slug/test-cases/:testCaseId",
+    sandboxRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       await sandboxService.deleteTestCase(userId, request.params.testCaseId);

@@ -43,7 +43,7 @@ export async function skillRoutes(app: FastifyInstance) {
   });
 
   // DELETE /api/v1/skills/:slug — archive skill
-  app.delete<{ Params: { slug: string } }>("/:slug", async (request) => {
+  app.delete<{ Params: { slug: string } }>("/:slug", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     await skillService.archiveSkill(userId, request.params.slug);
     return { success: true };
@@ -58,7 +58,7 @@ export async function skillRoutes(app: FastifyInstance) {
   });
 
   // DELETE /api/v1/skills/:slug/composition — remove composition
-  app.delete<{ Params: { slug: string } }>("/:slug/composition", async (request) => {
+  app.delete<{ Params: { slug: string } }>("/:slug/composition", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     await skillService.removeComposition(userId, request.params.slug);
     return { success: true };

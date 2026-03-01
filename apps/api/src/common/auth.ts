@@ -4,6 +4,11 @@ import { prisma } from "./db.js";
 import { UnauthorizedError } from "./errors.js";
 import { getEnv } from "../config/env.js";
 
+// Debounce API key lastUsedAt writes to avoid DB contention on every request.
+// Only writes once per key per 5 minutes.
+const apiKeyLastUsed = new Map<string, number>();
+const API_KEY_DEBOUNCE_MS = 5 * 60 * 1000;
+
 interface JwtPayload {
   sub: string;
   username: string;
@@ -58,10 +63,15 @@ export async function requireAuth(request: FastifyRequest): Promise<{ userId: st
       throw new UnauthorizedError("API key expired");
     }
 
-    await prisma.apiKey.update({
-      where: { id: apiKey.id },
-      data: { lastUsedAt: new Date() },
-    });
+    const now = Date.now();
+    const lastWrite = apiKeyLastUsed.get(apiKey.id);
+    if (!lastWrite || now - lastWrite > API_KEY_DEBOUNCE_MS) {
+      apiKeyLastUsed.set(apiKey.id, now);
+      prisma.apiKey.update({
+        where: { id: apiKey.id },
+        data: { lastUsedAt: new Date() },
+      }).catch(() => {}); // fire-and-forget, non-critical
+    }
 
     return { userId: apiKey.user.id, username: apiKey.user.username };
   }

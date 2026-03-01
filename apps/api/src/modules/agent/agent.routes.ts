@@ -29,7 +29,7 @@ export async function agentRoutes(app: FastifyInstance) {
   });
 
   // PATCH /api/v1/agents/:agentId — update agent config
-  app.patch<{ Params: { agentId: string } }>("/:agentId", async (request) => {
+  app.patch<{ Params: { agentId: string } }>("/:agentId", agentRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = updateAgentSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -66,7 +66,7 @@ export async function agentRoutes(app: FastifyInstance) {
   );
 
   // DELETE /api/v1/agents/:agentId — delete agent
-  app.delete<{ Params: { agentId: string } }>("/:agentId", async (request) => {
+  app.delete<{ Params: { agentId: string } }>("/:agentId", agentRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     await agentService.deleteAgent(userId, request.params.agentId);
     return { success: true };

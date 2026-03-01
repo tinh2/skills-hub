@@ -17,14 +17,15 @@ export async function getPublicProfile(username: string): Promise<PublicUser> {
       githubUrl: true,
       createdAt: true,
       _count: { select: { skills: { where: { status: "PUBLISHED" } } } },
-      skills: {
-        where: { status: "PUBLISHED" },
-        select: { installCount: true },
-      },
     },
   });
 
   if (!user) throw new NotFoundError("User");
+
+  const installSum = await prisma.skill.aggregate({
+    where: { authorId: user.id, status: "PUBLISHED" },
+    _sum: { installCount: true },
+  });
 
   return {
     id: user.id,
@@ -35,7 +36,7 @@ export async function getPublicProfile(username: string): Promise<PublicUser> {
     githubUrl: user.githubUrl,
     createdAt: user.createdAt.toISOString(),
     skillCount: user._count.skills,
-    totalInstalls: user.skills.reduce((sum, s) => sum + s.installCount, 0),
+    totalInstalls: installSum._sum.installCount ?? 0,
   };
 }
 
@@ -52,11 +53,12 @@ export async function getPrivateProfile(userId: string): Promise<PrivateUser> {
       email: true,
       createdAt: true,
       _count: { select: { skills: { where: { status: "PUBLISHED" } } } },
-      skills: {
-        where: { status: "PUBLISHED" },
-        select: { installCount: true },
-      },
     },
+  });
+
+  const installSum = await prisma.skill.aggregate({
+    where: { authorId: userId, status: "PUBLISHED" },
+    _sum: { installCount: true },
   });
 
   return {
@@ -69,7 +71,7 @@ export async function getPrivateProfile(userId: string): Promise<PrivateUser> {
     email: user.email,
     createdAt: user.createdAt.toISOString(),
     skillCount: user._count.skills,
-    totalInstalls: user.skills.reduce((sum, s) => sum + s.installCount, 0),
+    totalInstalls: installSum._sum.installCount ?? 0,
   };
 }
 

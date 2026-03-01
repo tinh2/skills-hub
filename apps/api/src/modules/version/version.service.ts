@@ -26,6 +26,7 @@ export async function listVersions(slug: string, requesterId?: string | null): P
   const versions = await prisma.skillVersion.findMany({
     where: { skillId: skill.id },
     orderBy: { createdAt: "desc" },
+    take: 100,
     select: { id: true, version: true, changelog: true, qualityScore: true, createdAt: true },
   });
 
