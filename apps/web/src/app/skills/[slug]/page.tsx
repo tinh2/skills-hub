@@ -313,6 +313,9 @@ export default function SkillDetailPage() {
               </button>
             )}
           </div>
+          <Link href="/docs/cli" className="mt-2 inline-block text-xs text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">
+            View all CLI commands &rarr;
+          </Link>
         </div>
 
         {/* Composition */}
