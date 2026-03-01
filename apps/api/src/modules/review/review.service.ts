@@ -5,15 +5,16 @@ import type { CreateReviewInput, UpdateReviewInput, ReviewSummary, ReviewStats }
 export async function listReviews(
   slug: string,
   currentUserId: string | null,
-  limit = 50,
-): Promise<ReviewSummary[]> {
+  limit = 20,
+  cursor?: string,
+): Promise<{ data: ReviewSummary[]; cursor: string | null; hasMore: boolean }> {
   const skill = await prisma.skill.findUnique({ where: { slug } });
   if (!skill) throw new NotFoundError("Skill");
 
-  const reviews = await prisma.review.findMany({
+  const findArgs: any = {
     where: { skillId: skill.id },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: limit + 1,
     select: {
       id: true,
       rating: true,
@@ -25,12 +26,21 @@ export async function listReviews(
       author: { select: { username: true, avatarUrl: true } },
       response: { select: { body: true, createdAt: true } },
     },
-  });
+  };
 
-  if (reviews.length === 0) return [];
+  if (cursor) {
+    findArgs.cursor = { id: cursor };
+    findArgs.skip = 1;
+  }
+
+  const reviews = await prisma.review.findMany(findArgs);
+  const hasMore = reviews.length > limit;
+  const data = reviews.slice(0, limit);
+
+  if (data.length === 0) return { data: [], cursor: null, hasMore: false };
 
   // Batch compute vote counts per review using groupBy
-  const reviewIds = reviews.map((r) => r.id);
+  const reviewIds = data.map((r: any) => r.id);
   const voteCounts = await prisma.reviewVote.groupBy({
     by: ["reviewId", "helpful"],
     where: { reviewId: { in: reviewIds } },
@@ -57,7 +67,7 @@ export async function listReviews(
     userVoteMap = new Map(userVotes.map((v) => [v.reviewId, v.helpful]));
   }
 
-  return reviews.map((r) => ({
+  const formatted = data.map((r: any) => ({
     id: r.id,
     rating: r.rating,
     title: r.title,
@@ -71,6 +81,12 @@ export async function listReviews(
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   }));
+
+  return {
+    data: formatted,
+    cursor: hasMore ? data[data.length - 1].id : null,
+    hasMore,
+  };
 }
 
 export async function getReviewStats(slug: string): Promise<ReviewStats> {

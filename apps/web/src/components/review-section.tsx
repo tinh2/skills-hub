@@ -13,6 +13,9 @@ export function ReviewSection({
   authUsername,
   skillAuthorUsername,
   isAuthenticated,
+  hasMoreReviews = false,
+  isFetchingMoreReviews = false,
+  onLoadMoreReviews,
 }: {
   slug: string;
   reviewCount: number;
@@ -20,6 +23,9 @@ export function ReviewSection({
   authUsername: string | undefined;
   skillAuthorUsername: string;
   isAuthenticated: boolean;
+  hasMoreReviews?: boolean;
+  isFetchingMoreReviews?: boolean;
+  onLoadMoreReviews?: () => void;
 }) {
   const queryClient = useQueryClient();
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -132,6 +138,17 @@ export function ReviewSection({
           isAuthenticated={isAuthenticated}
         />
       ))}
+      {hasMoreReviews && onLoadMoreReviews && (
+        <div className="mt-4 text-center">
+          <button
+            onClick={onLoadMoreReviews}
+            disabled={isFetchingMoreReviews}
+            className="min-h-[44px] rounded-lg border border-[var(--border)] px-6 py-2 text-sm transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
+          >
+            {isFetchingMoreReviews ? "Loading..." : "Load More Reviews"}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

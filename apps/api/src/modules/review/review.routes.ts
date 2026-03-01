@@ -12,9 +12,10 @@ import * as reviewService from "./review.service.js";
 
 export async function reviewRoutes(app: FastifyInstance) {
   // GET /api/v1/skills/:slug/reviews
-  app.get<{ Params: { slug: string } }>("/:slug/reviews", async (request) => {
+  app.get<{ Params: { slug: string }; Querystring: { limit?: string; cursor?: string } }>("/:slug/reviews", async (request) => {
     const user = await optionalAuth(request);
-    return reviewService.listReviews(request.params.slug, user?.userId ?? null);
+    const limit = Math.min(Math.max(parseInt(request.query.limit || "20", 10) || 20, 1), 50);
+    return reviewService.listReviews(request.params.slug, user?.userId ?? null, limit, request.query.cursor);
   });
 
   // GET /api/v1/skills/:slug/reviews/stats

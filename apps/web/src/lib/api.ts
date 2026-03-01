@@ -199,8 +199,14 @@ export const versions = {
 
 // Reviews
 export const reviews = {
-  list: (slug: string) =>
-    apiFetch<ReviewSummary[]>(`/api/v1/skills/${slug}/reviews`),
+  list: (slug: string, cursor?: string) => {
+    const params = new URLSearchParams();
+    if (cursor) params.set("cursor", cursor);
+    const qs = params.toString();
+    return apiFetch<{ data: ReviewSummary[]; cursor: string | null; hasMore: boolean }>(
+      `/api/v1/skills/${slug}/reviews${qs ? `?${qs}` : ""}`,
+    );
+  },
   stats: (slug: string) =>
     apiFetch<ReviewStats>(`/api/v1/skills/${slug}/reviews/stats`),
   create: (slug: string, data: CreateReviewInput) =>

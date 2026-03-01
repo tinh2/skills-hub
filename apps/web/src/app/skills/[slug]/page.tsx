@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { skills as skillsApi, reviews as reviewsApi, likes } from "@/lib/api";
 import { MediaGallery } from "@/components/media-gallery";
 import { InstallSection } from "@/components/install-section";
@@ -23,11 +23,20 @@ export default function SkillDetailPage() {
     queryFn: () => skillsApi.get(slug),
   });
 
-  const { data: reviewList } = useQuery({
+  const {
+    data: reviewPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["reviews", slug],
-    queryFn: () => reviewsApi.list(slug),
+    queryFn: ({ pageParam }) => reviewsApi.list(slug, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
     enabled: !!skill,
   });
+
+  const reviewList = reviewPages?.pages.flatMap((p) => p.data);
 
   const toggleLike = useMutation({
     mutationFn: () => likes.toggle(slug),
@@ -224,6 +233,9 @@ export default function SkillDetailPage() {
           authUsername={authUser?.username}
           skillAuthorUsername={skill.author.username}
           isAuthenticated={isAuthenticated}
+          hasMoreReviews={!!hasNextPage}
+          isFetchingMoreReviews={isFetchingNextPage}
+          onLoadMoreReviews={() => fetchNextPage()}
         />
       </div>
 

@@ -42,10 +42,10 @@ describe("review service (integration)", () => {
     // Vote on review2
     await reviewService.voteReview(voter.id, review2.id, true);
 
-    const reviews = await reviewService.listReviews(skill.slug, voter.id);
-    expect(reviews.length).toBe(2);
+    const result = await reviewService.listReviews(skill.slug, voter.id);
+    expect(result.data.length).toBe(2);
 
-    const votedReview = reviews.find((r) => r.id === review2.id)!;
+    const votedReview = result.data.find((r) => r.id === review2.id)!;
     expect(votedReview.helpfulCount).toBe(1);
     expect(votedReview.userVote).toBe(true);
   });
@@ -126,8 +126,8 @@ describe("review service (integration)", () => {
     const review = await reviewService.createReview(reviewer.id, skill.slug, { rating: 4 });
     await reviewService.respondToReview(author.id, review.id, "Thanks for the feedback!");
 
-    const reviews = await reviewService.listReviews(skill.slug, null);
-    const r = reviews.find((rev) => rev.id === review.id)!;
+    const result = await reviewService.listReviews(skill.slug, null);
+    const r = result.data.find((rev) => rev.id === review.id)!;
     expect(r.response).toBeTruthy();
     expect(r.response!.body).toBe("Thanks for the feedback!");
   });
@@ -142,16 +142,16 @@ describe("review service (integration)", () => {
 
     // Vote helpful
     await reviewService.voteReview(voter.id, review.id, true);
-    let reviews = await reviewService.listReviews(skill.slug, voter.id);
-    let r = reviews.find((rev) => rev.id === review.id)!;
+    let result = await reviewService.listReviews(skill.slug, voter.id);
+    let r = result.data.find((rev) => rev.id === review.id)!;
     expect(r.helpfulCount).toBe(1);
     expect(r.notHelpfulCount).toBe(0);
     expect(r.userVote).toBe(true);
 
     // Switch to not-helpful
     await reviewService.voteReview(voter.id, review.id, false);
-    reviews = await reviewService.listReviews(skill.slug, voter.id);
-    r = reviews.find((rev) => rev.id === review.id)!;
+    result = await reviewService.listReviews(skill.slug, voter.id);
+    r = result.data.find((rev) => rev.id === review.id)!;
     expect(r.helpfulCount).toBe(0);
     expect(r.notHelpfulCount).toBe(1);
     expect(r.userVote).toBe(false);
