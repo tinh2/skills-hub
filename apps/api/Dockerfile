@@ -34,6 +34,8 @@ RUN pnpm --filter @skills-hub/api build
 # Production image
 FROM node:22-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 appuser
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -56,6 +58,8 @@ COPY --from=builder /app/pnpm-workspace.yaml ./
 EXPOSE 3000
 
 WORKDIR /app/apps/api
+
+USER appuser
 
 # Run migrations then start server
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

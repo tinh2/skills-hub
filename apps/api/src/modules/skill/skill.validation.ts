@@ -33,7 +33,8 @@ export async function validateSkillBySlug(
   if (skill.visibility === "PRIVATE" && skill.authorId !== userId) {
     throw new NotFoundError("Skill");
   }
-  if (skill.visibility === "ORG" && skill.orgId && userId) {
+  if (skill.visibility === "ORG" && skill.orgId) {
+    if (!userId) throw new NotFoundError("Skill");
     const member = await isOrgMember(userId, skill.orgId);
     if (!member) throw new NotFoundError("Skill");
   }

@@ -37,6 +37,8 @@ RUN pnpm --filter @skills-hub/web build
 # Production image
 FROM node:22-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 appuser
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -58,5 +60,7 @@ COPY --from=builder /app/pnpm-workspace.yaml ./
 EXPOSE 3001
 
 WORKDIR /app/apps/web
+
+USER appuser
 
 CMD ["pnpm", "next", "start", "-p", "3001", "-H", "0.0.0.0"]

@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { createServer } from "node:http";
+import { randomBytes } from "node:crypto";
 import open from "open";
 import { saveConfig, getConfig } from "../lib/config.js";
 
@@ -15,6 +16,9 @@ export const loginCommand = new Command("login")
 
     console.log("Opening GitHub login in your browser...");
 
+    // Generate CSRF state parameter
+    const expectedState = randomBytes(32).toString("hex");
+
     // Start local server to receive OAuth callback
     const port = 9876;
     const server = createServer(async (req, res) => {
@@ -28,12 +32,22 @@ export const loginCommand = new Command("login")
         return;
       }
 
+      // Validate CSRF state parameter
+      if (state !== expectedState) {
+        res.writeHead(403, { "Content-Type": "text/html" });
+        res.end("<h1>Authentication failed</h1><p>Invalid state parameter (possible CSRF attack).</p>");
+        console.error("Login failed: state parameter mismatch");
+        server.close();
+        process.exit(1);
+        return;
+      }
+
       try {
         const config = getConfig();
         const tokenRes = await fetch(`${config.apiUrl}/api/v1/auth/github/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, state: state || "" }),
+          body: JSON.stringify({ code, state }),
         });
 
         if (!tokenRes.ok) throw new Error("Auth failed");
@@ -58,6 +72,7 @@ export const loginCommand = new Command("login")
 
     server.listen(port, () => {
       const config = getConfig();
-      open(`${config.apiUrl}/api/v1/auth/github?redirect_uri=http://localhost:${port}`);
+      const redirectUri = encodeURIComponent(`http://localhost:${port}`);
+      open(`${config.apiUrl}/api/v1/auth/github?redirect_uri=${redirectUri}&state=${expectedState}`);
     });
   });
