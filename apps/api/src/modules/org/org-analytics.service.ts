@@ -22,11 +22,14 @@ export async function getOrgAnalytics(
   });
   const totalInstalls = installAgg._sum.installCount ?? 0;
 
-  // Active members (30d)
+  // Active members (30d) — members who created or updated skills in the org recently
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const activeMembers = await prisma.orgMembership.count({
+  const activeAuthors = await prisma.skill.findMany({
     where: { orgId: org.id, updatedAt: { gte: thirtyDaysAgo } },
+    select: { authorId: true },
+    distinct: ["authorId"],
   });
+  const activeMembers = activeAuthors.length;
 
   // Skills by category
   const skillsByCategory = await prisma.skill.groupBy({

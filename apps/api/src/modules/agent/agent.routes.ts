@@ -37,13 +37,13 @@ export async function agentRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/agents/:agentId/pause — pause agent
-  app.post<{ Params: { agentId: string } }>("/:agentId/pause", async (request) => {
+  app.post<{ Params: { agentId: string } }>("/:agentId/pause", agentRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     return agentService.pauseAgent(userId, request.params.agentId);
   });
 
   // POST /api/v1/agents/:agentId/resume — resume agent
-  app.post<{ Params: { agentId: string } }>("/:agentId/resume", async (request) => {
+  app.post<{ Params: { agentId: string } }>("/:agentId/resume", agentRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     return agentService.resumeAgent(userId, request.params.agentId);
   });
