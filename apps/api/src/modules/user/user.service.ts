@@ -120,6 +120,14 @@ export async function listApiKeys(userId: string): Promise<ApiKeyResponse[]> {
   const keys = await prisma.apiKey.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      keyPrefix: true,
+      lastUsedAt: true,
+      expiresAt: true,
+      createdAt: true,
+    },
   });
 
   return keys.map((k) => ({
@@ -133,7 +141,10 @@ export async function listApiKeys(userId: string): Promise<ApiKeyResponse[]> {
 }
 
 export async function deleteApiKey(userId: string, keyId: string): Promise<void> {
-  const key = await prisma.apiKey.findUnique({ where: { id: keyId } });
+  const key = await prisma.apiKey.findUnique({
+    where: { id: keyId },
+    select: { id: true, userId: true },
+  });
   if (!key || key.userId !== userId) throw new NotFoundError("API key");
   await prisma.apiKey.delete({ where: { id: keyId } });
 }

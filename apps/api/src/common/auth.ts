@@ -56,7 +56,11 @@ export async function requireAuth(request: FastifyRequest): Promise<{ userId: st
     const hash = await hashApiKey(key);
     const apiKey = await prisma.apiKey.findUnique({
       where: { keyHash: hash },
-      include: { user: { select: { id: true, username: true } } },
+      select: {
+        id: true,
+        expiresAt: true,
+        user: { select: { id: true, username: true } },
+      },
     });
 
     if (!apiKey) throw new UnauthorizedError("Invalid API key");
