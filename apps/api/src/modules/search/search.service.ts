@@ -28,7 +28,7 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     where.category = { slug: query.category };
   }
   if (query.platform) {
-    where.platforms = { has: query.platform as any };
+    where.platforms = { has: query.platform };
   }
   if (query.minScore !== undefined) {
     where.qualityScore = { gte: query.minScore };
@@ -60,7 +60,21 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     where,
     orderBy,
     take: query.limit + 1,
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      status: true,
+      visibility: true,
+      platforms: true,
+      qualityScore: true,
+      installCount: true,
+      likeCount: true,
+      avgRating: true,
+      reviewCount: true,
+      createdAt: true,
+      updatedAt: true,
       category: { select: { name: true, slug: true } },
       author: { select: { username: true, avatarUrl: true } },
       tags: { include: { tag: { select: { name: true } } } },
