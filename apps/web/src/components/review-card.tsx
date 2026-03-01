@@ -45,7 +45,7 @@ export function ReviewCard({
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-medium">{review.author.username}</span>
-          <span className="text-sm text-[var(--muted)]">{review.rating}/5</span>
+          <span className="text-sm text-[var(--muted)]" aria-label={`Rating: ${review.rating} out of 5`}>{review.rating}/5</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-[var(--muted)]">
@@ -56,7 +56,9 @@ export function ReviewCard({
               onClick={() => {
                 if (confirm("Delete your review?")) deleteReview.mutate();
               }}
-              className="text-xs text-red-600 hover:underline"
+              disabled={deleteReview.isPending}
+              className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+              aria-label="Delete your review"
             >
               Delete
             </button>
@@ -70,10 +72,20 @@ export function ReviewCard({
       {isAuthenticated && !isReviewAuthor && (
         <div className="mt-2 flex items-center gap-3 text-xs text-[var(--muted)]">
           <span>Helpful?</span>
-          <button onClick={() => voteReview.mutate(true)} className="hover:text-green-600">
+          <button
+            onClick={() => voteReview.mutate(true)}
+            disabled={voteReview.isPending}
+            className="px-2 py-1 hover:text-green-600 disabled:opacity-50"
+            aria-label="Mark review as helpful"
+          >
             Yes{review.helpfulCount > 0 ? ` (${review.helpfulCount})` : ""}
           </button>
-          <button onClick={() => voteReview.mutate(false)} className="hover:text-red-600">
+          <button
+            onClick={() => voteReview.mutate(false)}
+            disabled={voteReview.isPending}
+            className="px-2 py-1 hover:text-red-600 disabled:opacity-50"
+            aria-label="Mark review as not helpful"
+          >
             No
           </button>
         </div>
@@ -98,7 +110,9 @@ export function ReviewCard({
       )}
       {showResponse && (
         <div className="mt-3">
+          <label htmlFor={`response-${review.id}`} className="sr-only">Your response</label>
           <textarea
+            id={`response-${review.id}`}
             value={responseBody}
             onChange={(e) => setResponseBody(e.target.value)}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"

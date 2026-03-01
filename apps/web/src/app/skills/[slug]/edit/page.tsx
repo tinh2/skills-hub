@@ -111,7 +111,7 @@ export default function EditSkillPage() {
             <button
               onClick={() => publishSkill.mutate()}
               disabled={publishSkill.isPending}
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
               Publish
             </button>
@@ -126,7 +126,7 @@ export default function EditSkillPage() {
       </div>
 
       {msg && (
-        <p className={`mb-4 text-sm ${msg.includes("updated") || msg.includes("created") || msg.includes("published") ? "text-green-600" : "text-red-600"}`}>
+        <p role="status" className={`mb-4 text-sm ${msg.includes("updated") || msg.includes("created") || msg.includes("published") ? "text-green-600" : "text-red-600"}`}>
           {msg}
         </p>
       )}
@@ -151,8 +151,9 @@ export default function EditSkillPage() {
       {tab === "metadata" && (
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Name</label>
+            <label htmlFor="edit-name" className="mb-1 block text-sm font-medium">Name</label>
             <input
+              id="edit-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -161,8 +162,9 @@ export default function EditSkillPage() {
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Description</label>
+            <label htmlFor="edit-description" className="mb-1 block text-sm font-medium">Description</label>
             <textarea
+              id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -171,8 +173,9 @@ export default function EditSkillPage() {
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Category</label>
+            <label htmlFor="edit-category" className="mb-1 block text-sm font-medium">Category</label>
             <select
+              id="edit-category"
               value={categorySlug}
               onChange={(e) => setCategorySlug(e.target.value)}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -201,8 +204,9 @@ export default function EditSkillPage() {
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Visibility</label>
+            <label htmlFor="edit-visibility" className="mb-1 block text-sm font-medium">Visibility</label>
             <select
+              id="edit-visibility"
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -231,8 +235,9 @@ export default function EditSkillPage() {
           </p>
 
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Version Number</label>
+            <label htmlFor="version-number" className="mb-1 block text-sm font-medium">Version Number</label>
             <input
+              id="version-number"
               type="text"
               value={versionNum}
               onChange={(e) => setVersionNum(e.target.value)}
@@ -242,8 +247,9 @@ export default function EditSkillPage() {
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Instructions</label>
+            <label htmlFor="version-instructions" className="mb-1 block text-sm font-medium">Instructions</label>
             <textarea
+              id="version-instructions"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
@@ -253,8 +259,9 @@ export default function EditSkillPage() {
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Changelog (optional)</label>
+            <label htmlFor="version-changelog" className="mb-1 block text-sm font-medium">Changelog (optional)</label>
             <textarea
+              id="version-changelog"
               value={changelog}
               onChange={(e) => setChangelog(e.target.value)}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"

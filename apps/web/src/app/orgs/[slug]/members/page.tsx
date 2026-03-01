@@ -84,16 +84,20 @@ export default function OrgMembersPage() {
       {isAdmin && (
         <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
           <h2 className="mb-3 text-sm font-semibold">Invite Member</h2>
-          {inviteError && <p className="mb-2 text-sm text-red-600">{inviteError}</p>}
+          {inviteError && <p role="alert" className="mb-2 text-sm text-red-600">{inviteError}</p>}
           <div className="flex gap-2">
+            <label htmlFor="invite-username" className="sr-only">GitHub username</label>
             <input
+              id="invite-username"
               type="text"
               value={inviteUsername}
               onChange={(e) => setInviteUsername(e.target.value)}
               placeholder="GitHub username"
               className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
             />
+            <label htmlFor="invite-role" className="sr-only">Member role</label>
             <select
+              id="invite-role"
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
               className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -128,7 +132,9 @@ export default function OrgMembersPage() {
                 </div>
                 <button
                   onClick={() => revokeInvite.mutate(inv.id)}
-                  className="text-xs text-red-600 hover:underline"
+                  disabled={revokeInvite.isPending}
+                  className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+                  aria-label={`Revoke invite for ${inv.inviteeUsername ?? "open invite"}`}
                 >
                   Revoke
                 </button>
@@ -146,7 +152,7 @@ export default function OrgMembersPage() {
             <div key={m.user.id} className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 {m.user.avatarUrl && (
-                  <img src={m.user.avatarUrl} alt="" className="h-8 w-8 rounded-full" />
+                  <img src={m.user.avatarUrl} alt={`${m.user.username}'s avatar`} className="h-8 w-8 rounded-full" />
                 )}
                 <div>
                   <Link href={`/u/${m.user.username}`} className="text-sm font-medium hover:underline">
@@ -163,6 +169,7 @@ export default function OrgMembersPage() {
                     value={m.role}
                     onChange={(e) => updateRole.mutate({ userId: m.user.id, role: e.target.value })}
                     className="rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-xs"
+                    aria-label={`Role for ${m.user.username}`}
                   >
                     {ORG_ROLES.map((r) => (
                       <option key={r} value={r}>{r}</option>
@@ -176,7 +183,9 @@ export default function OrgMembersPage() {
                     onClick={() => {
                       if (confirm(`Remove ${m.user.username}?`)) removeMember.mutate(m.user.id);
                     }}
-                    className="text-xs text-red-600 hover:underline"
+                    disabled={removeMember.isPending}
+                    className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+                    aria-label={`Remove ${m.user.username}`}
                   >
                     Remove
                   </button>

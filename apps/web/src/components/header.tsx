@@ -16,7 +16,7 @@ export function Header() {
           <Link href="/" className="text-xl font-bold text-[var(--primary)]">
             skills-hub.ai
           </Link>
-          <nav className="hidden items-center gap-6 sm:flex">
+          <nav aria-label="Main navigation" className="hidden items-center gap-6 sm:flex">
             <Link
               href="/browse"
               className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
@@ -78,8 +78,10 @@ export function Header() {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="sm:hidden rounded p-1 text-[var(--muted)] hover:text-[var(--foreground)]"
-            aria-label="Toggle menu"
+            className="sm:hidden rounded p-2 text-[var(--muted)] hover:text-[var(--foreground)]"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               {mobileOpen ? (
@@ -94,7 +96,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <nav className="border-t border-[var(--border)] px-4 py-3 sm:hidden">
+        <nav id="mobile-nav" className="border-t border-[var(--border)] px-4 py-3 sm:hidden">
           <div className="flex flex-col gap-3">
             <Link href="/browse" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]" onClick={() => setMobileOpen(false)}>
               Browse

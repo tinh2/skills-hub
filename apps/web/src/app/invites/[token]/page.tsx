@@ -69,7 +69,7 @@ export default function InviteAcceptPage() {
         You&apos;ve been invited to join an organization.
       </p>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mb-4 text-sm text-red-600">{error}</p>}
 
       <div className="flex justify-center gap-3">
         <button

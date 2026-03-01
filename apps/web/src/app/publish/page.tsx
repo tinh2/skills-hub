@@ -88,15 +88,16 @@ export default function PublishPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800">
+        <div role="alert" className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">Name</label>
+          <label htmlFor="publish-name" className="mb-1 block text-sm font-medium">Name</label>
           <input
+            id="publish-name"
             type="text"
             required
             value={form.name}
@@ -107,8 +108,9 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Description</label>
+          <label htmlFor="publish-description" className="mb-1 block text-sm font-medium">Description</label>
           <textarea
+            id="publish-description"
             required
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -119,8 +121,9 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Category</label>
+          <label htmlFor="publish-category" className="mb-1 block text-sm font-medium">Category</label>
           <select
+            id="publish-category"
             required
             value={form.categorySlug}
             onChange={(e) => setForm({ ...form, categorySlug: e.target.value })}
@@ -143,6 +146,7 @@ export default function PublishPage() {
                 key={p}
                 type="button"
                 onClick={() => handlePlatformToggle(p)}
+                aria-pressed={form.platforms.includes(p)}
                 className={`rounded-lg px-3 py-1.5 text-sm ${
                   form.platforms.includes(p)
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
@@ -163,6 +167,7 @@ export default function PublishPage() {
                 key={v}
                 type="button"
                 onClick={() => setForm({ ...form, visibility: v })}
+                aria-pressed={form.visibility === v}
                 className={`rounded-lg px-3 py-1.5 text-sm ${
                   form.visibility === v
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
@@ -179,8 +184,9 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Version</label>
+          <label htmlFor="publish-version" className="mb-1 block text-sm font-medium">Version</label>
           <input
+            id="publish-version"
             type="text"
             required
             value={form.version}
@@ -191,10 +197,11 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">
+          <label htmlFor="publish-tags" className="mb-1 block text-sm font-medium">
             Tags (comma-separated)
           </label>
           <input
+            id="publish-tags"
             type="text"
             value={form.tags}
             onChange={(e) => setForm({ ...form, tags: e.target.value })}
@@ -204,8 +211,9 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Instructions</label>
+          <label htmlFor="publish-instructions" className="mb-1 block text-sm font-medium">Instructions</label>
           <textarea
+            id="publish-instructions"
             required
             value={form.instructions}
             onChange={(e) => setForm({ ...form, instructions: e.target.value })}

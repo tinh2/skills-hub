@@ -57,17 +57,17 @@ export function SkillCard({
           <div className="flex items-center gap-2">
             <h3 className="font-semibold">{skill.name}</h3>
             {isFeatured && (
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                 Top Liked
               </span>
             )}
             {skill.isComposition && (
-              <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-800">
+              <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                 Composition
               </span>
             )}
             {skill.visibility !== "PUBLIC" && (
-              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                 {skill.visibility === "PRIVATE" ? "Private" : "Unlisted"}
               </span>
             )}
@@ -80,11 +80,12 @@ export function SkillCard({
           <div
             className={`rounded-full px-2 py-0.5 text-xs font-bold ${
               skill.qualityScore >= 70
-                ? "bg-green-100 text-green-800"
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                 : skill.qualityScore >= 40
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-red-100 text-red-800"
+                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
             }`}
+            aria-label={`Quality score: ${skill.qualityScore} out of 100`}
           >
             {skill.qualityScore}
           </div>
@@ -108,8 +109,9 @@ export function SkillCard({
           <button
             type="button"
             onClick={handleLikeClick}
-            className="flex items-center gap-1 hover:text-red-500"
-            aria-label={skill.userLiked ? "Unlike skill" : "Like skill"}
+            disabled={toggleLike.isPending}
+            className="flex items-center gap-1 px-1 py-1 hover:text-red-500 disabled:opacity-50"
+            aria-label={skill.userLiked ? `Unlike ${skill.name}` : `Like ${skill.name}`}
           >
             <span className={skill.userLiked ? "text-red-500" : ""}>{skill.userLiked ? "\u2665" : "\u2661"}</span>
             <span>{skill.likeCount}</span>

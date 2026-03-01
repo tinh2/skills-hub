@@ -129,10 +129,10 @@ function BrowseContent() {
       {featuredSkill && category && (
         <Link
           href={`/skills/${featuredSkill.slug}`}
-          className="mb-8 block rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 transition-shadow hover:shadow-lg"
+          className="mb-8 block rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 transition-shadow hover:shadow-lg dark:border-amber-800 dark:from-amber-950 dark:to-orange-950"
         >
           <div className="mb-2 flex items-center gap-2">
-            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-900 dark:text-amber-200">
               Top Liked
             </span>
             <span className="rounded bg-[var(--accent)] px-2 py-0.5 text-xs">
@@ -160,7 +160,7 @@ function BrowseContent() {
       {/* Results */}
       {isLoading && <p className="text-[var(--muted)]">Loading skills...</p>}
       {error && (
-        <p className="text-[var(--error)]">
+        <p role="alert" className="text-[var(--error)]">
           Failed to load skills. Please try again.
         </p>
       )}

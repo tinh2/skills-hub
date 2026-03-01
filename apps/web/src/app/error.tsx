@@ -8,7 +8,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
+    <div role="alert" className="flex min-h-[50vh] flex-col items-center justify-center text-center">
       <h1 className="mb-2 text-4xl font-bold">Something went wrong</h1>
       <p className="mb-6 text-[var(--muted)]">
         {error.message || "An unexpected error occurred."}

@@ -30,7 +30,7 @@ export default function CategoriesPage() {
               </p>
               {featured && (
                 <div className="mt-3 border-t border-[var(--card-border)] pt-3">
-                  <p className="mb-1 text-xs font-medium text-amber-700">Top skill</p>
+                  <p className="mb-1 text-xs font-medium text-amber-700 dark:text-amber-400">Top skill</p>
                   <p className="text-sm font-medium">{featured.name}</p>
                   <p className="text-xs text-[var(--muted)]">
                     by {featured.author.username} &middot; {"\u2665"} {featured.likeCount}

@@ -53,10 +53,11 @@ export function MediaGallery({
 
       {showForm && (
         <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
-          {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
           <div className="mb-3">
-            <label className="mb-1 block text-sm font-medium">Type</label>
+            <label htmlFor="media-type" className="mb-1 block text-sm font-medium">Type</label>
             <select
+              id="media-type"
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value as "SCREENSHOT" | "YOUTUBE" })}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -66,8 +67,9 @@ export function MediaGallery({
             </select>
           </div>
           <div className="mb-3">
-            <label className="mb-1 block text-sm font-medium">URL</label>
+            <label htmlFor="media-url" className="mb-1 block text-sm font-medium">URL</label>
             <input
+              id="media-url"
               type="url"
               value={form.url}
               onChange={(e) => setForm({ ...form, url: e.target.value })}
@@ -81,8 +83,9 @@ export function MediaGallery({
             </p>
           </div>
           <div className="mb-3">
-            <label className="mb-1 block text-sm font-medium">Caption (optional)</label>
+            <label htmlFor="media-caption" className="mb-1 block text-sm font-medium">Caption (optional)</label>
             <input
+              id="media-caption"
               type="text"
               value={form.caption}
               onChange={(e) => setForm({ ...form, caption: e.target.value })}
@@ -116,8 +119,9 @@ export function MediaGallery({
               {isAuthor && (
                 <button
                   onClick={() => removeMedia.mutate(m.id)}
-                  className="absolute right-2 top-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white hover:bg-black/70"
-                  aria-label="Remove media"
+                  disabled={removeMedia.isPending}
+                  className="absolute right-2 top-2 z-10 rounded-full bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/70 disabled:opacity-50"
+                  aria-label={`Remove ${m.caption || "media item"}`}
                 >
                   x
                 </button>
