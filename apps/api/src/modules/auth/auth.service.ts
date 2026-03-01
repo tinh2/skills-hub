@@ -3,6 +3,7 @@ import { createAccessToken, createRefreshToken, hashToken } from "../../common/a
 import { getEnv } from "../../config/env.js";
 import { AppError, UnauthorizedError } from "../../common/errors.js";
 import { fetchWithTimeout } from "../../common/fetch.js";
+import { encryptToken } from "../../common/crypto.js";
 
 interface GithubUser {
   id: number;
@@ -58,13 +59,17 @@ export async function exchangeGithubCode(code: string) {
 
   const githubUser = (await userRes.json()) as GithubUser;
 
+  // Encrypt GitHub access token before storing (if encryption key is configured)
+  const env2 = getEnv();
+  const encryptedGithubToken = encryptToken(tokenData.access_token, env2.GITHUB_TOKEN_ENCRYPTION_KEY);
+
   // Upsert user — username is set once at first login, never changed
   const user = await prisma.user.upsert({
     where: { githubId: githubUser.id },
     update: {
       avatarUrl: githubUser.avatar_url,
       email: githubUser.email,
-      githubAccessToken: tokenData.access_token,
+      githubAccessToken: encryptedGithubToken,
     },
     create: {
       githubId: githubUser.id,
@@ -73,7 +78,7 @@ export async function exchangeGithubCode(code: string) {
       avatarUrl: githubUser.avatar_url,
       githubUrl: githubUser.html_url,
       email: githubUser.email,
-      githubAccessToken: tokenData.access_token,
+      githubAccessToken: encryptedGithubToken,
     },
   });
 
@@ -117,7 +122,7 @@ export async function refreshAccessToken(rawToken: string) {
 
   const stored = await prisma.refreshToken.findUnique({
     where: { tokenHash },
-    include: { user: { select: { id: true, username: true } } },
+    select: { id: true, userId: true, expiresAt: true, user: { select: { id: true, username: true } } },
   });
 
   if (!stored) {

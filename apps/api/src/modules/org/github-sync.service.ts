@@ -1,6 +1,8 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../common/errors.js";
 import { fetchWithTimeout } from "../../common/fetch.js";
+import { decryptToken } from "../../common/crypto.js";
+import { getEnv } from "../../config/env.js";
 import { requireOrgRole } from "./org.auth.js";
 import type { SyncGithubOrgInput } from "@skills-hub/shared";
 
@@ -25,12 +27,14 @@ export async function connectGithubOrg(
     throw new ValidationError("GitHub access token not available. Please re-login with GitHub.");
   }
 
+  const githubToken = decryptToken(user.githubAccessToken, getEnv().GITHUB_TOKEN_ENCRYPTION_KEY);
+
   // Verify user has admin access to the GitHub org
   const membershipRes = await fetchWithTimeout(
     `https://api.github.com/orgs/${input.githubOrgSlug}/memberships/${user.username}`,
     {
       headers: {
-        Authorization: `Bearer ${user.githubAccessToken}`,
+        Authorization: `Bearer ${githubToken}`,
         Accept: "application/vnd.github+json",
       },
     },
@@ -48,7 +52,7 @@ export async function connectGithubOrg(
   // Get GitHub org details for the org ID
   const orgRes = await fetchWithTimeout(`https://api.github.com/orgs/${input.githubOrgSlug}`, {
     headers: {
-      Authorization: `Bearer ${user.githubAccessToken}`,
+      Authorization: `Bearer ${githubToken}`,
       Accept: "application/vnd.github+json",
     },
   });
@@ -68,7 +72,7 @@ export async function connectGithubOrg(
   });
 
   // Trigger initial sync
-  const result = await doSync(org.id, input.githubOrgSlug, user.githubAccessToken, input.defaultRole);
+  const result = await doSync(org.id, input.githubOrgSlug, githubToken, input.defaultRole);
 
   return { connected: true, membersAdded: result.added };
 }
@@ -88,7 +92,8 @@ export async function syncGithubOrgMembers(
     throw new ValidationError("GitHub access token not available. Please re-login with GitHub.");
   }
 
-  return doSync(org.id, org.githubOrg, user.githubAccessToken, "MEMBER");
+  const githubToken = decryptToken(user.githubAccessToken, getEnv().GITHUB_TOKEN_ENCRYPTION_KEY);
+  return doSync(org.id, org.githubOrg, githubToken, "MEMBER");
 }
 
 export async function disconnectGithubOrg(userId: string, orgSlug: string): Promise<void> {
