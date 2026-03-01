@@ -57,7 +57,7 @@ export async function getTemplate(
   orgSlug: string,
   templateId: string,
   requesterId: string,
-): Promise<OrgSkillTemplateSummary & { instructions: string | null }> {
+): Promise<OrgSkillTemplateSummary> {
   await requireOrgRole(requesterId, orgSlug, "MEMBER");
 
   const org = await prisma.organization.findUnique({ where: { slug: orgSlug } });

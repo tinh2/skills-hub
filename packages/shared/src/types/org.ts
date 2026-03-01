@@ -41,6 +41,7 @@ export interface OrgSkillTemplateSummary {
   description: string | null;
   categorySlug: string | null;
   platforms: string[];
+  instructions?: string | null;
   createdAt: string;
 }
 

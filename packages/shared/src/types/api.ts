@@ -15,3 +15,7 @@ export interface AuthTokens {
   accessToken: string;
   expiresIn: number;
 }
+
+export interface AuthCallbackResponse extends AuthTokens {
+  user: import("./user.js").PublicUser;
+}

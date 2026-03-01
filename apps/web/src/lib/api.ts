@@ -12,6 +12,7 @@ import type {
   ApiKeyResponse,
   ApiKeyCreatedResponse,
   AuthTokens,
+  AuthCallbackResponse,
   ApiError,
   SkillQuery,
   CreateSkillInput,
@@ -114,7 +115,7 @@ export const auth = {
     window.location.href = `${API_BASE}/api/v1/auth/github`;
   },
   callback: (code: string, state: string) =>
-    apiFetch<AuthTokens & { user: PublicUser }>("/api/v1/auth/github/callback", {
+    apiFetch<AuthCallbackResponse>("/api/v1/auth/github/callback", {
       method: "POST",
       body: JSON.stringify({ code, state }),
     }),

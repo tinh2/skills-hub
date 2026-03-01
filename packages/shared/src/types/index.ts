@@ -23,7 +23,7 @@ export type {
   ReviewStats,
 } from "./review.js";
 
-export type { ApiError, PaginatedResponse, AuthTokens } from "./api.js";
+export type { ApiError, PaginatedResponse, AuthTokens, AuthCallbackResponse } from "./api.js";
 
 export type {
   SandboxStatus,
