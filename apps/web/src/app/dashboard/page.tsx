@@ -15,15 +15,15 @@ export default function DashboardPage() {
   const [tab, setTab] = useState<"published" | "drafts">("published");
 
   const { data: publishedData, isLoading: loadingPublished } = useQuery({
-    queryKey: ["dashboard", "published"],
-    queryFn: () => skillsApi.list({ visibility: "PUBLIC", sort: "recently_updated", limit: 50 }),
-    enabled: isAuthenticated,
+    queryKey: ["dashboard", "published", user?.username],
+    queryFn: () => skillsApi.list({ author: user!.username, sort: "recently_updated", limit: 50 }),
+    enabled: isAuthenticated && !!user,
   });
 
   const { data: draftData, isLoading: loadingDrafts } = useQuery({
-    queryKey: ["dashboard", "drafts"],
-    queryFn: () => skillsApi.list({ visibility: "PRIVATE", sort: "recently_updated", limit: 50 }),
-    enabled: isAuthenticated,
+    queryKey: ["dashboard", "drafts", user?.username],
+    queryFn: () => skillsApi.list({ author: user!.username, status: "DRAFT", sort: "recently_updated", limit: 50 }),
+    enabled: isAuthenticated && !!user,
   });
 
   const { data: userOrgs } = useQuery({
@@ -51,9 +51,8 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Filter to own skills only
-  const myPublished = publishedData?.data?.filter((s) => s.author.username === user?.username) ?? [];
-  const myDrafts = draftData?.data?.filter((s) => s.author.username === user?.username) ?? [];
+  const myPublished = publishedData?.data ?? [];
+  const myDrafts = draftData?.data ?? [];
 
   return (
     <div>

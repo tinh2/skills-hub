@@ -39,6 +39,7 @@ export default function EditSkillPage() {
     setCategorySlug(skill.category.slug);
     setSelectedPlatforms(skill.platforms);
     setVisibility(skill.visibility);
+    setInstructions(skill.instructions);
     setInitialized(true);
   }
 
