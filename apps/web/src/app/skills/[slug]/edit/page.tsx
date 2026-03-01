@@ -140,16 +140,24 @@ export default function EditSkillPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-4 border-b border-[var(--border)]">
+      <div role="tablist" aria-label="Edit skill sections" className="mb-6 flex gap-4 border-b border-[var(--border)]">
         <button
+          role="tab"
+          aria-selected={tab === "metadata"}
+          aria-controls="panel-metadata"
+          id="tab-metadata"
           onClick={() => setTab("metadata")}
-          className={`border-b-2 pb-2 text-sm font-medium ${tab === "metadata" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)]"}`}
+          className={`min-h-[44px] border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${tab === "metadata" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"}`}
         >
           Metadata
         </button>
         <button
+          role="tab"
+          aria-selected={tab === "version"}
+          aria-controls="panel-version"
+          id="tab-version"
           onClick={() => setTab("version")}
-          className={`border-b-2 pb-2 text-sm font-medium ${tab === "version" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)]"}`}
+          className={`min-h-[44px] border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${tab === "version" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"}`}
         >
           New Version
         </button>
@@ -157,6 +165,7 @@ export default function EditSkillPage() {
 
       {/* Metadata Tab */}
       {tab === "metadata" && (
+        <div role="tabpanel" id="panel-metadata" aria-labelledby="tab-metadata">
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
           <div className="mb-4">
             <label htmlFor="edit-name" className="mb-1 block text-sm font-medium">Name</label>
@@ -245,10 +254,12 @@ export default function EditSkillPage() {
             {updateSkill.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
+        </div>
       )}
 
       {/* Version Tab */}
       {tab === "version" && (
+        <div role="tabpanel" id="panel-version" aria-labelledby="tab-version">
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
           <p className="mb-4 text-sm text-[var(--muted)]">
             Current version: <span className="font-medium">v{skill.latestVersion}</span>
@@ -297,6 +308,7 @@ export default function EditSkillPage() {
           >
             {createVersion.isPending ? "Creating..." : "Create Version"}
           </button>
+        </div>
         </div>
       )}
     </div>

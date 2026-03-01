@@ -121,44 +121,57 @@ export default function DashboardPage() {
       )}
 
       {/* Skills tabs */}
-      <div className="mb-4 flex gap-4 border-b border-[var(--border)]">
+      <div role="tablist" aria-label="Skill lists" className="mb-4 flex gap-4 border-b border-[var(--border)]">
         <button
+          role="tab"
+          aria-selected={tab === "published"}
+          aria-controls="panel-published"
+          id="tab-published"
           onClick={() => setTab("published")}
-          className={`border-b-2 pb-2 text-sm font-medium ${tab === "published" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)]"}`}
+          className={`min-h-[44px] border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${tab === "published" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"}`}
         >
           Published ({myPublished.length})
         </button>
         <button
+          role="tab"
+          aria-selected={tab === "drafts"}
+          aria-controls="panel-drafts"
+          id="tab-drafts"
           onClick={() => setTab("drafts")}
-          className={`border-b-2 pb-2 text-sm font-medium ${tab === "drafts" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)]"}`}
+          className={`min-h-[44px] border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${tab === "drafts" ? "border-[var(--primary)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"}`}
         >
           Drafts ({myDrafts.length})
         </button>
       </div>
 
-      {(tab === "published" ? loadingPublished : loadingDrafts) && (
-        <div className="flex items-center py-8">
-          <span className="loading-spinner" aria-hidden="true" />
-          <span className="ml-3 text-[var(--muted)]">Loading skills...</span>
-        </div>
-      )}
+      <div
+        role="tabpanel"
+        id={`panel-${tab}`}
+        aria-labelledby={`tab-${tab}`}
+      >
+        {(tab === "published" ? loadingPublished : loadingDrafts) && (
+          <div className="flex items-center py-8">
+            <span className="loading-spinner" aria-hidden="true" />
+            <span className="ml-3 text-[var(--muted)]">Loading skills...</span>
+          </div>
+        )}
 
-      {tab === "published" && myPublished.length === 0 && !loadingPublished && (
-        <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
-          <p className="mb-2 text-[var(--muted)]">No published skills yet.</p>
-          <Link href="/publish" className="text-sm text-[var(--primary)] hover:underline">
-            Publish your first skill
-          </Link>
-        </div>
-      )}
+        {tab === "published" && myPublished.length === 0 && !loadingPublished && (
+          <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
+            <p className="mb-2 text-[var(--muted)]">No published skills yet.</p>
+            <Link href="/publish" className="text-sm text-[var(--primary)] hover:underline">
+              Publish your first skill
+            </Link>
+          </div>
+        )}
 
-      {tab === "drafts" && myDrafts.length === 0 && !loadingDrafts && (
-        <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
-          <p className="text-[var(--muted)]">No drafts.</p>
-        </div>
-      )}
+        {tab === "drafts" && myDrafts.length === 0 && !loadingDrafts && (
+          <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
+            <p className="text-[var(--muted)]">No drafts.</p>
+          </div>
+        )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(tab === "published" ? myPublished : myDrafts).map((skill) => (
           <div key={skill.id} className="relative">
             <SkillCard skill={skill} />
@@ -200,6 +213,7 @@ export default function DashboardPage() {
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
