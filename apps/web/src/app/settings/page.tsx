@@ -68,7 +68,12 @@ export default function SettingsPage() {
     return null;
   }
 
-  if (isLoading) return <p className="text-[var(--muted)]">Loading...</p>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-16">
+      <span className="loading-spinner" aria-hidden="true" />
+      <span className="ml-3 text-[var(--muted)]">Loading settings...</span>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -176,9 +181,11 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => deleteKey.mutate(key.id)}
+                  onClick={() => {
+                    if (confirm(`Revoke API key "${key.name}"? This cannot be undone.`)) deleteKey.mutate(key.id);
+                  }}
                   disabled={deleteKey.isPending}
-                  className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+                  className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
                   aria-label={`Revoke API key ${key.name}`}
                 >
                   Revoke
