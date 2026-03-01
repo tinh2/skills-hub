@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: skillshub_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/skillshub_test?schema=public
+      JWT_SECRET: test-jwt-secret-at-least-32-characters-long
+      GITHUB_CLIENT_ID: test
+      GITHUB_CLIENT_SECRET: test
+      GITHUB_CALLBACK_URL: http://localhost:3001/auth/callback
+      GITHUB_TOKEN_ENCRYPTION_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      FRONTEND_URL: http://localhost:3001
+      API_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @skills-hub/api exec prisma generate
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Run database migrations
+        run: pnpm --filter @skills-hub/api exec prisma migrate deploy
+
+      - name: Run integration tests
+        run: pnpm --filter @skills-hub/api test:integration
