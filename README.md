@@ -268,10 +268,110 @@ Skill instructions go here...
 
 ## Deployment
 
-Production Docker Compose is provided in `docker-compose.prod.yml`. It builds and runs all services:
+### Infrastructure: Cloudflare + AWS (Terraform)
+
+Production runs on **Cloudflare Pages** (frontend) + **AWS** (API, database, cache) managed by Terraform.
+
+```
+User → Cloudflare DNS/CDN → Cloudflare Pages (Next.js)
+                           → api.skills-hub.ai → AWS App Runner (Fastify)
+                                                    ↓
+                                                 RDS PostgreSQL 16
+                                                 ElastiCache Redis 7
+                                                 S3 (skill files)
+```
+
+#### Prerequisites
+
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.5
+- AWS CLI with `recipeai` profile configured
+- Docker
+- A [GitHub OAuth App](https://github.com/settings/developers)
+
+#### 1. Bootstrap (one-time)
+
+Creates the S3 state bucket, ECR repository, and GitHub Actions OIDC provider:
 
 ```bash
-# Build and start all services
+cd infra/terraform/global
+terraform init
+terraform apply
+```
+
+#### 2. Deploy dev environment
+
+```bash
+cd infra/terraform/environments/dev
+
+# Create secrets file (gitignored)
+cat > secrets.tfvars <<'EOF'
+jwt_secret                  = "GENERATE_WITH: openssl rand -hex 32"
+github_client_id            = "your-github-oauth-client-id"
+github_client_secret        = "your-github-oauth-client-secret"
+github_token_encryption_key = "GENERATE_WITH: openssl rand -hex 32"
+EOF
+
+terraform init
+terraform plan -var-file=secrets.tfvars
+terraform apply -var-file=secrets.tfvars
+```
+
+By default, dev runs **without VPC/NAT** (~$18/mo). Set `use_vpc = true` in `terraform.tfvars` for full private networking (~$36/mo).
+
+#### 3. Push first Docker image
+
+```bash
+# Login to ECR
+aws ecr get-login-password --region us-east-1 --profile recipeai | \
+  docker login --username AWS --password-stdin \
+  "$(terraform -chdir=infra/terraform/global output -raw ecr_repository_url | cut -d/ -f1)"
+
+# Build and push
+ECR_URL=$(terraform -chdir=infra/terraform/global output -raw ecr_repository_url)
+docker build -t "$ECR_URL:dev" -f apps/api/Dockerfile .
+docker push "$ECR_URL:dev"
+```
+
+App Runner auto-deploys when a new image is pushed.
+
+#### 4. Configure Cloudflare DNS
+
+```bash
+# Get DNS records to add
+terraform -chdir=infra/terraform/environments/prod output custom_domain_records
+```
+
+Add the CNAME records in Cloudflare Dashboard (DNS only, gray cloud). For the frontend, connect your repo to Cloudflare Pages with build command `pnpm build --filter @skills-hub/web`.
+
+#### 5. Set up CI/CD
+
+```bash
+gh secret set AWS_DEPLOY_ROLE_ARN \
+  --body "$(terraform -chdir=infra/terraform/global output -raw github_actions_role_arn)"
+```
+
+Pushes to `main` automatically build, test, push to ECR, and trigger App Runner deployment.
+
+#### Monthly costs
+
+| | dev (no VPC) | dev (VPC) | staging | prod |
+|---|---|---|---|---|
+| App Runner | ~$5 | ~$5 | ~$5 | ~$30 |
+| RDS PostgreSQL | ~$13* | ~$13* | ~$13 | ~$30 |
+| NAT | $0 | ~$3.50 | ~$33 | ~$33 |
+| ElastiCache | $0 | ~$12 | ~$12 | ~$24 |
+| S3 + ECR + CW | ~$1 | ~$2 | ~$2 | ~$9 |
+| **Total** | **~$18/mo** | **~$36/mo** | **~$65/mo** | **~$126/mo** |
+
+*RDS free tier for first 12 months
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide and [docs/COST_ANALYSIS.md](docs/COST_ANALYSIS.md) for detailed cost projections.
+
+### Local: Docker Compose
+
+For local development or self-hosting, `docker-compose.prod.yml` runs all services:
+
+```bash
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 

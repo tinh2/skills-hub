@@ -65,3 +65,46 @@ jobs:
 
       - name: Run integration tests
         run: pnpm --filter @skills-hub/api test:integration
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_REGION: us-east-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push API image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/skills-hub/api:$IMAGE_TAG -t $ECR_REGISTRY/skills-hub/api:prod -f apps/api/Dockerfile .
+          docker push $ECR_REGISTRY/skills-hub/api:$IMAGE_TAG
+          docker push $ECR_REGISTRY/skills-hub/api:prod
+
+      - name: Build and push Web image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/skills-hub/web:$IMAGE_TAG -t $ECR_REGISTRY/skills-hub/web:prod -f apps/web/Dockerfile .
+          docker push $ECR_REGISTRY/skills-hub/web:$IMAGE_TAG
+          docker push $ECR_REGISTRY/skills-hub/web:prod

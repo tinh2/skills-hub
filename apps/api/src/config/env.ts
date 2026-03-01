@@ -19,6 +19,9 @@ const envSchema = z.object({
   API_URL: z.string().url().default("http://localhost:3000"),
 
   GITHUB_TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
+
+  REDIS_URL: z.string().url().optional(),
+  S3_BUCKET_NAME: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
