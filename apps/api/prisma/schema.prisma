@@ -171,6 +171,7 @@ model SkillTag {
   tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([skillId, tagId])
+  @@index([tagId])
 }
 
 model Review {

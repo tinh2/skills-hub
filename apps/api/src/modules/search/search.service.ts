@@ -187,16 +187,24 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
  * Get search suggestions for autocomplete.
  */
 export async function getSearchSuggestions(q: string, limit = 5) {
-  const skills = await prisma.skill.findMany({
-    where: {
-      status: "PUBLISHED",
-      visibility: "PUBLIC",
-      name: { contains: q, mode: "insensitive" },
-    },
-    take: limit,
-    select: { name: true, slug: true },
-    orderBy: { installCount: "desc" },
-  });
+  const searchTerm = q.trim();
+  const tsQuery = searchTerm
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.replace(/[^a-zA-Z0-9]/g, ""))
+    .filter(Boolean)
+    .join(" & ");
+
+  // Use tsvector prefix matching for skill names (GIN indexed)
+  const skills = tsQuery
+    ? await prisma.$queryRaw<{ name: string; slug: string }[]>`
+        SELECT name, slug FROM "Skill"
+        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
+          AND status = 'PUBLISHED' AND visibility = 'PUBLIC'
+        ORDER BY "installCount" DESC
+        LIMIT ${limit}
+      `
+    : [];
 
   const tags = await prisma.tag.findMany({
     where: { name: { contains: q.toLowerCase(), mode: "insensitive" } },
