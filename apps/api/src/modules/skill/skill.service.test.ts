@@ -274,7 +274,7 @@ describe("skill.service", () => {
       expect(mockPrisma.skill.update).toHaveBeenCalledWith({
         where: { slug: "test-skill" },
         data: { status: "PUBLISHED" },
-        include: expect.any(Object),
+        select: expect.any(Object),
       });
     });
 
