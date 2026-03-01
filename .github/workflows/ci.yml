@@ -103,6 +103,6 @@ jobs:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build --build-arg NEXT_PUBLIC_API_URL=https://byff7zzt55.us-east-1.awsapprunner.com --build-arg NEXT_PUBLIC_SITE_URL=https://hrhxqcyxpz.us-east-1.awsapprunner.com -t $ECR_REGISTRY/skills-hub/web:$IMAGE_TAG -t $ECR_REGISTRY/skills-hub/web:prod -f apps/web/Dockerfile .
+          docker build --build-arg NEXT_PUBLIC_API_URL=https://api.skills-hub.ai --build-arg NEXT_PUBLIC_SITE_URL=https://skills-hub.ai -t $ECR_REGISTRY/skills-hub/web:$IMAGE_TAG -t $ECR_REGISTRY/skills-hub/web:prod -f apps/web/Dockerfile .
           docker push $ECR_REGISTRY/skills-hub/web:$IMAGE_TAG
           docker push $ECR_REGISTRY/skills-hub/web:prod

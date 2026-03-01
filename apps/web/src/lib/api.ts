@@ -69,7 +69,7 @@ async function apiFetch<T>(
 ): Promise<T> {
   const { _retried, ...fetchOptions } = options;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(fetchOptions.body ? { "Content-Type": "application/json" } : {}),
     ...(fetchOptions.headers as Record<string, string>),
   };
 
