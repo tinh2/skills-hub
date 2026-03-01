@@ -8,6 +8,9 @@ import { useAuthStore } from "@/lib/auth-store";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS, VISIBILITY, VISIBILITY_LABELS, VISIBILITY_DESCRIPTIONS } from "@skills-hub/shared";
 import type { Platform, Visibility } from "@skills-hub/shared";
 import { parseSkillMd } from "@skills-hub/skill-parser";
+import { useAiStore } from "@/lib/ai-store";
+import { generateSkill, suggestField, OpenRouterError } from "@/lib/openrouter";
+import { GenerateSection } from "./generate-section";
 
 export default function PublishPage() {
   const router = useRouter();
@@ -20,9 +23,14 @@ export default function PublishPage() {
   const visibilityOptions = userOrgs?.length
     ? VISIBILITY
     : VISIBILITY.filter((v) => v !== "ORG");
+  const { openRouterKey, preferredModel } = useAiStore();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [fileMsg, setFileMsg] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [suggestingField, setSuggestingField] = useState<"name" | "description" | "tags" | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -115,6 +123,49 @@ export default function PublishPage() {
     }));
   }
 
+  async function handleAiGenerate() {
+    if (!openRouterKey || !aiPrompt.trim()) return;
+    setAiError("");
+    setAiGenerating(true);
+    try {
+      const result = await generateSkill(aiPrompt, openRouterKey, preferredModel);
+      const validCategory = CATEGORIES.some((c) => c.slug === result.categorySlug);
+      setForm({
+        name: result.name || form.name,
+        description: result.description || form.description,
+        categorySlug: validCategory ? result.categorySlug : form.categorySlug,
+        platforms: form.platforms,
+        visibility: form.visibility,
+        instructions: result.instructions || form.instructions,
+        version: form.version,
+        tags: Array.isArray(result.tags) ? result.tags.join(", ") : form.tags,
+      });
+    } catch (err) {
+      setAiError(err instanceof OpenRouterError ? err.message : "AI generation failed. Try again.");
+    } finally {
+      setAiGenerating(false);
+    }
+  }
+
+  async function handleSuggestField(field: "name" | "description" | "tags") {
+    if (!openRouterKey) return;
+    setAiError("");
+    setSuggestingField(field);
+    try {
+      const value = await suggestField(
+        field,
+        { prompt: aiPrompt, name: form.name, description: form.description, instructions: form.instructions },
+        openRouterKey,
+        preferredModel,
+      );
+      setForm((prev) => ({ ...prev, [field]: value }));
+    } catch (err) {
+      setAiError(err instanceof OpenRouterError ? err.message : `Failed to suggest ${field}.`);
+    } finally {
+      setSuggestingField(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-3xl font-bold">Publish a Skill</h1>
@@ -142,6 +193,16 @@ export default function PublishPage() {
         </div>
       </div>
 
+      <GenerateSection
+        hasKey={!!openRouterKey}
+        preferredModel={preferredModel}
+        prompt={aiPrompt}
+        onPromptChange={setAiPrompt}
+        generating={aiGenerating}
+        error={aiError}
+        onGenerate={handleAiGenerate}
+      />
+
       {error && (
         <div role="alert" className="mb-4 rounded-lg bg-[var(--error-subtle)] p-4 text-sm text-[var(--error)]">
           {error}
@@ -150,7 +211,20 @@ export default function PublishPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="publish-name" className="mb-1 block text-sm font-medium">Name</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="publish-name" className="text-sm font-medium">Name</label>
+            {openRouterKey && (
+              <button
+                type="button"
+                onClick={() => handleSuggestField("name")}
+                disabled={suggestingField === "name"}
+                className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
+                aria-label="Suggest name with AI"
+              >
+                {suggestingField === "name" ? "Suggesting..." : "Suggest"}
+              </button>
+            )}
+          </div>
           <input
             id="publish-name"
             type="text"
@@ -163,7 +237,20 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label htmlFor="publish-description" className="mb-1 block text-sm font-medium">Description</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="publish-description" className="text-sm font-medium">Description</label>
+            {openRouterKey && (
+              <button
+                type="button"
+                onClick={() => handleSuggestField("description")}
+                disabled={suggestingField === "description"}
+                className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
+                aria-label="Suggest description with AI"
+              >
+                {suggestingField === "description" ? "Suggesting..." : "Suggest"}
+              </button>
+            )}
+          </div>
           <textarea
             id="publish-description"
             required
@@ -254,9 +341,22 @@ export default function PublishPage() {
         </div>
 
         <div>
-          <label htmlFor="publish-tags" className="mb-1 block text-sm font-medium">
-            Tags (comma-separated)
-          </label>
+          <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="publish-tags" className="text-sm font-medium">
+              Tags (comma-separated)
+            </label>
+            {openRouterKey && (
+              <button
+                type="button"
+                onClick={() => handleSuggestField("tags")}
+                disabled={suggestingField === "tags"}
+                className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
+                aria-label="Suggest tags with AI"
+              >
+                {suggestingField === "tags" ? "Suggesting..." : "Suggest"}
+              </button>
+            )}
+          </div>
           <input
             id="publish-tags"
             type="text"

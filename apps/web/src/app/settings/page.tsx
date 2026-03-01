@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { users } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useAiStore, OPENROUTER_MODELS } from "@/lib/ai-store";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -69,6 +70,23 @@ export default function SettingsPage() {
     },
     onError: (err: Error) => setKeyError(err.message),
   });
+
+  // AI Generation
+  const { openRouterKey, preferredModel, setKey, setModel } = useAiStore();
+  const [aiKeyInput, setAiKeyInput] = useState("");
+  const [aiModelInput, setAiModelInput] = useState<string>(OPENROUTER_MODELS[0].id);
+  const [aiInitialized, setAiInitialized] = useState(false);
+  const [aiShowKey, setAiShowKey] = useState(false);
+  const [aiMsg, setAiMsg] = useState("");
+
+  // Sync local state after zustand persist rehydrates from localStorage
+  useEffect(() => {
+    if (!aiInitialized && openRouterKey !== null) {
+      setAiKeyInput(openRouterKey);
+      setAiModelInput(preferredModel);
+      setAiInitialized(true);
+    }
+  }, [openRouterKey, preferredModel, aiInitialized]);
 
   if (!isAuthenticated) {
     router.push("/");
@@ -211,6 +229,86 @@ export default function SettingsPage() {
             <p className="text-[var(--muted)]">No API keys yet.</p>
           </div>
         )}
+      </section>
+
+      {/* AI Generation */}
+      <section className="mt-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
+        <h2 className="mb-4 text-lg font-semibold">AI Generation</h2>
+        <p className="mb-4 text-sm text-[var(--muted)]">
+          Use your own{" "}
+          <a
+            href="https://openrouter.ai/keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-[var(--foreground)]"
+          >
+            OpenRouter API key
+          </a>{" "}
+          to generate skills with AI on the publish page.
+        </p>
+
+        <div aria-live="polite" aria-atomic="true">
+          {aiMsg && (
+            <p role="status" className={`mb-3 text-sm ${aiMsg.includes("saved") ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
+              {aiMsg}
+            </p>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="settings-openrouter-key" className="mb-1 block text-sm font-medium">
+            OpenRouter API Key
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="settings-openrouter-key"
+              type={aiShowKey ? "text" : "password"}
+              value={aiKeyInput}
+              onChange={(e) => setAiKeyInput(e.target.value)}
+              className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+              placeholder="sk-or-..."
+            />
+            <button
+              type="button"
+              onClick={() => setAiShowKey(!aiShowKey)}
+              className="min-h-[44px] rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+              aria-label={aiShowKey ? "Hide API key" : "Show API key"}
+            >
+              {aiShowKey ? "Hide" : "Show"}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Your key is stored only in your browser and sent directly to OpenRouter.
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="settings-ai-model" className="mb-1 block text-sm font-medium">
+            Preferred Model
+          </label>
+          <select
+            id="settings-ai-model"
+            value={aiModelInput}
+            onChange={(e) => setAiModelInput(e.target.value)}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+          >
+            {OPENROUTER_MODELS.map((m) => (
+              <option key={m.id} value={m.id}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          onClick={() => {
+            setKey(aiKeyInput.trim() || null);
+            setModel(aiModelInput);
+            setAiMsg("AI settings saved");
+            setTimeout(() => setAiMsg(""), 3000);
+          }}
+          className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90"
+        >
+          Save AI Settings
+        </button>
       </section>
     </div>
   );
