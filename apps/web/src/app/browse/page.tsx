@@ -16,6 +16,7 @@ function BrowseContent() {
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [platform, setPlatform] = useState(searchParams.get("platform") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
+  const [minScore, setMinScore] = useState(searchParams.get("minScore") || "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce search input
@@ -43,8 +44,8 @@ function BrowseContent() {
 
   // Update URL when debounced query changes
   useEffect(() => {
-    updateUrl({ q: debouncedQuery, category, platform, sort });
-  }, [debouncedQuery, category, platform, sort, updateUrl]);
+    updateUrl({ q: debouncedQuery, category, platform, sort, minScore });
+  }, [debouncedQuery, category, platform, sort, minScore, updateUrl]);
 
   function handleFilterChange(key: string, value: string) {
     if (key === "q") {
@@ -54,9 +55,10 @@ function BrowseContent() {
     if (key === "category") setCategory(value);
     if (key === "platform") setPlatform(value);
     if (key === "sort") setSort(value);
+    if (key === "minScore") setMinScore(value);
   }
 
-  const hasActiveFilters = debouncedQuery || category || platform || sort !== "newest";
+  const hasActiveFilters = debouncedQuery || category || platform || sort !== "newest" || minScore;
 
   function clearAllFilters() {
     setSearchQuery("");
@@ -64,6 +66,7 @@ function BrowseContent() {
     setCategory("");
     setPlatform("");
     setSort("newest");
+    setMinScore("");
   }
 
   // Featured skill for the active category
@@ -83,13 +86,14 @@ function BrowseContent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["skills", debouncedQuery, category, platform, sort],
+    queryKey: ["skills", debouncedQuery, category, platform, sort, minScore],
     queryFn: ({ pageParam }) =>
       skillsApi.list({
         q: debouncedQuery || undefined,
         category: category || undefined,
         platform: (platform || undefined) as any,
         sort: sort as any,
+        minScore: minScore ? Number(minScore) : undefined,
         limit: 20,
         cursor: pageParam,
       }),
@@ -154,6 +158,16 @@ function BrowseContent() {
           <option value="highest_rated">Highest Rated</option>
           <option value="recently_updated">Recently Updated</option>
         </select>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          placeholder="Min score"
+          aria-label="Minimum quality score"
+          value={minScore}
+          onChange={(e) => handleFilterChange("minScore", e.target.value)}
+          className="min-h-[44px] w-28 rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
+        />
       </div>
 
       {/* Active filter indicator + clear */}

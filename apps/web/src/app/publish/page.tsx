@@ -6,12 +6,14 @@ import { skills as skillsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS, VISIBILITY, VISIBILITY_LABELS, VISIBILITY_DESCRIPTIONS } from "@skills-hub/shared";
 import type { Platform, Visibility } from "@skills-hub/shared";
+import { parseSkillMd } from "@skills-hub/skill-parser";
 
 export default function PublishPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fileMsg, setFileMsg] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -58,6 +60,38 @@ export default function PublishPage() {
     }
   }
 
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileMsg("");
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const content = reader.result as string;
+      const result = parseSkillMd(content);
+
+      if (!result.success || !result.skill) {
+        setFileMsg(result.errors.map((err) => `${err.field}: ${err.message}`).join("; "));
+        return;
+      }
+
+      const { skill } = result;
+      setForm({
+        name: skill.name,
+        description: skill.description,
+        categorySlug: skill.category || "",
+        platforms: skill.platforms.length > 0 ? skill.platforms : ["CLAUDE_CODE"],
+        visibility: "PUBLIC",
+        instructions: skill.instructions,
+        version: skill.version,
+        tags: "",
+      });
+      setFileMsg("SKILL.md parsed successfully");
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
   function handlePlatformToggle(platform: string) {
     setForm((prev) => ({
       ...prev,
@@ -70,6 +104,27 @@ export default function PublishPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-3xl font-bold">Publish a Skill</h1>
+
+      <div className="mb-6 rounded-lg border border-dashed border-[var(--border)] p-4">
+        <label htmlFor="skill-file" className="mb-2 block text-sm font-medium">
+          Import from SKILL.md
+        </label>
+        <input
+          id="skill-file"
+          type="file"
+          accept=".md,.markdown"
+          onChange={handleFileUpload}
+          className="text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--primary)] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[var(--primary-foreground)]"
+        />
+        <p className="mt-1 text-xs text-[var(--muted)]">
+          Upload a SKILL.md file with YAML frontmatter to auto-fill the form.
+        </p>
+        {fileMsg && (
+          <p className={`mt-2 text-sm ${fileMsg.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+            {fileMsg}
+          </p>
+        )}
+      </div>
 
       {error && (
         <div role="alert" className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@skills-hub/shared": "workspace:*",
+    "@skills-hub/skill-parser": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
     "fflate": "^0.8.2",
     "next": "^15.0.0",
