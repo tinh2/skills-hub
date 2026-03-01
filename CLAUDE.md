@@ -20,6 +20,10 @@ Claude Code skill marketplace — full-stack TypeScript monorepo.
 - Cursor-based pagination (not offset)
 - Prisma atomic `increment` for denormalized counters
 - Tests alongside features (in same module directory)
+- Prisma queries must use `select` (not `include`) to fetch only needed fields
+- Commits must not touch more than 20 files — split larger changes into focused commits
+- Every interactive element needs: aria-label or visible text, 48px min touch target, focus-visible indicator
+- Run security audit once after each feature-complete phase, not incrementally per feature
 
 ## Commands
 
