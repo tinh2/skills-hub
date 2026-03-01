@@ -41,23 +41,31 @@ export function ReviewCard({
   });
 
   return (
-    <div className="mb-4 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
+    <article className="mb-4 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-medium">{review.author.username}</span>
-          <span className="text-sm text-[var(--muted)]" aria-label={`Rating: ${review.rating} out of 5`}>{review.rating}/5</span>
+          <span className="text-sm text-[var(--muted)]" aria-label={`Rating: ${review.rating} out of 5`}>
+            {"*".repeat(review.rating).split("").map((_, i) => (
+              <span key={i} className="text-yellow-500">{"\u2605"}</span>
+            ))}
+            {"*".repeat(5 - review.rating).split("").map((_, i) => (
+              <span key={i} className="text-gray-300 dark:text-gray-600">{"\u2605"}</span>
+            ))}
+            <span className="ml-1">{review.rating}/5</span>
+          </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--muted)]">
+          <time className="text-xs text-[var(--muted)]" dateTime={review.createdAt}>
             {new Date(review.createdAt).toLocaleDateString()}
-          </span>
+          </time>
           {isReviewAuthor && (
             <button
               onClick={() => {
                 if (confirm("Delete your review?")) deleteReview.mutate();
               }}
               disabled={deleteReview.isPending}
-              className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+              className="min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
               aria-label="Delete your review"
             >
               Delete
@@ -70,12 +78,12 @@ export function ReviewCard({
 
       {/* Vote buttons */}
       {isAuthenticated && !isReviewAuthor && (
-        <div className="mt-2 flex items-center gap-3 text-xs text-[var(--muted)]">
-          <span>Helpful?</span>
+        <div className="mt-2 flex items-center gap-1 text-xs text-[var(--muted)]">
+          <span className="mr-1">Helpful?</span>
           <button
             onClick={() => voteReview.mutate(true)}
             disabled={voteReview.isPending}
-            className="px-2 py-1 hover:text-green-600 disabled:opacity-50"
+            className="min-h-[44px] min-w-[44px] rounded px-3 py-1 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50 dark:hover:bg-green-950"
             aria-label="Mark review as helpful"
           >
             Yes{review.helpfulCount > 0 ? ` (${review.helpfulCount})` : ""}
@@ -83,7 +91,7 @@ export function ReviewCard({
           <button
             onClick={() => voteReview.mutate(false)}
             disabled={voteReview.isPending}
-            className="px-2 py-1 hover:text-red-600 disabled:opacity-50"
+            className="min-h-[44px] min-w-[44px] rounded px-3 py-1 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:hover:bg-red-950"
             aria-label="Mark review as not helpful"
           >
             No
@@ -103,7 +111,7 @@ export function ReviewCard({
       {isSkillAuthor && !review.response && !showResponse && (
         <button
           onClick={() => setShowResponse(true)}
-          className="mt-2 text-xs text-[var(--primary)] hover:underline"
+          className="mt-2 min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] hover:underline"
         >
           Respond to review
         </button>
@@ -123,19 +131,19 @@ export function ReviewCard({
             <button
               onClick={() => respondToReview.mutate()}
               disabled={respondToReview.isPending || !responseBody.trim()}
-              className="rounded bg-[var(--primary)] px-3 py-1 text-xs text-[var(--primary-foreground)] disabled:opacity-50"
+              className="min-h-[44px] rounded bg-[var(--primary)] px-4 py-2 text-xs text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
             >
               Submit
             </button>
             <button
               onClick={() => setShowResponse(false)}
-              className="rounded bg-[var(--accent)] px-3 py-1 text-xs"
+              className="min-h-[44px] rounded bg-[var(--accent)] px-4 py-2 text-xs transition-colors hover:bg-[var(--border)]"
             >
               Cancel
             </button>
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
