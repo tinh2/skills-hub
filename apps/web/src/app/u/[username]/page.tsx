@@ -21,7 +21,12 @@ export default function UserProfilePage() {
   });
 
   if (isLoading) {
-    return <p className="text-[var(--muted)]">Loading profile...</p>;
+    return (
+      <div className="flex items-center justify-center py-16">
+        <span className="loading-spinner" aria-hidden="true" />
+        <span className="ml-3 text-[var(--muted)]">Loading profile...</span>
+      </div>
+    );
   }
 
   if (!user) {

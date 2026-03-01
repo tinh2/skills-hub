@@ -90,7 +90,12 @@ export default function EditSkillPage() {
     return null;
   }
 
-  if (isLoading) return <p className="text-[var(--muted)]">Loading...</p>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-16">
+      <span className="loading-spinner" aria-hidden="true" />
+      <span className="ml-3 text-[var(--muted)]">Loading skill...</span>
+    </div>
+  );
   if (!skill) return <p className="text-red-600">Skill not found.</p>;
 
   const isOwner = skill.author.username === authUser?.username;

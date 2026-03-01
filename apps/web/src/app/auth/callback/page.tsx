@@ -30,8 +30,12 @@ function CallbackContent() {
   }, [searchParams, router, login]);
 
   return (
-    <div className="py-16 text-center">
-      <p className="text-[var(--muted)]">Signing you in...</p>
+    <div className="flex min-h-[50vh] flex-col items-center justify-center py-16 text-center">
+      <span className="loading-spinner mb-4" aria-hidden="true" style={{ width: 32, height: 32 }} />
+      <p className="text-lg font-medium">Signing you in...</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">
+        Please wait while we complete your GitHub authentication.
+      </p>
     </div>
   );
 }
@@ -40,8 +44,9 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="py-16 text-center">
-          <p className="text-[var(--muted)]">Loading...</p>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center py-16 text-center">
+          <span className="loading-spinner mb-4" aria-hidden="true" style={{ width: 32, height: 32 }} />
+          <p className="text-lg font-medium">Loading...</p>
         </div>
       }
     >
