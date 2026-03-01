@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { skills as skillsApi } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { skills as skillsApi, orgs as orgsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS, VISIBILITY, VISIBILITY_LABELS, VISIBILITY_DESCRIPTIONS } from "@skills-hub/shared";
 import type { Platform, Visibility } from "@skills-hub/shared";
@@ -11,6 +12,14 @@ import { parseSkillMd } from "@skills-hub/skill-parser";
 export default function PublishPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const { data: userOrgs } = useQuery({
+    queryKey: ["user-orgs"],
+    queryFn: () => orgsApi.list(),
+    enabled: isAuthenticated,
+  });
+  const visibilityOptions = userOrgs?.length
+    ? VISIBILITY
+    : VISIBILITY.filter((v) => v !== "ORG");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [fileMsg, setFileMsg] = useState("");
@@ -208,7 +217,7 @@ export default function PublishPage() {
         <div>
           <label className="mb-1 block text-sm font-medium">Visibility</label>
           <div className="flex flex-wrap gap-2">
-            {VISIBILITY.map((v) => (
+            {visibilityOptions.map((v) => (
               <button
                 key={v}
                 type="button"
