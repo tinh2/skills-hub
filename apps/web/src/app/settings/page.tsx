@@ -48,19 +48,26 @@ export default function SettingsPage() {
 
   const [keyName, setKeyName] = useState("");
   const [newKey, setNewKey] = useState<string | null>(null);
+  const [keyError, setKeyError] = useState("");
 
   const createKey = useMutation({
     mutationFn: () => users.createApiKey({ name: keyName }),
     onSuccess: (data) => {
       setNewKey(data.key);
       setKeyName("");
+      setKeyError("");
       queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
     },
+    onError: (err: Error) => setKeyError(err.message),
   });
 
   const deleteKey = useMutation({
     mutationFn: (id: string) => users.deleteApiKey(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["apiKeys"] }),
+    onSuccess: () => {
+      setKeyError("");
+      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
+    },
+    onError: (err: Error) => setKeyError(err.message),
   });
 
   if (!isAuthenticated) {
@@ -136,6 +143,10 @@ export default function SettingsPage() {
         <p className="mb-4 text-sm text-[var(--muted)]">
           API keys let you use the CLI and API without browser login.
         </p>
+
+        {keyError && (
+          <p role="alert" className="mb-3 text-sm text-red-600">{keyError}</p>
+        )}
 
         {newKey && (
           <div role="alert" className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
