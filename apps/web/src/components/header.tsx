@@ -59,7 +59,7 @@ export function Header() {
                   href={`/u/${user?.username}`}
                   className="inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
                 >
-                  {user?.username}
+                  {user?.displayName || user?.username}
                 </Link>
                 <button
                   onClick={() => {
@@ -122,7 +122,7 @@ export function Header() {
                   Publish Skill
                 </Link>
                 <Link href={`/u/${user?.username}`} className="flex min-h-[44px] items-center rounded-lg px-3 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]" onClick={() => setMobileOpen(false)}>
-                  Profile
+                  {user?.displayName || user?.username}
                 </Link>
                 <Link href="/settings" className="flex min-h-[44px] items-center rounded-lg px-3 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]" onClick={() => setMobileOpen(false)}>
                   Settings
