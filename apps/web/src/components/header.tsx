@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth-store";
 import { auth } from "@/lib/api";
@@ -8,6 +8,19 @@ import { auth } from "@/lib/api";
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   return (
     <header className="border-b border-[var(--border)] bg-[var(--card)]">
@@ -49,27 +62,47 @@ export function Header() {
                 >
                   Dashboard
                 </Link>
-                <Link
-                  href="/settings"
-                  className="inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
-                >
-                  Settings
-                </Link>
-                <Link
-                  href={`/u/${user?.username}`}
-                  className="inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
-                >
-                  {user?.displayName || user?.username}
-                </Link>
-                <button
-                  onClick={() => {
-                    auth.logout().catch(() => {});
-                    logout();
-                  }}
-                  className="inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
-                >
-                  Sign out
-                </button>
+                <div ref={menuRef} className="relative">
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+                    aria-expanded={menuOpen}
+                    aria-haspopup="true"
+                  >
+                    {user?.displayName || user?.username}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-[var(--border)] bg-[var(--card)] py-1 shadow-lg">
+                      <Link
+                        href={`/u/${user?.username}`}
+                        className="flex min-h-[44px] items-center px-4 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href="/settings"
+                        className="flex min-h-[44px] items-center px-4 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Settings
+                      </Link>
+                      <button
+                        onClick={() => {
+                          auth.logout().catch(() => {});
+                          logout();
+                          setMenuOpen(false);
+                        }}
+                        className="flex min-h-[44px] w-full items-center px-4 text-left text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <button
