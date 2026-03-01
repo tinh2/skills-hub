@@ -281,11 +281,40 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
   }
 
   if (query.q) {
-    where.OR = [
-      { name: { contains: query.q, mode: "insensitive" } },
-      { description: { contains: query.q, mode: "insensitive" } },
-      { tags: { some: { tag: { name: { contains: query.q.toLowerCase(), mode: "insensitive" } } } } },
-    ];
+    const searchTerm = query.q.trim();
+    // Use tsvector (GIN indexed) for published public skills; ILIKE fallback for others
+    const canUseTsvector = where.status === "PUBLISHED" && where.visibility === "PUBLIC";
+    let tsvectorIds: string[] | null = null;
+
+    if (canUseTsvector) {
+      const tsQuery = searchTerm
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((w) => w.replace(/[^a-zA-Z0-9]/g, ""))
+        .filter(Boolean)
+        .join(" & ");
+
+      if (tsQuery) {
+        const tsvectorResults = await prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Skill"
+          WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
+            AND status = 'PUBLISHED' AND visibility = 'PUBLIC'
+          ORDER BY ts_rank("searchVector", to_tsquery('english', ${tsQuery + ":*"})) DESC
+          LIMIT 200`;
+        tsvectorIds = tsvectorResults.map((r) => r.id);
+      }
+
+      where.OR = [
+        ...(tsvectorIds && tsvectorIds.length > 0 ? [{ id: { in: tsvectorIds } }] : []),
+        { tags: { some: { tag: { name: { contains: searchTerm.toLowerCase(), mode: "insensitive" as const } } } } },
+      ];
+    } else {
+      where.OR = [
+        { name: { contains: searchTerm, mode: "insensitive" as const } },
+        { description: { contains: searchTerm, mode: "insensitive" as const } },
+        { tags: { some: { tag: { name: { contains: searchTerm.toLowerCase(), mode: "insensitive" as const } } } } },
+      ];
+    }
   }
 
   const orderBy: Prisma.SkillOrderByWithRelationInput = (() => {
