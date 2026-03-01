@@ -18,7 +18,7 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY --from=deps /app/packages/skill-parser/node_modules ./packages/skill-parser/node_modules
 
-COPY tsconfig.base.json ./
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
 COPY packages/shared/ packages/shared/
 COPY packages/skill-parser/ packages/skill-parser/
 COPY apps/api/ apps/api/
@@ -44,8 +44,10 @@ COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/packages/skill-parser/node_modules ./packages/skill-parser/node_modules
 COPY --from=builder /app/packages/skill-parser/dist ./packages/skill-parser/dist
 COPY --from=builder /app/packages/skill-parser/package.json ./packages/skill-parser/
 COPY --from=builder /app/package.json ./
