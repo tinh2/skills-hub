@@ -1,11 +1,10 @@
 # skills-hub.ai
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Fastify](https://img.shields.io/badge/Fastify-5-000?logo=fastify&logoColor=white)](https://fastify.dev/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 The marketplace for Claude Code skills. Discover, share, install, and rate quality-scored skills for Claude Code, Cursor, and Codex CLI.
 
@@ -13,58 +12,59 @@ The marketplace for Claude Code skills. Discover, share, install, and rate quali
 
 ---
 
-## Features
+## Overview
 
-- **Skill Discovery** -- Browse and search skills by category, platform, quality score, tags, and author
-- **Quality Scoring** -- Every skill receives an automated 0-100 quality score based on schema completeness, instruction structure, error handling, guardrails, and examples
-- **One-Command Install** -- `npx skills-hub install <slug>` downloads any skill to `~/.claude/skills/` with auto-detected platform targeting
-- **Version Management** -- Semantic versioning with changelogs, version diffs, and `skills-hub update` to keep installed skills current
-- **Ratings & Reviews** -- 1-5 star ratings with text reviews, helpfulness voting, and creator responses
-- **Skill Compositions** -- Chain multiple skills into pipelines with sequential or parallel execution ordering
-- **Visibility Controls** -- Public, private, and unlisted skill visibility with PII-separated user profiles
-- **API Key Auth** -- Generate API keys for CLI and automation workflows alongside GitHub OAuth login
-- **13 Skill Categories** -- Build, Test, QA, Review, Deploy, Docs, Security, UX, Analysis, Productivity, Integration, Combo, Meta
+skills-hub.ai is a full-stack platform where developers publish, discover, and install reusable skills (structured instruction sets) for AI coding assistants. Every skill receives an automated 0-100 quality score. Users authenticate with GitHub, browse a curated 13-category taxonomy, leave star ratings and reviews, organize skills within teams, and install with a single CLI command.
 
----
+## Tech Stack
 
-## Architecture
+| Layer | Technology |
+|-------|-----------|
+| Monorepo | Turborepo + pnpm 9 workspaces |
+| Backend | Fastify 5 + Prisma 6 + PostgreSQL 16 |
+| Frontend | Next.js 15 (App Router) + Tailwind CSS 4 + React 19 |
+| CLI | Commander.js + Chalk + Ora |
+| Auth | GitHub OAuth + JWT (jose) + httpOnly refresh cookies |
+| Validation | Zod (shared across all layers) |
+| State | TanStack Query (server) + Zustand (client) |
+| Rate Limiting | @fastify/rate-limit + Redis 7 |
 
-This is a full-stack TypeScript monorepo managed by [Turborepo](https://turbo.build/) and [pnpm workspaces](https://pnpm.io/workspaces).
+## Project Structure
 
 ```
 skills-hub/
 ├── apps/
-│   ├── api/          # Fastify 5 REST API + Prisma 6 ORM
-│   ├── web/          # Next.js 15 (App Router) frontend
-│   └── cli/          # Commander.js CLI, published as `skills-hub` on npm
+│   ├── api/            Fastify REST API (15 domain modules)
+│   ├── web/            Next.js frontend (12 route groups)
+│   └── cli/            CLI tool (15 commands)
 ├── packages/
-│   ├── shared/       # Zod schemas, TypeScript types, constants
-│   └── skill-parser/ # SKILL.md frontmatter parser + semver utilities
-├── docker-compose.yml
-├── turbo.json
+│   ├── shared/         Zod schemas, types, constants
+│   └── skill-parser/   SKILL.md parser + OpenFang adapter
+├── docker-compose.yml  PostgreSQL 16 + Redis 7
+├── turbo.json          Build pipeline
 └── pnpm-workspace.yaml
 ```
 
-### Backend (`apps/api`)
+**API modules:** auth, user, skill, version, review, search, install, like, category, tag, media, org, sandbox, agent, validation
 
-Fastify 5 with domain-split modules under `src/modules/<domain>/` (routes, service, repository pattern). Prisma 6 as the ORM against PostgreSQL 16. Authentication via GitHub OAuth with JWT access tokens and httpOnly refresh token cookies.
+**Web pages:** Home, Browse, Categories, Skill Detail/Edit, User Profile, Dashboard, Publish, Settings, Org Management, Invites
 
-**Key modules:** auth, user, skill, version, review, search, install, category, tag, validation
+**CLI commands:** login, logout, whoami, search, install, uninstall, list, update, publish, unpublish, version-create, info, categories, diff, org
 
-### Frontend (`apps/web`)
+## Key Features
 
-Next.js 15 with App Router, Tailwind CSS 4, React Query (TanStack Query) for server state, and Zustand for client state. Renders skill instructions with react-markdown and remark-gfm.
-
-**Pages:** Home, Browse, Categories, Skill Detail (`/skills/[slug]`), User Profile (`/u/[username]`), Publish, Auth Callback
-
-### CLI (`apps/cli`)
-
-Commander.js-based CLI tool distributed via npm. Supports GitHub OAuth browser flow and API key authentication. Auto-detects install target (Claude Code `~/.claude/skills/` or Cursor `~/.cursor/skills/`).
-
-### Shared Packages
-
-- **`@skills-hub/shared`** -- Zod validation schemas for all API inputs, TypeScript types for API responses, constants (categories, platforms, visibility, pagination, quality scoring)
-- **`@skills-hub/skill-parser`** -- Parses SKILL.md files with YAML frontmatter, validates against the schema, provides semver comparison utilities
+- **Skill Discovery** -- Browse and search by category, platform, quality score, tags, and author with cursor-based pagination
+- **Quality Scoring** -- Automated 0-100 score: schema completeness (25 pts) + instruction quality (75 pts); minimum 20 to publish
+- **One-Command Install** -- `npx skills-hub install <slug>` with auto-detected platform targeting
+- **Version Management** -- Semver versioning, changelogs, version diffs, and bulk update
+- **Ratings and Reviews** -- 1-5 star ratings, text reviews, helpfulness voting, creator responses
+- **Skill Compositions** -- Chain multiple skills into pipelines with sequential or parallel execution
+- **Organizations** -- Team workspaces with GitHub org sync, roles (Admin/Publisher/Member), skill templates, and analytics
+- **Media Showcase** -- Screenshots and YouTube embeds with URL allowlisting and reorder support
+- **Sandbox Testing** -- Run skills in sandboxed environments with test cases and cached results
+- **Agent Deployment** -- Deploy skills as persistent agents with manual, scheduled, or webhook triggers
+- **Visibility Controls** -- Public, Private, Unlisted, and Organization-scoped skills
+- **API Key Auth** -- Named API keys with optional expiry for CLI and automation
 
 ---
 
@@ -72,306 +72,140 @@ Commander.js-based CLI tool distributed via npm. Supports GitHub OAuth browser f
 
 ### Prerequisites
 
-- **Node.js** >= 22.0.0
-- **pnpm** >= 9.15
-- **Docker** (for PostgreSQL and Redis)
-- **GitHub OAuth App** (for authentication)
+- Node.js >= 22.0.0, pnpm >= 9.15, Docker, and a [GitHub OAuth App](https://github.com/settings/developers)
 
 ### Setup
 
-1. **Clone and install dependencies:**
+```bash
+git clone <repo-url>
+cd skills-hub
+pnpm install
+docker compose up -d                          # PostgreSQL 16 + Redis 7
+cp .env.example apps/api/.env                 # then edit with your values
+pnpm db:migrate                               # run Prisma migrations
+pnpm db:seed                                  # seed 13 categories
+pnpm dev                                      # API :3000, Web :3001
+```
 
-   ```bash
-   git clone https://github.com/tinh2/skills-hub.git
-   cd skills-hub
-   pnpm install
-   ```
+Required environment variables in `apps/api/.env`:
 
-2. **Start infrastructure:**
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/skillshub?schema=public"
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
+GITHUB_CALLBACK_URL="http://localhost:3001/api/auth/callback"
+JWT_SECRET="your-jwt-secret-at-least-32-characters-long"
+```
 
-   ```bash
-   docker compose up -d
-   ```
+Optional: `FRONTEND_URL` (default `http://localhost:3001`), `API_URL` (default `http://localhost:3000`), `PORT` (default `3000`), `HOST` (default `0.0.0.0`), `JWT_EXPIRES_IN` (default `15m`), `REFRESH_TOKEN_EXPIRES_IN_DAYS` (default `7`), `GITHUB_TOKEN_ENCRYPTION_KEY`.
 
-   This starts PostgreSQL 16 on port 5432 and Redis 7 on port 6379.
-
-3. **Configure environment:**
-
-   ```bash
-   cp .env.example apps/api/.env
-   ```
-
-   Edit `apps/api/.env` and fill in your values:
-
-   ```env
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/skillshub?schema=public"
-   GITHUB_CLIENT_ID="your_github_client_id"
-   GITHUB_CLIENT_SECRET="your_github_client_secret"
-   GITHUB_CALLBACK_URL="http://localhost:3001/api/auth/callback"
-   JWT_SECRET="your-jwt-secret-at-least-32-characters-long"
-   FRONTEND_URL="http://localhost:3001"
-   API_URL="http://localhost:3000"
-   ```
-
-4. **Run database migrations and seed categories:**
-
-   ```bash
-   pnpm db:migrate
-   pnpm db:seed
-   ```
-
-5. **Start all apps in development mode:**
-
-   ```bash
-   pnpm dev
-   ```
-
-   - **API:** http://localhost:3000
-   - **Web:** http://localhost:3001
-   - **Health check:** http://localhost:3000/health
-
----
-
-## Development
-
-### Commands
+## Development Commands
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start all apps in dev mode (hot reload) |
+| `pnpm dev` | Start all apps (hot reload) |
 | `pnpm build` | Build all apps and packages |
-| `pnpm test` | Run all tests (Vitest) |
+| `pnpm test` | Run all unit tests (Vitest) |
 | `pnpm lint` | Type-check all packages |
 | `pnpm db:migrate` | Run Prisma migrations |
-| `pnpm db:seed` | Seed categories into the database |
+| `pnpm db:seed` | Seed categories |
 | `pnpm db:generate` | Regenerate Prisma Client |
-| `pnpm db:studio` | Open Prisma Studio (visual database browser) |
+| `pnpm db:studio` | Open Prisma Studio |
 | `docker compose up -d` | Start PostgreSQL + Redis |
 
-### Project Conventions
+Integration tests run against a real PostgreSQL database (`skillshub_test`):
 
-- **API routes** use the `/api/v1/` prefix on all endpoints
-- **Domain-split modules** live at `apps/api/src/modules/<domain>/` with routes, service, and repository files
-- **Username is immutable** after first GitHub login
-- **Public user API never exposes email** (PII separation)
-- **Cursor-based pagination** (not offset-based) on all list endpoints
-- **Prisma atomic `increment`** for denormalized counters (install count, review count)
-- **Tests live alongside features** in the same module directory
+```bash
+pnpm --filter @skills-hub/api test:integration
+```
 
-### Rate Limiting
+### Conventions
 
-Global rate limit: **300 requests/minute**
-
-Granular limits by route group:
-
-| Route Group | Limit |
-|-------------|-------|
-| Auth endpoints | 20/min |
-| Write operations | 30/min |
-| Search endpoints | 60/min |
+- `/api/v1/` prefix on all API endpoints
+- Domain-split modules: `apps/api/src/modules/<domain>/` (routes + service + repository)
+- Zod validation on all inputs; cursor-based pagination on all list endpoints
+- Prisma atomic `increment` for denormalized counters
+- Tests alongside features in the same module directory
+- Username immutable after first login; public API never exposes email
 
 ---
 
-## API Reference
+## API Overview
 
-All endpoints are prefixed with `/api/v1/`.
+All endpoints prefixed with `/api/v1/`. Auth via `Authorization: Bearer <jwt>` or `X-API-Key: <key>`.
 
-### Authentication
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/auth/github` | -- | Redirect to GitHub OAuth |
-| `POST` | `/auth/github/callback` | -- | Exchange auth code for JWT tokens |
-| `DELETE` | `/auth/session` | -- | Logout (clears refresh token cookie) |
+### Auth
+`GET /auth/github` | `POST /auth/github/callback` | `POST /auth/refresh` | `DELETE /auth/session`
 
 ### Users
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/users/me` | Required | Get authenticated user's private profile |
-| `PATCH` | `/users/me` | Required | Update profile (displayName, bio) |
-| `POST` | `/users/me/api-keys` | Required | Create a new API key |
-| `GET` | `/users/me/api-keys` | Required | List all API keys |
-| `DELETE` | `/users/me/api-keys/:id` | Required | Revoke an API key |
-| `GET` | `/users/:username` | -- | Get public profile |
+`GET /users/me` | `PATCH /users/me` | `POST /users/me/api-keys` | `GET /users/me/api-keys` | `DELETE /users/me/api-keys/:id` | `GET /users/:username`
 
 ### Skills
+`GET /skills` | `GET /skills/:slug` | `POST /skills` | `PATCH /skills/:slug` | `POST /skills/:slug/publish` | `DELETE /skills/:slug` | `PUT /skills/:slug/composition` | `DELETE /skills/:slug/composition`
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/skills` | Optional | List/search skills (cursor-paginated) |
-| `GET` | `/skills/:slug` | Optional | Get skill detail with versions and composition |
-| `POST` | `/skills` | Required | Create a new skill |
-| `PATCH` | `/skills/:slug` | Required | Update skill metadata |
-| `POST` | `/skills/:slug/publish` | Required | Publish a draft skill |
-| `DELETE` | `/skills/:slug` | Required | Archive a skill |
-| `PUT` | `/skills/:slug/composition` | Required | Set skill composition (chain of child skills) |
-| `DELETE` | `/skills/:slug/composition` | Required | Remove composition |
-
-**Skill query parameters:**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `q` | string | Full-text search across name, description, tags |
-| `author` | string | Filter by author username |
-| `category` | string | Filter by category slug |
-| `platform` | string | Filter by platform (`CLAUDE_CODE`, `CURSOR`, `CODEX_CLI`, `OTHER`) |
-| `visibility` | string | Filter by visibility (`PUBLIC`, `PRIVATE`, `UNLISTED`) |
-| `minScore` | number | Minimum quality score (0-100) |
-| `sort` | string | `newest` (default), `most_installed`, `highest_rated`, `recently_updated` |
-| `cursor` | string | Cursor for pagination |
-| `limit` | number | Results per page (1-100, default 20) |
+Query params: `q`, `author`, `category`, `platform`, `visibility`, `minScore`, `sort` (newest/most_installed/highest_rated/recently_updated), `cursor`, `limit`
 
 ### Versions
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/skills/:slug/versions` | -- | List all versions |
-| `GET` | `/skills/:slug/versions/:version` | -- | Get specific version details |
-| `POST` | `/skills/:slug/versions` | Required | Create a new version |
-| `GET` | `/skills/:slug/versions/:from/diff/:to` | -- | Diff between two versions |
+`GET /skills/:slug/versions` | `GET /skills/:slug/versions/:v` | `POST /skills/:slug/versions` | `GET /skills/:slug/versions/:from/diff/:to`
 
 ### Reviews
+`GET /skills/:slug/reviews` | `GET /skills/:slug/reviews/stats` | `POST /skills/:slug/reviews` | `PATCH /skills/reviews/:id` | `DELETE /skills/reviews/:id` | `POST /skills/reviews/:id/vote` | `POST /skills/reviews/:id/response`
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/skills/:slug/reviews` | Optional | List reviews for a skill |
-| `GET` | `/skills/:slug/reviews/stats` | -- | Get review statistics |
-| `POST` | `/skills/:slug/reviews` | Required | Create a review (1-5 rating + text) |
-| `PATCH` | `/skills/reviews/:id` | Required | Update a review |
-| `DELETE` | `/skills/reviews/:id` | Required | Delete a review |
-| `POST` | `/skills/reviews/:id/vote` | Required | Vote a review as helpful/unhelpful |
-| `POST` | `/skills/reviews/:id/response` | Required | Creator responds to a review |
+### Likes, Installs, Media
+`POST /skills/:slug/like` | `POST /skills/:slug/install` | `POST /skills/:slug/media` | `DELETE /skills/:slug/media/:id` | `PUT /skills/:slug/media/reorder`
+
+### Sandbox and Test Cases
+`POST /skills/:slug/sandbox` | `GET /skills/:slug/sandbox` | `GET /skills/:slug/test-cases` | `POST /skills/:slug/test-cases` | `PATCH /skills/:slug/test-cases/:id` | `DELETE /skills/:slug/test-cases/:id`
+
+### Agents
+`POST /agents` | `GET /agents` | `GET /agents/:id` | `PATCH /agents/:id` | `POST /agents/:id/execute` | `POST /agents/:id/pause` | `POST /agents/:id/resume` | `DELETE /agents/:id`
 
 ### Search
+`GET /search` | `GET /search/suggestions?q=`
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/search` | -- | Search skills (same query params as `/skills`) |
-| `GET` | `/search/suggestions?q=` | -- | Autocomplete suggestions (skills + tags) |
+### Categories and Tags
+`GET /categories` | `GET /categories/featured` | `GET /categories/:slug` | `GET /tags?q=&limit=`
 
-### Install Tracking
+### Organizations
+`POST /orgs` | `GET /orgs` | `GET /orgs/:slug` | `PATCH /orgs/:slug` | `DELETE /orgs/:slug` | Members, invites, templates, GitHub sync, and analytics endpoints under `/orgs/:slug/...`
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/skills/:slug/install` | Optional | Record an installation event |
-
-### Categories & Tags
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/categories` | -- | List all categories (sorted) |
-| `GET` | `/categories/:slug` | -- | Get category detail |
-| `GET` | `/tags?q=&limit=` | -- | List/search tags with skill counts |
-
-### Error Responses
-
-All errors follow a consistent format:
+### Error Format
 
 ```json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "Resource not found"
-  }
-}
+{ "error": { "code": "NOT_FOUND", "message": "Resource not found" } }
 ```
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | 400 | Request body or query failed validation |
-| `NOT_FOUND` | 404 | Resource does not exist |
-| `CONFLICT` | 409 | Resource already exists (unique constraint) |
-| `INTERNAL_ERROR` | 500 | Unexpected server error |
+Codes: `VALIDATION_ERROR` (400), `UNAUTHORIZED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `CONFLICT` (409), `INTERNAL_ERROR` (500)
+
+### Rate Limits
+
+Global: 300/min. Auth: 20/min. Writes: 30/min. Search: 60/min. Sandbox: 10/min. Agents: 20/min.
 
 ---
 
 ## CLI Usage
 
-The CLI is published as `skills-hub` on npm. Use it directly with `npx` or install globally.
-
-### Commands
-
 ```bash
-# Search for skills
-npx skills-hub search "code review"
-npx skills-hub search "deploy" --category deploy --sort highest_rated
-
-# Install a skill
-npx skills-hub install review-code
-npx skills-hub install review-code --version 2.1.0
-npx skills-hub install review-code --target cursor
-
-# List installed skills
-npx skills-hub list
-npx skills-hub ls
-
-# Update installed skills
-npx skills-hub update           # Update all skills
-npx skills-hub update review-code  # Update a specific skill
-
-# Authenticate
-npx skills-hub login             # Opens GitHub OAuth in browser
-npx skills-hub login --api-key sk_abc123  # Use an API key
+npx skills-hub search "code review"                   # search skills
+npx skills-hub install review-code                     # install a skill
+npx skills-hub install review-code --target cursor     # install for Cursor
+npx skills-hub list                                    # list installed
+npx skills-hub update                                  # update all installed
+npx skills-hub info review-code                        # skill details
+npx skills-hub diff review-code 1.0.0 2.0.0            # version diff
+npx skills-hub publish ./SKILL.md                      # publish a skill
+npx skills-hub login                                   # GitHub OAuth
+npx skills-hub org list                                # list organizations
+npx skills-hub categories                              # browse categories
 ```
 
-### Install Targets
+Install targets: Claude Code (`~/.claude/skills/`), Cursor (`~/.cursor/skills/`). Override with `--target`.
 
-The CLI auto-detects the appropriate install directory:
-
-| Platform | Install Path |
-|----------|-------------|
-| Claude Code | `~/.claude/skills/<slug>/SKILL.md` |
-| Cursor | `~/.cursor/skills/<slug>/SKILL.md` |
-
-Override with `--target cursor` or `--target claude-code`.
-
-### Configuration
-
-CLI config is stored at `~/.skills-hub/config.json`:
-
-```json
-{
-  "apiUrl": "https://api.skills-hub.ai",
-  "accessToken": "..."
-}
-```
-
----
-
-## Quality Scoring
-
-Every skill receives an automated quality score from 0 to 100, computed from two dimensions:
-
-### Schema Score (0-25 points)
-
-| Criteria | Points |
-|----------|--------|
-| All required fields present (name, description, instructions, version) | 10 |
-| Description >= 50 characters | 5 |
-| Valid semver version | 5 |
-| Valid category slug | 5 |
-
-### Instruction Score (0-75 points)
-
-| Criteria | Points |
-|----------|--------|
-| Instructions >= 500 characters | 10 |
-| Instructions >= 2,000 characters | 5 |
-| Structured phases/steps detected | 15 |
-| Input/output specification present | 10 |
-| Error handling instructions | 10 |
-| Guardrails / strict rules defined | 10 |
-| Examples or code blocks present | 10 |
-| Output format specification | 5 |
-
-**Minimum score to publish:** 20
+Config stored at `~/.skills-hub/config.json`.
 
 ---
 
 ## SKILL.md Format
-
-Skills use a YAML frontmatter format:
 
 ```markdown
 ---
@@ -381,81 +215,18 @@ version: 1.0.0
 category: review
 platforms:
   - CLAUDE_CODE
-  - CURSOR
 ---
 
-Your skill instructions go here. This is the content that gets
-loaded as context when the skill is invoked.
-
-## Phase 1: Analysis
-...
-
-## Phase 2: Implementation
-...
+Skill instructions go here...
 ```
-
-### Frontmatter Fields
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `name` | Yes | Display name (1-100 chars) |
 | `description` | Yes | Short description (10-1,000 chars) |
-| `version` | Yes | Semver version (e.g., `1.0.0`) |
-| `category` | No | Category slug (see Categories below) |
-| `platforms` | No | Target platforms array |
-
-### Categories
-
-`build`, `test`, `qa`, `review`, `deploy`, `docs`, `security`, `ux`, `analysis`, `productivity`, `integration`, `combo`, `meta`
-
-### Platforms
-
-`CLAUDE_CODE`, `CURSOR`, `CODEX_CLI`, `OTHER`
-
----
-
-## Database Schema
-
-The data model uses PostgreSQL 16 with Prisma 6:
-
-- **User** -- GitHub-linked accounts with username, avatar, bio
-- **ApiKey** -- Hashed API keys with prefix display and expiry
-- **Skill** -- Core entity with slug, quality score, denormalized counters
-- **SkillVersion** -- Versioned instructions with changelogs and per-version quality scores
-- **Category** -- Curated taxonomy (13 categories, seeded on setup)
-- **Tag / SkillTag** -- User-applied freeform tags (many-to-many)
-- **Review / ReviewVote / ReviewResponse** -- Ratings, helpfulness voting, creator responses
-- **Install** -- Installation tracking by platform and version
-- **Composition / CompositionSkill** -- Skill chaining with sort order and parallel execution flags
-
----
-
-## Deployment
-
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | -- | PostgreSQL connection string |
-| `GITHUB_CLIENT_ID` | Yes | -- | GitHub OAuth app client ID |
-| `GITHUB_CLIENT_SECRET` | Yes | -- | GitHub OAuth app client secret |
-| `GITHUB_CALLBACK_URL` | Yes | -- | OAuth callback URL |
-| `JWT_SECRET` | Yes | -- | JWT signing secret (min 32 chars) |
-| `JWT_EXPIRES_IN` | No | `15m` | Access token TTL |
-| `REFRESH_TOKEN_EXPIRES_IN_DAYS` | No | `7` | Refresh token TTL in days |
-| `FRONTEND_URL` | No | `http://localhost:3001` | Frontend origin (CORS) |
-| `API_URL` | No | `http://localhost:3000` | API base URL |
-| `PORT` | No | `3000` | API server port |
-| `HOST` | No | `0.0.0.0` | API server bind address |
-| `NODE_ENV` | No | `development` | `development`, `production`, or `test` |
-
-### Production Build
-
-```bash
-pnpm build
-pnpm --filter @skills-hub/api start   # Start API server
-pnpm --filter @skills-hub/web start   # Start Next.js server
-```
+| `version` | Yes | Semver version |
+| `category` | No | One of: build, test, qa, review, deploy, docs, security, ux, analysis, productivity, integration, combo, meta |
+| `platforms` | No | `CLAUDE_CODE`, `CURSOR`, `CODEX_CLI`, `OTHER` |
 
 ---
 
@@ -463,11 +234,9 @@ pnpm --filter @skills-hub/web start   # Start Next.js server
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Make your changes with tests alongside features
-4. Run `pnpm test` and `pnpm lint` to verify
+3. Make changes with tests alongside features
+4. Run `pnpm test` and `pnpm lint`
 5. Submit a pull request
-
----
 
 ## License
 
