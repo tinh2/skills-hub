@@ -36,7 +36,7 @@ Check for OWASP top 10 vulnerabilities.
 `;
 
 function makeDirent(name: string): ReturnType<typeof readdirSync>[0] {
-  return { name, isDirectory: () => true, isFile: () => false } as ReturnType<typeof readdirSync>[0];
+  return { name, isDirectory: () => true, isFile: () => false } as unknown as ReturnType<typeof readdirSync>[0];
 }
 
 beforeEach(() => {

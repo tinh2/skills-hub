@@ -20,6 +20,7 @@ skills-hub.ai is a full-stack platform where developers publish, discover, and i
 | Backend | Fastify 5 + Prisma 6 + PostgreSQL 16 |
 | Frontend | Next.js 15 (App Router) + Tailwind CSS 4 + React 19 |
 | CLI | Commander.js 12 + Chalk + Ora |
+| MCP Server | @modelcontextprotocol/sdk (stdio transport) |
 | Auth | GitHub OAuth + JWT (jose) + httpOnly refresh cookies |
 | Validation | Zod 3 (shared across all layers) |
 | State | TanStack Query 5 (server) + Zustand 5 (client) |
@@ -60,6 +61,7 @@ skills-hub/
                          publish, settings, orgs, categories, docs
     cli/                 CLI tool (15 commands + org subcommands)
       src/commands/      login, search, install, publish, org, etc.
+    mcp/                 MCP server (skills as prompts for any AI tool)
   packages/
     shared/              Zod schemas, TypeScript types, constants
     skill-parser/        SKILL.md frontmatter parser + OpenFang adapter
@@ -171,6 +173,7 @@ This produces:
 - `apps/api/dist/` -- compiled Fastify server
 - `apps/web/.next/` -- Next.js build
 - `packages/shared/dist/` -- compiled types and schemas
+- `apps/mcp/dist/` -- compiled MCP server
 - `packages/skill-parser/dist/` -- compiled parser
 
 Both apps have multi-stage Dockerfiles (`apps/api/Dockerfile`, `apps/web/Dockerfile`) based on Node.js 22 Alpine. Build context is the repository root:
@@ -215,7 +218,7 @@ CI/CD: Pushes to `main` trigger GitHub Actions to build, test, push Docker image
 
 - **Skill Discovery** -- Browse and search by category, platform, quality score, tags, and author
 - **Quality Scoring** -- Automated 0--100 score based on schema completeness and instruction quality
-- **One-Command Install** -- `npx skills-hub install <slug>` with platform targeting
+- **One-Command Install** -- `npx skills-hub install <slug>` with automatic dependency resolution for composition skills
 - **Version Management** -- Semver versioning, changelogs, and version diffs
 - **Ratings and Reviews** -- Star ratings, text reviews, helpfulness voting, creator responses
 - **Skill Compositions** -- Chain multiple skills into pipelines with sequential or parallel execution
@@ -224,6 +227,7 @@ CI/CD: Pushes to `main` trigger GitHub Actions to build, test, push Docker image
 - **Sandbox Testing** -- Run skills in sandboxed environments with test cases
 - **Agent Deployment** -- Deploy skills as persistent agents with manual, scheduled, webhook, or channel triggers
 - **AI-Powered Skill Generation** -- Describe what you want on the publish page and generate name, description, category, tags, and instructions via OpenRouter (supports Claude Sonnet 4, Claude Haiku 4, GPT-4o, Gemini 2.0 Flash). Per-field "Suggest" buttons for targeted regeneration. Client-side only -- your API key stays in the browser
+- **MCP Server** -- Serve installed skills as prompts in any MCP-compatible AI tool (Claude Code, Cursor, Windsurf, Copilot, etc.)
 - **Visibility Controls** -- Public, Private, Unlisted, and Organization-scoped skills
 - **API Key Auth** -- Named API keys with optional expiry for CLI and programmatic access
 
@@ -244,6 +248,32 @@ npx skills-hub org list                          # list organizations
 ```
 
 Config is stored at `~/.skills-hub/config.json`.
+
+## MCP Server
+
+The MCP server exposes installed skills as prompts in any MCP-compatible AI tool -- not just Claude Code and Cursor.
+
+### Setup
+
+**Claude Code:**
+
+```bash
+claude mcp add skills-hub -- npx @skills-hub-ai/mcp
+```
+
+**Cursor** (add to `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "skills-hub": { "command": "npx", "args": ["@skills-hub-ai/mcp"] }
+  }
+}
+```
+
+**Any MCP client:** Run `npx @skills-hub-ai/mcp` as a stdio server.
+
+The server scans `~/.claude/skills/` and `~/.cursor/skills/` for installed SKILL.md files and serves each as an MCP prompt. Skills show up as slash commands in your AI tool.
 
 ## SKILL.md Format
 
