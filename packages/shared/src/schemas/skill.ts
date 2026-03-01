@@ -40,7 +40,7 @@ export const skillQuerySchema = z.object({
   category: z.enum(CATEGORY_SLUGS as [string, ...string[]]).optional(),
   platform: z.enum(PLATFORMS).optional(),
   visibility: z.enum(VISIBILITY).optional(),
-  status: z.enum(["PUBLISHED", "DRAFT", "ARCHIVED"]).optional(),
+  status: z.enum(["PUBLISHED", "DRAFT", "PENDING_REVIEW", "ARCHIVED"]).optional(),
   org: z.string().optional(),
   minScore: z.coerce.number().int().min(0).max(100).optional(),
   sort: z

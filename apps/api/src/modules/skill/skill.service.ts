@@ -221,8 +221,8 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
 export async function listSkills(query: SkillQuery, requesterId?: string | null) {
   const where: Prisma.SkillWhereInput = {};
 
-  // Status filter: DRAFT/ARCHIVED require author ownership
-  if (query.status === "DRAFT" || query.status === "ARCHIVED") {
+  // Status filter: non-PUBLISHED statuses require author ownership
+  if (query.status === "DRAFT" || query.status === "ARCHIVED" || query.status === "PENDING_REVIEW") {
     if (!requesterId) throw new ForbiddenError("Authentication required");
     where.status = query.status;
     where.authorId = requesterId;
