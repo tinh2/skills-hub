@@ -120,7 +120,7 @@ export async function createReview(
   slug: string,
   input: CreateReviewInput,
 ): Promise<ReviewSummary> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({ where: { slug }, select: { id: true, authorId: true } });
   if (!skill) throw new NotFoundError("Skill");
   if (skill.authorId === userId) throw new ForbiddenError("You cannot review your own skill");
 
@@ -190,7 +190,7 @@ export async function updateReview(
   reviewId: string,
   input: UpdateReviewInput,
 ): Promise<void> {
-  const review = await prisma.review.findUnique({ where: { id: reviewId } });
+  const review = await prisma.review.findUnique({ where: { id: reviewId }, select: { id: true, skillId: true, authorId: true } });
   if (!review) throw new NotFoundError("Review");
   if (review.authorId !== userId) throw new ForbiddenError("You can only edit your own reviews");
 
@@ -211,7 +211,7 @@ export async function updateReview(
 }
 
 export async function deleteReview(userId: string, reviewId: string): Promise<void> {
-  const review = await prisma.review.findUnique({ where: { id: reviewId } });
+  const review = await prisma.review.findUnique({ where: { id: reviewId }, select: { id: true, skillId: true, authorId: true } });
   if (!review) throw new NotFoundError("Review");
   if (review.authorId !== userId) throw new ForbiddenError("You can only delete your own reviews");
 

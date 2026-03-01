@@ -193,7 +193,7 @@ export default function PublishPage() {
                 type="button"
                 onClick={() => handlePlatformToggle(p)}
                 aria-pressed={form.platforms.includes(p)}
-                className={`rounded-lg px-3 py-1.5 text-sm ${
+                className={`min-h-[44px] rounded-lg px-3 py-1.5 text-sm ${
                   form.platforms.includes(p)
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
                     : "bg-[var(--accent)] text-[var(--muted)]"
@@ -214,7 +214,7 @@ export default function PublishPage() {
                 type="button"
                 onClick={() => setForm({ ...form, visibility: v })}
                 aria-pressed={form.visibility === v}
-                className={`rounded-lg px-3 py-1.5 text-sm ${
+                className={`min-h-[44px] rounded-lg px-3 py-1.5 text-sm ${
                   form.visibility === v
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
                     : "bg-[var(--accent)] text-[var(--muted)]"

@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       const res = await fetch(`${API_BASE}/api/v1/skills?${params}`, {
         next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(10000),
       });
       if (!res.ok) break;
 

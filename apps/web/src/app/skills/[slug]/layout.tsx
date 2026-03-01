@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/skills/${slug}`, {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return { title: "Skill not found — skills-hub.ai" };
 

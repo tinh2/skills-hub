@@ -61,7 +61,7 @@ export function ReviewCard({
                 <span key={`filled-${i}`} className="text-[var(--warning)]">{"\u2605"}</span>
               ))}
               {Array.from({ length: 5 - review.rating }, (_, i) => (
-                <span key={`empty-${i}`} className="text-gray-300 dark:text-gray-600">{"\u2605"}</span>
+                <span key={`empty-${i}`} className="text-[var(--border)]">{"\u2605"}</span>
               ))}
             </span>
             <span className="ml-1">{review.rating}/5</span>
