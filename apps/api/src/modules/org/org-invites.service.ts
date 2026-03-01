@@ -32,23 +32,21 @@ export async function inviteMember(
     throw new ValidationError(`Organization is at max capacity (${ORG_LIMITS.MAX_MEMBERS} members)`);
   }
 
-  let inviteeUserId: string | undefined;
-  if (input.username) {
-    const user = await prisma.user.findUnique({ where: { username: input.username } });
-    if (!user) throw new NotFoundError("User");
+  // username is guaranteed non-empty by inviteMemberSchema (z.string().min(1))
+  const user = await prisma.user.findUnique({ where: { username: input.username } });
+  if (!user) throw new NotFoundError("User");
 
-    const existing = await prisma.orgMembership.findUnique({
-      where: { orgId_userId: { orgId: org.id, userId: user.id } },
-    });
-    if (existing) throw new ConflictError("User is already a member of this organization");
+  const existing = await prisma.orgMembership.findUnique({
+    where: { orgId_userId: { orgId: org.id, userId: user.id } },
+  });
+  if (existing) throw new ConflictError("User is already a member of this organization");
 
-    const pendingInvite = await prisma.orgInvite.findFirst({
-      where: { orgId: org.id, inviteeUserId: user.id, status: "PENDING" },
-    });
-    if (pendingInvite) throw new ConflictError("User already has a pending invite");
+  const pendingInvite = await prisma.orgInvite.findFirst({
+    where: { orgId: org.id, inviteeUserId: user.id, status: "PENDING" },
+  });
+  if (pendingInvite) throw new ConflictError("User already has a pending invite");
 
-    inviteeUserId = user.id;
-  }
+  const inviteeUserId = user.id;
 
   const token = generateInviteToken();
   const expiresAt = new Date(Date.now() + ORG_LIMITS.INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);

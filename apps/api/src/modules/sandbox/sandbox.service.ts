@@ -263,18 +263,12 @@ export async function getSandboxRunById(
 ): Promise<SandboxRunSummary> {
   const run = await prisma.sandboxRun.findUnique({
     where: { id: runId },
-    select: sandboxRunSelect,
+    select: { ...sandboxRunSelect, userId: true },
   });
-  if (!run) throw new NotFoundError("SandboxRun");
+  if (!run || run.userId !== userId) throw new NotFoundError("SandboxRun");
 
-  // Users can only poll their own runs
-  const fullRun = await prisma.sandboxRun.findUnique({
-    where: { id: runId },
-    select: { userId: true },
-  });
-  if (fullRun?.userId !== userId) throw new NotFoundError("SandboxRun");
-
-  return formatSandboxRun(run);
+  const { userId: _uid, ...runData } = run;
+  return formatSandboxRun(runData as SandboxRunRow);
 }
 
 // --- Test Cases ---

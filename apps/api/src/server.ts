@@ -125,8 +125,16 @@ async function start() {
 
     // Start job queue workers if Redis is available
     if (isQueueAvailable()) {
-      workers.push(createWorker(SANDBOX_QUEUE, processSandboxJob, { concurrency: 5 }));
-      workers.push(createWorker(AGENT_QUEUE, processAgentJob, { concurrency: 5 }));
+      const sandboxWorker = createWorker(SANDBOX_QUEUE, processSandboxJob, { concurrency: 5 });
+      sandboxWorker.on("error", (err) => app.log.error({ queue: SANDBOX_QUEUE, err }, "Worker error"));
+      sandboxWorker.on("failed", (job, err) => app.log.error({ queue: SANDBOX_QUEUE, jobId: job?.id, err }, "Job failed"));
+      workers.push(sandboxWorker);
+
+      const agentWorker = createWorker(AGENT_QUEUE, processAgentJob, { concurrency: 5 });
+      agentWorker.on("error", (err) => app.log.error({ queue: AGENT_QUEUE, err }, "Worker error"));
+      agentWorker.on("failed", (job, err) => app.log.error({ queue: AGENT_QUEUE, jobId: job?.id, err }, "Job failed"));
+      workers.push(agentWorker);
+
       app.log.info("Job queue workers started (sandbox + agent)");
     }
 

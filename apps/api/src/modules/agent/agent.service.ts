@@ -345,7 +345,7 @@ export async function executeAgent(
 
   // Inline fallback (no Redis)
   const startTime = Date.now();
-  let output: string;
+  let output = "";
   let tokenCount = 0;
   let status: "COMPLETED" | "FAILED" | "TIMEOUT" = "COMPLETED";
   let errorMessage: string | null = null;
@@ -362,8 +362,7 @@ export async function executeAgent(
       if (result.status === "failed") {
         status = "FAILED";
         errorMessage = result.error ?? "Execution failed";
-      }
-      if (result.status === "timeout") {
+      } else if (result.status === "timeout") {
         status = "TIMEOUT";
         errorMessage = "Execution timed out";
       }
