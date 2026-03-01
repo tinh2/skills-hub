@@ -130,7 +130,7 @@ export default function EditSkillPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Edit: {skill.name}</h1>
+        <h1 className="text-3xl font-bold">Edit: {skill.name}</h1>
         <div className="flex gap-2">
           {skill.status === "DRAFT" && (
             <button
@@ -152,7 +152,7 @@ export default function EditSkillPage() {
 
       <div aria-live="polite" aria-atomic="true">
         {msg && (
-          <p role="status" className={`mb-4 text-sm ${msg.includes("updated") || msg.includes("created") || msg.includes("published") ? "text-green-600" : "text-red-600"}`}>
+          <p role="status" className={`mb-4 text-sm ${msg.includes("updated") || msg.includes("created") || msg.includes("published") ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
             {msg}
           </p>
         )}

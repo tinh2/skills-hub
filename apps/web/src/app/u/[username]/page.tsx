@@ -73,7 +73,7 @@ export default function UserProfilePage() {
       <section aria-labelledby="user-skills-heading">
         <h2 id="user-skills-heading" className="mb-4 text-xl font-bold">Published Skills</h2>
         {loadingSkills && (
-          <div className="flex items-center py-8">
+          <div className="flex items-center justify-center py-8">
             <span className="loading-spinner" aria-hidden="true" />
             <span className="ml-3 text-[var(--muted)]">Loading skills...</span>
           </div>

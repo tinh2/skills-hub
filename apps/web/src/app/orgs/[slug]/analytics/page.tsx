@@ -39,7 +39,7 @@ export default function OrgAnalyticsPage() {
       </div>
 
       {isLoading && (
-        <div className="flex items-center py-8">
+        <div className="flex items-center justify-center py-8">
           <span className="loading-spinner" aria-hidden="true" />
           <span className="ml-3 text-[var(--muted)]">Loading analytics...</span>
         </div>
@@ -105,7 +105,7 @@ export default function OrgAnalyticsPage() {
           {analytics.recentInstalls.length > 0 && (
             <section>
               <h2 className="mb-3 text-lg font-semibold">Install Activity (Last 30 Days)</h2>
-              <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
+              <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
                 <div className="flex items-end gap-1" role="img" aria-label={`Bar chart showing install activity over the last 30 days, total ${analytics.recentInstalls.reduce((s, d) => s + d.count, 0)} installs`} style={{ height: 120 }}>
                   {analytics.recentInstalls.map((day) => {
                     const maxCount = Math.max(...analytics.recentInstalls.map((d) => d.count));

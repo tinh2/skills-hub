@@ -342,7 +342,7 @@ function BrowseContent() {
 
       {/* Results */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-16">
           <span className="loading-spinner" aria-hidden="true" />
           <span className="ml-3 text-[var(--muted)]">Loading skills...</span>
         </div>
@@ -371,8 +371,8 @@ function BrowseContent() {
         </>
       )}
       {!isLoading && allSkills.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="mb-2 text-lg text-[var(--muted)]">
+        <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
+          <p className="mb-2 text-[var(--muted)]">
             No skills found matching your criteria.
           </p>
           {hasActiveFilters && (
@@ -411,7 +411,7 @@ export default function BrowsePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-16">
           <span className="loading-spinner" aria-hidden="true" />
           <span className="ml-3 text-[var(--muted)]">Loading...</span>
         </div>

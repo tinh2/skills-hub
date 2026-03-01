@@ -84,8 +84,8 @@ export default function OrgMembersPage() {
       {/* Invite form (admin only) */}
       {isAdmin && (
         <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
-          <h2 className="mb-3 text-sm font-semibold">Invite Member</h2>
-          {inviteError && <p role="alert" className="mb-2 text-sm text-red-600">{inviteError}</p>}
+          <h2 className="mb-3 text-lg font-semibold">Invite Member</h2>
+          {inviteError && <p role="alert" className="mb-2 text-sm text-[var(--error)]">{inviteError}</p>}
           <div className="flex gap-2">
             <label htmlFor="invite-username" className="sr-only">GitHub username</label>
             <input
@@ -121,7 +121,7 @@ export default function OrgMembersPage() {
       {/* Pending invites */}
       {isAdmin && invitesData && invitesData.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold">Pending Invites ({invitesData.length})</h2>
+          <h2 className="mb-3 text-lg font-semibold">Pending Invites ({invitesData.length})</h2>
           <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--card-border)] bg-[var(--card)]">
             {invitesData.map((inv) => (
               <div key={inv.id} className="flex items-center justify-between px-4 py-3">
@@ -134,7 +134,7 @@ export default function OrgMembersPage() {
                 <button
                   onClick={() => revokeInvite.mutate(inv.id)}
                   disabled={revokeInvite.isPending}
-                  className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
+                  className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-[var(--error)] transition-colors hover:bg-[var(--error-subtle)] hover:underline disabled:opacity-50"
                   aria-label={`Revoke invite for ${inv.inviteeUsername ?? "open invite"}`}
                 >
                   Revoke
@@ -147,7 +147,7 @@ export default function OrgMembersPage() {
 
       {/* Members list */}
       {isLoading && (
-        <div className="flex items-center py-8">
+        <div className="flex items-center justify-center py-8">
           <span className="loading-spinner" aria-hidden="true" />
           <span className="ml-3 text-[var(--muted)]">Loading members...</span>
         </div>
@@ -190,7 +190,7 @@ export default function OrgMembersPage() {
                       if (confirm(`Remove ${m.user.username}?`)) removeMember.mutate(m.user.id);
                     }}
                     disabled={removeMember.isPending}
-                    className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
+                    className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-[var(--error)] transition-colors hover:bg-[var(--error-subtle)] hover:underline disabled:opacity-50"
                     aria-label={`Remove ${m.user.username}`}
                   >
                     Remove

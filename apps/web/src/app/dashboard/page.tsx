@@ -81,7 +81,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {actionError && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950">{actionError}</p>}
+      {actionError && <p role="alert" className="mb-4 rounded-lg bg-[var(--error-subtle)] p-3 text-sm text-[var(--error)]">{actionError}</p>}
 
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -158,7 +158,7 @@ export default function DashboardPage() {
         aria-labelledby={`tab-${tab}`}
       >
         {(tab === "published" ? loadingPublished : loadingDrafts) && (
-          <div className="flex items-center py-8">
+          <div className="flex items-center justify-center py-8">
             <span className="loading-spinner" aria-hidden="true" />
             <span className="ml-3 text-[var(--muted)]">Loading skills...</span>
           </div>
