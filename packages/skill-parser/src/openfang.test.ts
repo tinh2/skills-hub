@@ -96,6 +96,12 @@ describe("translateToHand", () => {
     expect(config.hand.name).toMatch(/^[a-z0-9-]+$/);
   });
 
+  it("falls back to 'unnamed-hand' for all-special-char names", () => {
+    const skill: ParsedSkill = { ...sampleSkill, name: "@#$%^&*()" };
+    const config = translateToHand(skill);
+    expect(config.hand.name).toBe("unnamed-hand");
+  });
+
   it("handles missing category", () => {
     const skill: ParsedSkill = {
       ...sampleSkill,
@@ -134,8 +140,8 @@ describe("serializeHandToml", () => {
     const config = translateToHand(sampleSkill);
     const toml = serializeHandToml(config);
 
-    // Long instructions should use triple-quoted literals
-    expect(toml).toContain("'''");
+    // Long instructions should use multiline basic strings
+    expect(toml).toContain('"""');
   });
 
   it("escapes special characters in strings", () => {
@@ -148,6 +154,18 @@ describe("serializeHandToml", () => {
 
     expect(toml).toContain('\\"quotes\\"');
     expect(toml).toContain("\\\\");
+  });
+
+  it("escapes control characters in strings", () => {
+    const skill: ParsedSkill = {
+      ...sampleSkill,
+      description: "Has\ttabs and\rcarriage returns",
+    };
+    const config = translateToHand(skill);
+    const toml = serializeHandToml(config);
+
+    expect(toml).toContain("\\t");
+    expect(toml).toContain("\\r");
   });
 
   it("serializes arrays correctly", () => {

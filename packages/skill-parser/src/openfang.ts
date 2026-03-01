@@ -157,25 +157,45 @@ function extractUserTemplate(instructions: string): string {
  * OpenFang hand names must be lowercase alphanumeric with hyphens.
  */
 function sanitizeName(name: string): string {
-  return name
+  const sanitized = name
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 64);
+
+  // Fallback for names that are entirely special characters
+  return sanitized || "unnamed-hand";
 }
 
 function tomlString(value: string): string {
-  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`;
+  return `"${value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t")
+    .replace(/\x0c/g, "\\f")
+    .replace(/\x08/g, "\\b")
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x07\x0e-\x1f\x7f]/g, (ch) =>
+      `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,
+    )}"`;
 }
 
 function tomlMultilineString(value: string): string {
-  // Use TOML multiline literal strings for long content
+  // Use TOML multiline basic strings (""") for long content
+  // These support escape sequences, unlike literal strings (''')
   if (value.length > 200 || value.includes("\n")) {
-    // Escape any triple quotes in the content
-    const escaped = value.replace(/'''/g, "'''\\'''");
-    return `'''\n${escaped}\n'''`;
+    const escaped = value
+      .replace(/\\/g, "\\\\")
+      .replace(/"""/g, '\\"\\"\\"\\"')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x08\x0e-\x1f\x7f]/g, (ch) =>
+        `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,
+      );
+    return `"""\n${escaped}\n"""`;
   }
   return tomlString(value);
 }
