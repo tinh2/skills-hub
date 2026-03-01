@@ -68,13 +68,13 @@ export async function getFeaturedSkillPerCategory(): Promise<Record<string, Skil
   });
 
   // Single query: get top skill per category using Prisma raw for DISTINCT ON
+  // Falls back to installCount when no likes exist (e.g. freshly seeded data)
   const topSkillIds = await prisma.$queryRaw<{ id: string }[]>`
     SELECT DISTINCT ON ("categoryId") id
     FROM "Skill"
     WHERE status = 'PUBLISHED'
       AND visibility = 'PUBLIC'
-      AND "likeCount" >= 1
-    ORDER BY "categoryId", "likeCount" DESC
+    ORDER BY "categoryId", "likeCount" DESC, "installCount" DESC
   `;
 
   const result: Record<string, SkillSummary | null> = {};
@@ -116,9 +116,8 @@ export async function getFeaturedSkill(categorySlug: string): Promise<SkillSumma
       categoryId: category.id,
       status: "PUBLISHED",
       visibility: "PUBLIC",
-      likeCount: { gte: 1 },
     },
-    orderBy: { likeCount: "desc" },
+    orderBy: [{ likeCount: "desc" }, { installCount: "desc" }],
     select: summarySelect,
   });
 

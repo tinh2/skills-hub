@@ -8,6 +8,7 @@ import type {
   ReviewStats,
   VersionSummary,
   VersionDetail,
+  VersionDiff,
   ApiKeyResponse,
   ApiKeyCreatedResponse,
   AuthTokens,
@@ -192,6 +193,8 @@ export const versions = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  diff: (slug: string, from: string, to: string) =>
+    apiFetch<VersionDiff>(`/api/v1/skills/${slug}/versions/${from}/diff/${to}`),
 };
 
 // Reviews

@@ -103,6 +103,7 @@ model Skill {
   @@index([qualityScore(sort: Desc)])
   @@index([installCount(sort: Desc)])
   @@index([likeCount(sort: Desc)])
+  @@index([avgRating(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@index([updatedAt(sort: Desc)])
 }

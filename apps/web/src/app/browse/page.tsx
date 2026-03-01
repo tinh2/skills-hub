@@ -18,6 +18,19 @@ function BrowseContent() {
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
   const [minScore, setMinScore] = useState(searchParams.get("minScore") || "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -78,6 +91,14 @@ function BrowseContent() {
 
   const featuredSkill = category && featuredMap ? featuredMap[category] : null;
 
+  // Autocomplete suggestions
+  const { data: suggestions } = useQuery({
+    queryKey: ["suggestions", searchQuery],
+    queryFn: () => searchApi.suggestions(searchQuery),
+    enabled: searchQuery.length >= 2,
+    staleTime: 30_000,
+  });
+
   const {
     data,
     isLoading,
@@ -113,15 +134,66 @@ function BrowseContent() {
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-3">
-        <div className="relative">
+        <div className="relative" ref={suggestionsRef}>
           <input
             type="search"
             placeholder="Search skills..."
             aria-label="Search skills"
+            aria-expanded={showSuggestions && !!suggestions && (suggestions.skills.length > 0 || suggestions.tags.length > 0)}
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
             value={searchQuery}
-            onChange={(e) => handleFilterChange("q", e.target.value)}
+            onChange={(e) => {
+              handleFilterChange("q", e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setShowSuggestions(false);
+            }}
             className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
           />
+          {showSuggestions && searchQuery.length >= 2 && suggestions && (suggestions.skills.length > 0 || suggestions.tags.length > 0) && (
+            <div
+              role="listbox"
+              className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-[var(--border)] bg-[var(--background)] py-1 shadow-lg"
+            >
+              {suggestions.skills.length > 0 && (
+                <div>
+                  <p className="px-3 py-1 text-xs font-medium text-[var(--muted)]">Skills</p>
+                  {suggestions.skills.map((s) => (
+                    <Link
+                      key={s.slug}
+                      href={`/skills/${s.slug}`}
+                      role="option"
+                      onClick={() => setShowSuggestions(false)}
+                      className="block min-h-[44px] px-3 py-2 text-sm hover:bg-[var(--accent)]"
+                    >
+                      {s.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {suggestions.tags.length > 0 && (
+                <div>
+                  <p className="px-3 py-1 text-xs font-medium text-[var(--muted)]">Tags</p>
+                  {suggestions.tags.map((tag) => (
+                    <button
+                      key={tag}
+                      role="option"
+                      onClick={() => {
+                        setSearchQuery(tag);
+                        setShowSuggestions(false);
+                      }}
+                      className="block min-h-[44px] w-full px-3 py-2 text-left text-sm hover:bg-[var(--accent)]"
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <select
           value={category}

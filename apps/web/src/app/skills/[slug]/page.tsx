@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { skills as skillsApi, versions as versionsApi, reviews as reviewsApi, installs, likes } from "@/lib/api";
+import type { VersionDiff } from "@skills-hub/shared";
 import { ReviewCard } from "@/components/review-card";
 import { MediaGallery } from "@/components/media-gallery";
 import { useAuthStore } from "@/lib/auth-store";
@@ -20,7 +21,7 @@ export default function SkillDetailPage() {
   const { isAuthenticated, user: authUser } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const { data: skill, isLoading } = useQuery({
+  const { data: skill, isLoading, error: skillError } = useQuery({
     queryKey: ["skill", slug],
     queryFn: () => skillsApi.get(slug),
   });
@@ -59,6 +60,26 @@ export default function SkillDetailPage() {
   // Download state
   const [isDownloading, setIsDownloading] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
+
+  // Version diff state
+  const [activeDiff, setActiveDiff] = useState<{ version: string; diff: VersionDiff } | null>(null);
+  const [loadingDiff, setLoadingDiff] = useState<string | null>(null);
+
+  async function handleViewDiff(fromVersion: string, toVersion: string) {
+    if (activeDiff?.version === toVersion) {
+      setActiveDiff(null);
+      return;
+    }
+    setLoadingDiff(toVersion);
+    try {
+      const diff = await versionsApi.diff(slug, fromVersion, toVersion);
+      setActiveDiff({ version: toVersion, diff });
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingDiff(null);
+    }
+  }
 
   // Install tracking
   const trackInstall = useMutation({
@@ -137,8 +158,43 @@ export default function SkillDetailPage() {
     );
   }
 
+  if (skillError) {
+    const is404 = skillError.message?.includes("not found") || skillError.message?.includes("404");
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <h1 className="mb-2 text-2xl font-bold">{is404 ? "Skill not found" : "Something went wrong"}</h1>
+        <p className="mb-6 text-[var(--muted)]">
+          {is404
+            ? "This skill may have been removed or the URL is incorrect."
+            : "We couldn't load this skill. Please try again."}
+        </p>
+        <div className="flex gap-3">
+          <Link href="/browse" className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)]">
+            Browse Skills
+          </Link>
+          {!is404 && (
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!skill) {
-    return <p className="text-[var(--error)]">Skill not found.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <h1 className="mb-2 text-2xl font-bold">Skill not found</h1>
+        <p className="mb-6 text-[var(--muted)]">This skill may have been removed or the URL is incorrect.</p>
+        <Link href="/browse" className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)]">
+          Browse Skills
+        </Link>
+      </div>
+    );
   }
 
   const installCmd = `npx skills-hub install ${skill.slug}`;
@@ -487,26 +543,56 @@ export default function SkillDetailPage() {
           <h3 className="mb-3 text-sm font-medium">Version History</h3>
           <ul className="space-y-2">
             {skill.versions.slice(0, 5).map((v, i) => (
-              <li key={v.id} className="flex items-start justify-between text-sm">
-                <div>
-                  <span className="font-medium">v{v.version}</span>
-                  <span className="ml-2 text-xs text-[var(--muted)]">
-                    {new Date(v.createdAt).toLocaleDateString()}
-                  </span>
-                  {v.changelog && (
-                    <p className="mt-0.5 text-xs text-[var(--muted)]">
-                      {v.changelog}
-                    </p>
-                  )}
+              <li key={v.id} className="text-sm">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="font-medium">v{v.version}</span>
+                    <span className="ml-2 text-xs text-[var(--muted)]">
+                      {new Date(v.createdAt).toLocaleDateString()}
+                    </span>
+                    {v.changelog && (
+                      <p className="mt-0.5 text-xs text-[var(--muted)]">
+                        {v.changelog}
+                      </p>
+                    )}
+                  </div>
+                  <div className="ml-2 flex shrink-0 gap-1">
+                    {i > 0 && i < skill.versions.length && (
+                      <button
+                        onClick={() => handleViewDiff(skill.versions[i].version, skill.versions[i - 1].version)}
+                        disabled={loadingDiff === skill.versions[i - 1].version}
+                        className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+                        aria-label={`View changes from v${v.version} to v${skill.versions[i - 1].version}`}
+                      >
+                        {loadingDiff === skill.versions[i - 1].version ? "..." : activeDiff?.version === skill.versions[i - 1].version ? "Hide" : "Changes"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => i === 0 ? handleDownloadSkillMd() : handleDownloadVersion(v.version)}
+                      className="min-h-[44px] rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] hover:underline"
+                      aria-label={`Download version ${v.version}`}
+                      title={`Download v${v.version}`}
+                    >
+                      Download
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => i === 0 ? handleDownloadSkillMd() : handleDownloadVersion(v.version)}
-                  className="ml-2 min-h-[44px] min-w-[44px] shrink-0 rounded px-2 py-1 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--accent)] hover:underline"
-                  aria-label={`Download version ${v.version}`}
-                  title={`Download v${v.version}`}
-                >
-                  Download
-                </button>
+                {activeDiff?.version === skill.versions[i - 1]?.version && (
+                  <pre className="mt-2 max-h-48 overflow-auto rounded bg-[var(--background)] p-2 text-xs leading-relaxed">
+                    {activeDiff.diff.diff.split("\n").map((line, j) => (
+                      <span
+                        key={j}
+                        className={
+                          line.startsWith("+ ") ? "text-green-600 dark:text-green-400" :
+                          line.startsWith("- ") ? "text-red-600 dark:text-red-400" :
+                          "text-[var(--muted)]"
+                        }
+                      >
+                        {line}{"\n"}
+                      </span>
+                    ))}
+                  </pre>
+                )}
               </li>
             ))}
           </ul>
