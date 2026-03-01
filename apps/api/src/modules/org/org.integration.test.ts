@@ -273,7 +273,7 @@ describe("org invites (integration)", () => {
     const invitee = await createTestUser({ username: "invited-person" });
 
     await expect(
-      orgInvites.inviteMember(publisher.id, org.slug, { username: "invited-person" }),
+      orgInvites.inviteMember(publisher.id, org.slug, { username: "invited-person", role: "MEMBER" }),
     ).rejects.toThrow("Requires ADMIN");
   });
 
@@ -283,7 +283,7 @@ describe("org invites (integration)", () => {
     await addMember(org.id, member.id);
 
     await expect(
-      orgInvites.inviteMember(admin.id, org.slug, { username: "already-member" }),
+      orgInvites.inviteMember(admin.id, org.slug, { username: "already-member", role: "MEMBER" }),
     ).rejects.toThrow("already a member");
   });
 
@@ -291,9 +291,9 @@ describe("org invites (integration)", () => {
     const { admin, org } = await createTestOrg();
     await createTestUser({ username: "dupe-invite" });
 
-    await orgInvites.inviteMember(admin.id, org.slug, { username: "dupe-invite" });
+    await orgInvites.inviteMember(admin.id, org.slug, { username: "dupe-invite", role: "MEMBER" });
     await expect(
-      orgInvites.inviteMember(admin.id, org.slug, { username: "dupe-invite" }),
+      orgInvites.inviteMember(admin.id, org.slug, { username: "dupe-invite", role: "MEMBER" }),
     ).rejects.toThrow("pending invite");
   });
 
@@ -325,7 +325,7 @@ describe("org invites (integration)", () => {
     const invitee = await createTestUser({ username: "target-user" });
     const wrongUser = await createTestUser();
 
-    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "target-user" });
+    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "target-user", role: "MEMBER" });
 
     await expect(orgInvites.acceptInvite(wrongUser.id, invite.token)).rejects.toThrow(
       "not for you",
@@ -336,7 +336,7 @@ describe("org invites (integration)", () => {
     const { admin, org } = await createTestOrg();
     const invitee = await createTestUser({ username: "expired-user" });
 
-    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "expired-user" });
+    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "expired-user", role: "MEMBER" });
 
     // Manually expire the invite
     await testPrisma.orgInvite.update({
@@ -351,7 +351,7 @@ describe("org invites (integration)", () => {
     const { admin, org } = await createTestOrg();
     const invitee = await createTestUser({ username: "decline-me" });
 
-    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "decline-me" });
+    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "decline-me", role: "MEMBER" });
     await orgInvites.declineInvite(invitee.id, invite.token);
 
     const dbInvite = await testPrisma.orgInvite.findUnique({ where: { token: invite.token } });
@@ -362,7 +362,7 @@ describe("org invites (integration)", () => {
     const { admin, org } = await createTestOrg();
     await createTestUser({ username: "revoke-target" });
 
-    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "revoke-target" });
+    const invite = await orgInvites.inviteMember(admin.id, org.slug, { username: "revoke-target", role: "MEMBER" });
     await orgInvites.revokeInvite(admin.id, org.slug, invite.id);
 
     const dbInvite = await testPrisma.orgInvite.findUnique({ where: { token: invite.token } });
@@ -374,8 +374,8 @@ describe("org invites (integration)", () => {
     await createTestUser({ username: "list-invite-a" });
     await createTestUser({ username: "list-invite-b" });
 
-    await orgInvites.inviteMember(admin.id, org.slug, { username: "list-invite-a" });
-    await orgInvites.inviteMember(admin.id, org.slug, { username: "list-invite-b" });
+    await orgInvites.inviteMember(admin.id, org.slug, { username: "list-invite-a", role: "MEMBER" });
+    await orgInvites.inviteMember(admin.id, org.slug, { username: "list-invite-b", role: "MEMBER" });
 
     const invites = await orgInvites.listInvites(org.slug, admin.id);
     expect(invites).toHaveLength(2);

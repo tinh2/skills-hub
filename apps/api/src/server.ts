@@ -21,6 +21,7 @@ import { inviteRoutes } from "./modules/org/invite.routes.js";
 import { sandboxRoutes } from "./modules/sandbox/sandbox.routes.js";
 import { agentRoutes } from "./modules/agent/agent.routes.js";
 import { isQueueAvailable, createWorker, closeQueues, SANDBOX_QUEUE, AGENT_QUEUE } from "./common/queue.js";
+import { startSweeper, stopSweeper } from "./common/sweeper.js";
 import { processSandboxJob } from "./modules/sandbox/sandbox.worker.js";
 import { processAgentJob } from "./modules/agent/agent.worker.js";
 import type { Worker } from "bullmq";
@@ -138,6 +139,9 @@ async function start() {
       app.log.info("Job queue workers started (sandbox + agent)");
     }
 
+    // Start stale record sweeper (runs regardless of Redis availability)
+    startSweeper(app.log);
+
     await app.listen({ port: env.PORT, host: env.HOST });
     app.log.info(`Server running on http://${env.HOST}:${env.PORT}`);
   } catch (err) {
@@ -151,6 +155,7 @@ async function start() {
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, async () => {
     app.log.info(`Received ${signal}, shutting down...`);
+    stopSweeper();
     await Promise.all(workers.map((w) => w.close()));
     await closeQueues();
     await app.close();
