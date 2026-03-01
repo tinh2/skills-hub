@@ -4,7 +4,6 @@ locals {
   # Computed parameters (from infrastructure outputs)
   computed_params = {
     DATABASE_URL         = local.database_url
-    REDIS_URL            = var.redis_connection_url
     GITHUB_CALLBACK_URL  = "${var.frontend_url}/auth/callback"
     API_URL              = var.api_url
     FRONTEND_URL         = var.frontend_url
@@ -14,6 +13,9 @@ locals {
     PORT                 = "3000"
   }
 
+  # Only include REDIS_URL when Redis is actually available (Zod validates it as .url().optional())
+  redis_params = var.redis_connection_url != "" ? { REDIS_URL = var.redis_connection_url } : {}
+
   # Sensitive parameters (provided at apply time)
   sensitive_params = {
     JWT_SECRET                  = var.jwt_secret
@@ -22,7 +24,7 @@ locals {
     GITHUB_TOKEN_ENCRYPTION_KEY = var.github_token_encryption_key
   }
 
-  all_params = merge(local.computed_params, local.sensitive_params)
+  all_params = merge(local.computed_params, local.redis_params, local.sensitive_params)
 }
 
 resource "aws_ssm_parameter" "params" {

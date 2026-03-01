@@ -8,6 +8,12 @@ variable "aws_profile" {
   default = "recipeai"
 }
 
+variable "use_vpc" {
+  description = "Use VPC with NAT for private networking. false = no NAT, public RDS, no Redis (~$11/mo)."
+  type        = bool
+  default     = false
+}
+
 # Database
 variable "db_instance_class" {
   type    = string

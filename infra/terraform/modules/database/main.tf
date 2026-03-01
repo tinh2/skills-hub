@@ -27,13 +27,15 @@ resource "aws_db_parameter_group" "main" {
   family      = "postgres16"
 
   parameter {
-    name  = "log_min_duration_statement"
-    value = "1000"
+    name         = "log_min_duration_statement"
+    value        = "1000"
+    apply_method = "pending-reboot"
   }
 
   parameter {
-    name  = "shared_preload_libraries"
-    value = "pg_stat_statements"
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot"
   }
 
   lifecycle {
