@@ -9,12 +9,11 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (user: PublicUser, accessToken: string) => void;
   logout: () => void;
-  _hydrate: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       accessToken: null,
       isAuthenticated: false,
@@ -25,12 +24,6 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         setAccessToken(null);
         set({ user: null, accessToken: null, isAuthenticated: false });
-      },
-      _hydrate: () => {
-        const { accessToken } = get();
-        if (accessToken) {
-          setAccessToken(accessToken);
-        }
       },
     }),
     {
@@ -47,11 +40,11 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.accessToken) {
+          setAccessToken(state.accessToken);
+        }
+      },
     },
   ),
 );
-
-// Rehydrate the access token on store init (client-side only)
-if (typeof window !== "undefined") {
-  useAuthStore.getState()._hydrate();
-}
