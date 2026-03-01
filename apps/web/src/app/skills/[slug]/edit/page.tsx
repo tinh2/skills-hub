@@ -24,6 +24,7 @@ export default function EditSkillPage() {
   const [categorySlug, setCategorySlug] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [visibility, setVisibility] = useState("PUBLIC");
+  const [tags, setTags] = useState("");
   const [initialized, setInitialized] = useState(false);
   const [msg, setMsg] = useState("");
   const [tab, setTab] = useState<"metadata" | "version">("metadata");
@@ -39,6 +40,7 @@ export default function EditSkillPage() {
     setCategorySlug(skill.category.slug);
     setSelectedPlatforms(skill.platforms);
     setVisibility(skill.visibility);
+    setTags(skill.tags?.join(", ") || "");
     setInstructions(skill.instructions);
     setInitialized(true);
   }
@@ -50,6 +52,7 @@ export default function EditSkillPage() {
       categorySlug: categorySlug !== skill?.category.slug ? categorySlug : undefined,
       platforms: selectedPlatforms,
       visibility,
+      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
     }),
     onSuccess: () => {
       setMsg("Skill updated");
@@ -220,6 +223,18 @@ export default function EditSkillPage() {
               <option value="PRIVATE">Private</option>
               <option value="UNLISTED">Unlisted</option>
             </select>
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="edit-tags" className="mb-1 block text-sm font-medium">Tags (comma-separated)</label>
+            <input
+              id="edit-tags"
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+              placeholder="testing, automation, flutter"
+            />
           </div>
 
           <button
