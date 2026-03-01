@@ -18,14 +18,10 @@ export const updateOrgSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
 });
 
-export const inviteMemberSchema = z
-  .object({
-    username: z.string().optional(),
-    role: z.enum(ORG_ROLES).default("MEMBER"),
-  })
-  .refine((data) => !!data.username, {
-    message: "username is required",
-  });
+export const inviteMemberSchema = z.object({
+  username: z.string().min(1),
+  role: z.enum(ORG_ROLES).default("MEMBER"),
+});
 
 export const updateMemberRoleSchema = z.object({
   role: z.enum(ORG_ROLES),
