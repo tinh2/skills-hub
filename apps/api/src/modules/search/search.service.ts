@@ -77,7 +77,7 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
       updatedAt: true,
       category: { select: { name: true, slug: true } },
       author: { select: { username: true, avatarUrl: true } },
-      tags: { include: { tag: { select: { name: true } } } },
+      tags: { select: { tag: { select: { name: true } } } },
       versions: {
         where: { isLatest: true },
         select: { version: true },

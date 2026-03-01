@@ -8,7 +8,14 @@ const MAX_API_KEYS_PER_USER = 10;
 export async function getPublicProfile(username: string): Promise<PublicUser> {
   const user = await prisma.user.findUnique({
     where: { username },
-    include: {
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      avatarUrl: true,
+      bio: true,
+      githubUrl: true,
+      createdAt: true,
       _count: { select: { skills: { where: { status: "PUBLISHED" } } } },
       skills: {
         where: { status: "PUBLISHED" },
@@ -35,7 +42,15 @@ export async function getPublicProfile(username: string): Promise<PublicUser> {
 export async function getPrivateProfile(userId: string): Promise<PrivateUser> {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    include: {
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      avatarUrl: true,
+      bio: true,
+      githubUrl: true,
+      email: true,
+      createdAt: true,
       _count: { select: { skills: { where: { status: "PUBLISHED" } } } },
       skills: {
         where: { status: "PUBLISHED" },
