@@ -299,7 +299,7 @@ export async function updateTestCase(
 ): Promise<TestCaseData> {
   const testCase = await prisma.testCase.findUnique({
     where: { id: testCaseId },
-    include: { skill: { select: { authorId: true } } },
+    select: { id: true, skill: { select: { authorId: true } } },
   });
   if (!testCase) throw new NotFoundError("TestCase");
   if (testCase.skill.authorId !== userId) {
@@ -322,7 +322,7 @@ export async function updateTestCase(
 export async function deleteTestCase(userId: string, testCaseId: string): Promise<void> {
   const testCase = await prisma.testCase.findUnique({
     where: { id: testCaseId },
-    include: { skill: { select: { authorId: true } } },
+    select: { id: true, skill: { select: { authorId: true } } },
   });
   if (!testCase) throw new NotFoundError("TestCase");
   if (testCase.skill.authorId !== userId) {
