@@ -1,5 +1,5 @@
 {
-  "name": "skills-hub",
+  "name": "@skills-hub-ai/cli",
   "version": "0.1.0",
   "type": "module",
   "bin": {

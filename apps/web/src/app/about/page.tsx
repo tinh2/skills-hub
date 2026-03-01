@@ -60,7 +60,7 @@ export default function AboutPage() {
           <Link href="/publish" className="text-[var(--primary)] hover:underline">publish your own</Link> to share with the community.
         </p>
         <p className="mb-3 text-[var(--muted)]">Install the CLI for the fastest experience:</p>
-        <CodeBlock>npx skills-hub install &lt;skill-name&gt;</CodeBlock>
+        <CodeBlock>npx @skills-hub-ai/cli install &lt;skill-name&gt;</CodeBlock>
       </section>
 
       <section>

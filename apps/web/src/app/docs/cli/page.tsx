@@ -32,9 +32,9 @@ export default function CliReferencePage() {
       <section className="mb-10">
         <h2 className="mb-3 text-2xl font-semibold">Installation</h2>
         <p className="mb-3 text-[var(--muted)]">Run commands directly with npx (no install needed):</p>
-        <CodeBlock>npx skills-hub &lt;command&gt;</CodeBlock>
+        <CodeBlock>npx @skills-hub-ai/cli &lt;command&gt;</CodeBlock>
         <p className="mb-3 mt-4 text-[var(--muted)]">Or install globally:</p>
-        <CodeBlock>npm install -g skills-hub</CodeBlock>
+        <CodeBlock>npm install -g @skills-hub-ai/cli  # provides the "skills-hub" command</CodeBlock>
       </section>
 
       <section className="mb-10">

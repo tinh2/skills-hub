@@ -36,7 +36,7 @@ export default function GettingStartedPage() {
         <CodeBlock>{`git clone https://github.com/tinh2/skills-hub.git
 cd skills-hub
 pnpm install
-pnpm --filter @skills-hub/cli build`}</CodeBlock>
+pnpm --filter @skills-hub-ai/cli build`}</CodeBlock>
         <p className="mt-4 mb-3 text-[var(--muted)]">Then use the CLI to install skills:</p>
         <CodeBlock>{`# Link the CLI for local use
 cd apps/cli && pnpm link --global

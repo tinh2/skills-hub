@@ -112,7 +112,7 @@ export default async function HomePage({
         <p className="mt-4 text-sm text-[var(--muted)]">
           or install via CLI:{" "}
           <code className="rounded bg-[var(--accent)] px-2 py-1">
-            npx skills-hub install &lt;skill-name&gt;
+            npx @skills-hub-ai/cli install &lt;skill-name&gt;
           </code>
         </p>
       </section>

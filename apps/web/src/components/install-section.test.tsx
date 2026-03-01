@@ -31,7 +31,7 @@ beforeEach(() => {
 describe("InstallSection", () => {
   it("renders install command with skill slug", () => {
     renderWithProviders(<InstallSection skill={mockSkillDetail} />);
-    expect(screen.getByText(`npx skills-hub install ${mockSkillDetail.slug}`)).toBeInTheDocument();
+    expect(screen.getByText(`npx @skills-hub-ai/cli install ${mockSkillDetail.slug}`)).toBeInTheDocument();
   });
 
   it("renders copy button", () => {

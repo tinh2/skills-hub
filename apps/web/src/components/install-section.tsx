@@ -17,7 +17,7 @@ export function InstallSection({ skill }: { skill: SkillDetail }) {
     mutationFn: () => installs.record(skill.slug),
   });
 
-  const installCmd = `npx skills-hub install ${skill.slug}`;
+  const installCmd = `npx @skills-hub-ai/cli install ${skill.slug}`;
 
   function handleCopyInstall() {
     navigator.clipboard.writeText(installCmd).catch(() => {});
