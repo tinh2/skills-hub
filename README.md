@@ -28,6 +28,7 @@ skills-hub.ai is a full-stack platform where developers publish, discover, and i
 | Auth | GitHub OAuth + JWT (jose) + httpOnly refresh cookies |
 | Validation | Zod 3 (shared across all layers) |
 | State | TanStack Query 5 (server) + Zustand 5 (client) |
+| Job Queue | BullMQ + Redis 7 (inline fallback when Redis unavailable) |
 | Rate Limiting | @fastify/rate-limit + Redis 7 |
 | Testing | Vitest 2 (unit + integration with real PostgreSQL) |
 
@@ -120,7 +121,7 @@ Copy `.env.example` to `apps/api/.env` and fill in the required values:
 | `API_URL` | No | API origin (default `http://localhost:3000`) |
 | `PORT` | No | API server port (default `3000`) |
 | `HOST` | No | API server host (default `0.0.0.0`) |
-| `REDIS_URL` | No | Redis URL for rate limiting |
+| `REDIS_URL` | No | Redis URL for rate limiting and job queue (optional; sandbox/agent jobs run inline without it) |
 | `NEXT_PUBLIC_API_URL` | No | API URL exposed to the browser |
 | `NEXT_PUBLIC_SITE_URL` | No | Public site URL for SEO/meta tags |
 
@@ -191,10 +192,10 @@ Query params: `q`, `author`, `category`, `platform`, `visibility`, `minScore`, `
 `POST /skills/:slug/like` | `POST /skills/:slug/install` | `POST /skills/:slug/media` | `DELETE /skills/:slug/media/:id` | `PUT /skills/:slug/media/reorder`
 
 ### Sandbox and Test Cases
-`POST /skills/:slug/sandbox` | `GET /skills/:slug/sandbox` | `GET /skills/:slug/test-cases` | `POST /skills/:slug/test-cases` | `PATCH /skills/:slug/test-cases/:id` | `DELETE /skills/:slug/test-cases/:id`
+`POST /skills/:slug/sandbox` | `GET /skills/:slug/sandbox` | `GET /skills/:slug/sandbox/:runId` | `GET /skills/:slug/test-cases` | `POST /skills/:slug/test-cases` | `PATCH /skills/:slug/test-cases/:id` | `DELETE /skills/:slug/test-cases/:id`
 
 ### Agents
-`POST /agents` | `GET /agents` | `GET /agents/:id` | `PATCH /agents/:id` | `POST /agents/:id/execute` | `POST /agents/:id/pause` | `POST /agents/:id/resume` | `DELETE /agents/:id`
+`POST /agents` | `GET /agents` | `GET /agents/:id` | `PATCH /agents/:id` | `POST /agents/:id/execute` | `GET /agents/:agentId/executions/:executionId` | `POST /agents/:id/pause` | `POST /agents/:id/resume` | `DELETE /agents/:id`
 
 ### Search
 `GET /search` | `GET /search/suggestions?q=`
@@ -390,6 +391,8 @@ Both `apps/api/Dockerfile` and `apps/web/Dockerfile` use multi-stage builds with
 The API follows a domain-driven module structure. Each module under `apps/api/src/modules/` encapsulates its own routes, service layer, and tests. Routes handle HTTP concerns (parsing, auth guards, rate limits), services contain business logic, and Prisma handles data access directly in the service layer.
 
 The frontend uses Next.js 15 App Router with server components for initial page loads and TanStack Query for client-side data fetching. Zustand manages local UI state (auth, toasts). All API types and validation schemas are shared from `packages/shared` to keep the frontend and backend in sync.
+
+Sandbox and agent execution jobs are dispatched via BullMQ (Redis) for async processing with retry and timeout handling. When Redis is unavailable, execution falls back to inline processing in the request handler.
 
 The skill-parser package handles parsing `SKILL.md` frontmatter files with YAML headers and markdown instruction bodies. It includes an OpenFang adapter for potential agent execution integration.
 
