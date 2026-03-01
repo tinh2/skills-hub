@@ -54,28 +54,54 @@ function toSummary(row: any): SkillSummary {
   };
 }
 
+// Cache featured skills for 5 minutes to avoid hammering the DB
+let featuredCache: { data: Record<string, SkillSummary | null>; expiresAt: number } | null = null;
+const FEATURED_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function getFeaturedSkillPerCategory(): Promise<Record<string, SkillSummary | null>> {
+  if (featuredCache && Date.now() < featuredCache.expiresAt) {
+    return featuredCache.data;
+  }
+
   const categories = await prisma.category.findMany({
     select: { slug: true, id: true },
   });
 
-  const result: Record<string, SkillSummary | null> = {};
+  // Single query: get top skill per category using Prisma raw for DISTINCT ON
+  const topSkillIds = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT DISTINCT ON ("categoryId") id
+    FROM "Skill"
+    WHERE status = 'PUBLISHED'
+      AND visibility = 'PUBLIC'
+      AND "likeCount" >= 1
+    ORDER BY "categoryId", "likeCount" DESC
+  `;
 
-  for (const cat of categories) {
-    const skill = await prisma.skill.findFirst({
-      where: {
-        categoryId: cat.id,
-        status: "PUBLISHED",
-        visibility: "PUBLIC",
-        likeCount: { gte: 1 },
-      },
-      orderBy: { likeCount: "desc" },
-      select: summarySelect,
+  const result: Record<string, SkillSummary | null> = {};
+  const catSlugMap = new Map(categories.map((c) => [c.id, c.slug]));
+
+  if (topSkillIds.length > 0) {
+    const skills = await prisma.skill.findMany({
+      where: { id: { in: topSkillIds.map((s) => s.id) } },
+      select: { ...summarySelect, categoryId: true },
     });
 
-    result[cat.slug] = skill ? toSummary(skill) : null;
+    for (const skill of skills) {
+      const catSlug = catSlugMap.get((skill as any).categoryId);
+      if (catSlug) {
+        result[catSlug] = toSummary(skill);
+      }
+    }
   }
 
+  // Fill in nulls for categories with no featured skill
+  for (const cat of categories) {
+    if (!(cat.slug in result)) {
+      result[cat.slug] = null;
+    }
+  }
+
+  featuredCache = { data: result, expiresAt: Date.now() + FEATURED_CACHE_TTL };
   return result;
 }
 

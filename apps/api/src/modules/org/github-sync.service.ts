@@ -124,22 +124,29 @@ export async function autoJoinGithubOrgs(userId: string, githubToken: string): P
   const userOrgs = (await userOrgsRes.json()) as { login: string }[];
   const userOrgSlugs = new Set(userOrgs.map((o) => o.login.toLowerCase()));
 
-  for (const org of connectedOrgs) {
-    if (!org.githubOrg || !userOrgSlugs.has(org.githubOrg.toLowerCase())) continue;
+  // Filter to orgs the user belongs to on GitHub
+  const matchingOrgs = connectedOrgs.filter(
+    (org) => org.githubOrg && userOrgSlugs.has(org.githubOrg.toLowerCase()),
+  );
 
-    // Check if already a member
-    const existing = await prisma.orgMembership.findUnique({
-      where: { orgId_userId: { orgId: org.id, userId } },
-    });
-    if (existing) continue;
+  if (matchingOrgs.length === 0) return;
 
-    await prisma.orgMembership.create({
-      data: {
-        orgId: org.id,
-        userId,
-        role: "MEMBER",
-      },
-    });
+  const matchingOrgIds = matchingOrgs.map((o) => o.id);
+
+  // Batch check existing memberships (single query instead of N)
+  const existingMemberships = await prisma.orgMembership.findMany({
+    where: { userId, orgId: { in: matchingOrgIds } },
+    select: { orgId: true },
+  });
+  const existingOrgIds = new Set(existingMemberships.map((m) => m.orgId));
+
+  // Create missing memberships
+  const toCreate = matchingOrgs
+    .filter((org) => !existingOrgIds.has(org.id))
+    .map((org) => ({ orgId: org.id, userId, role: "MEMBER" as const }));
+
+  if (toCreate.length > 0) {
+    await prisma.orgMembership.createMany({ data: toCreate, skipDuplicates: true });
   }
 }
 
@@ -182,19 +189,21 @@ async function doSync(
     select: { id: true, githubId: true },
   });
 
-  let added = 0;
-  for (const user of matchedUsers) {
-    const existing = await prisma.orgMembership.findUnique({
-      where: { orgId_userId: { orgId, userId: user.id } },
-    });
+  // Batch check existing memberships
+  const matchedUserIds = matchedUsers.map((u) => u.id);
+  const existingMembers = await prisma.orgMembership.findMany({
+    where: { orgId, userId: { in: matchedUserIds } },
+    select: { userId: true },
+  });
+  const existingUserIds = new Set(existingMembers.map((m) => m.userId));
 
-    if (!existing) {
-      await prisma.orgMembership.create({
-        data: { orgId, userId: user.id, role: defaultRole as any },
-      });
-      added++;
-    }
+  const toCreate = matchedUsers
+    .filter((u) => !existingUserIds.has(u.id))
+    .map((u) => ({ orgId, userId: u.id, role: defaultRole as any }));
+
+  if (toCreate.length > 0) {
+    await prisma.orgMembership.createMany({ data: toCreate, skipDuplicates: true });
   }
 
-  return { synced: members.length, added };
+  return { synced: members.length, added: toCreate.length };
 }
