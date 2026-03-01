@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./openfang": {
+      "types": "./dist/openfang.d.ts",
+      "import": "./dist/openfang.js"
     }
   },
   "scripts": {
