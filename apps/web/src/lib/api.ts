@@ -48,6 +48,17 @@ export function getAccessToken(): string | null {
 // Deduplicates concurrent refresh attempts
 let refreshPromise: Promise<string | null> | null = null;
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const [, payload] = token.split(".");
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    // Refresh 30s before actual expiry to avoid edge-case failures
+    return decoded.exp * 1000 < Date.now() + 30_000;
+  } catch {
+    return true;
+  }
+}
+
 async function attemptRefresh(): Promise<string | null> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
@@ -68,6 +79,27 @@ async function apiFetch<T>(
   options: RequestInit & { _retried?: boolean } = {},
 ): Promise<T> {
   const { _retried, ...fetchOptions } = options;
+
+  // Handle zustand rehydration race: module var may not be set yet on initial page load
+  if (!accessToken && typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("skills-hub-auth");
+      if (raw) {
+        const stored = JSON.parse(raw);
+        const token = stored?.state?.accessToken;
+        if (token) accessToken = token;
+      }
+    } catch { /* ignore parse errors */ }
+  }
+
+  // Proactively refresh expired tokens so optionalAuth endpoints get valid auth
+  if (accessToken && isTokenExpired(accessToken)) {
+    if (!refreshPromise) {
+      refreshPromise = attemptRefresh().finally(() => { refreshPromise = null; });
+    }
+    await refreshPromise;
+  }
+
   const headers: Record<string, string> = {
     ...(fetchOptions.body ? { "Content-Type": "application/json" } : {}),
     ...(fetchOptions.headers as Record<string, string>),
