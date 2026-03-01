@@ -1,6 +1,7 @@
 import type { Job } from "bullmq";
 import { prisma } from "../../common/db.js";
 import { SANDBOX_LIMITS } from "@skills-hub/shared";
+import { captureException } from "../../common/sentry.js";
 
 export interface SandboxJobData {
   runId: string;
@@ -49,6 +50,9 @@ export async function processSandboxJob(job: Job<SandboxJobData>): Promise<void>
       },
     });
   } catch (error) {
+    captureException(error instanceof Error ? error : new Error("Sandbox execution failed"), {
+      extra: { runId, skillId, inputLength: input.length },
+    });
     const durationMs = Date.now() - startTime;
     const errorMessage = error instanceof Error
       ? (error.message.length <= 200 ? error.message : "Execution failed")

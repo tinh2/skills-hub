@@ -1,6 +1,7 @@
 import type { Job } from "bullmq";
 import { prisma } from "../../common/db.js";
 import { getOpenFangClient } from "./openfang.client.js";
+import { captureException } from "../../common/sentry.js";
 
 export interface AgentJobData {
   executionId: string;
@@ -39,6 +40,9 @@ export async function processAgentJob(job: Job<AgentJobData>): Promise<void> {
       tokenCount = Math.ceil((input?.length ?? 0) / 4);
     }
   } catch (err) {
+    captureException(err instanceof Error ? err : new Error("Agent execution failed"), {
+      extra: { executionId, agentId, openfangHandId },
+    });
     status = "FAILED";
     output = "";
     errorMessage = err instanceof Error

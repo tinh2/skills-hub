@@ -30,9 +30,9 @@ export function initSentry(): void {
   initialized = true;
 }
 
-export function captureException(error: unknown): void {
+export function captureException(error: unknown, hint?: { extra?: Record<string, unknown> }): void {
   if (initialized) {
-    Sentry.captureException(error);
+    Sentry.captureException(error, hint);
   }
 }
 
