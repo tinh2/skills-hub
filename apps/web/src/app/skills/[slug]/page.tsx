@@ -250,8 +250,8 @@ export default function SkillDetailPage() {
               </button>
             )}
             {!isAuthenticated && (
-              <span className="flex items-center gap-1 rounded-full border border-[var(--card-border)] px-3 py-1 text-sm text-[var(--muted)]">
-                {"\u2661"} {skill.likeCount}
+              <span className="flex items-center gap-1 rounded-full border border-[var(--card-border)] px-3 py-1 text-sm text-[var(--muted)]" aria-label={`${skill.likeCount} likes`}>
+                <span aria-hidden="true">{"\u2661"}</span> {skill.likeCount}
               </span>
             )}
             {skill.qualityScore !== null && (

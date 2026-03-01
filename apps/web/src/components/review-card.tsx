@@ -47,12 +47,14 @@ export function ReviewCard({
         <div className="flex items-center gap-2">
           <span className="font-medium">{review.author.username}</span>
           <span className="text-sm text-[var(--muted)]" aria-label={`Rating: ${review.rating} out of 5`}>
-            {"*".repeat(review.rating).split("").map((_, i) => (
-              <span key={i} className="text-yellow-500">{"\u2605"}</span>
-            ))}
-            {"*".repeat(5 - review.rating).split("").map((_, i) => (
-              <span key={i} className="text-gray-300 dark:text-gray-600">{"\u2605"}</span>
-            ))}
+            <span aria-hidden="true">
+              {"*".repeat(review.rating).split("").map((_, i) => (
+                <span key={i} className="text-yellow-500">{"\u2605"}</span>
+              ))}
+              {"*".repeat(5 - review.rating).split("").map((_, i) => (
+                <span key={i} className="text-gray-300 dark:text-gray-600">{"\u2605"}</span>
+              ))}
+            </span>
             <span className="ml-1">{review.rating}/5</span>
           </span>
         </div>

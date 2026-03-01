@@ -49,6 +49,7 @@ function SkillCardSimple({ skill }: { skill: SkillSummaryData }) {
                   ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                   : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
             }`}
+            aria-label={`Quality score: ${skill.qualityScore} out of 100`}
           >
             {skill.qualityScore}
           </span>
