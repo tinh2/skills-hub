@@ -51,14 +51,14 @@ export function ReviewCard({
 
   return (
     <article className="mb-4 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
-      {error && <p role="alert" className="mb-2 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mb-2 text-sm text-[var(--error)]">{error}</p>}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-medium">{review.author.username}</span>
           <span className="text-sm text-[var(--muted)]" aria-label={`Rating: ${review.rating} out of 5`}>
             <span aria-hidden="true">
               {"*".repeat(review.rating).split("").map((_, i) => (
-                <span key={i} className="text-yellow-500">{"\u2605"}</span>
+                <span key={i} className="text-[var(--warning)]">{"\u2605"}</span>
               ))}
               {"*".repeat(5 - review.rating).split("").map((_, i) => (
                 <span key={i} className="text-gray-300 dark:text-gray-600">{"\u2605"}</span>
@@ -77,7 +77,7 @@ export function ReviewCard({
                 if (confirm("Delete your review?")) deleteReview.mutate();
               }}
               disabled={deleteReview.isPending}
-              className="min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
+              className="min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xs text-[var(--error)] transition-colors hover:bg-[var(--error-subtle)] hover:underline disabled:opacity-50"
               aria-label="Delete your review"
             >
               Delete
@@ -95,7 +95,7 @@ export function ReviewCard({
           <button
             onClick={() => voteReview.mutate(true)}
             disabled={voteReview.isPending}
-            className="min-h-[44px] min-w-[44px] rounded px-3 py-1 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50 dark:hover:bg-green-950"
+            className="min-h-[44px] min-w-[44px] rounded px-3 py-1 transition-colors hover:bg-[var(--success-subtle)] hover:text-[var(--success)] disabled:opacity-50"
             aria-label="Mark review as helpful"
           >
             Yes{review.helpfulCount > 0 ? ` (${review.helpfulCount})` : ""}
@@ -103,7 +103,7 @@ export function ReviewCard({
           <button
             onClick={() => voteReview.mutate(false)}
             disabled={voteReview.isPending}
-            className="min-h-[44px] min-w-[44px] rounded px-3 py-1 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:hover:bg-red-950"
+            className="min-h-[44px] min-w-[44px] rounded px-3 py-1 transition-colors hover:bg-[var(--error-subtle)] hover:text-[var(--error)] disabled:opacity-50"
             aria-label="Mark review as not helpful"
           >
             No

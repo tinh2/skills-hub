@@ -80,8 +80,8 @@ export function VersionHistory({ skill }: { skill: SkillDetail }) {
                   <span
                     key={j}
                     className={
-                      line.startsWith("+ ") ? "text-green-600 dark:text-green-400" :
-                      line.startsWith("- ") ? "text-red-600 dark:text-red-400" :
+                      line.startsWith("+ ") ? "text-[var(--success)]" :
+                      line.startsWith("- ") ? "text-[var(--error)]" :
                       "text-[var(--muted)]"
                     }
                   >

@@ -114,7 +114,7 @@ export default function OrgSettingsPage() {
         <h2 className="mb-4 text-lg font-semibold">General</h2>
         <div aria-live="polite" aria-atomic="true">
           {msg && (
-            <p role="status" className={`mb-3 text-sm ${msg.includes("saved") ? "text-green-600" : "text-red-600"}`}>
+            <p role="status" className={`mb-3 text-sm ${msg.includes("saved") ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
               {msg}
             </p>
           )}
@@ -213,7 +213,7 @@ export default function OrgSettingsPage() {
             if (confirm(`Delete ${org.name}? This cannot be undone.`)) deleteOrg.mutate();
           }}
           disabled={deleteOrg.isPending}
-          className="min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+          className="min-h-[44px] rounded-lg bg-[var(--error)] px-4 py-2 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50"
         >
           Delete Organization
         </button>

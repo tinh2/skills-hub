@@ -64,7 +64,7 @@ export function ReviewSection({
       {showReviewForm && (
         <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
           {reviewError && (
-            <p role="alert" className="mb-3 text-sm text-red-600">{reviewError}</p>
+            <p role="alert" className="mb-3 text-sm text-[var(--error)]">{reviewError}</p>
           )}
           <div className="mb-3">
             <label className="mb-1 block text-sm font-medium" id="rating-label">Rating</label>
@@ -77,7 +77,7 @@ export function ReviewSection({
                   aria-checked={reviewForm.rating === n}
                   aria-label={`${n} star${n > 1 ? "s" : ""}`}
                   onClick={() => setReviewForm({ ...reviewForm, rating: n })}
-                  className={`min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xl transition-colors hover:bg-[var(--accent)] ${n <= reviewForm.rating ? "text-yellow-500" : "text-gray-300 dark:text-gray-600"}`}
+                  className={`min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xl transition-colors hover:bg-[var(--accent)] ${n <= reviewForm.rating ? "text-[var(--warning)]" : "text-[var(--border)]"}`}
                 >
                   {"\u2605"}
                 </button>

@@ -57,7 +57,7 @@ export function MediaGallery({
 
       {showForm && (
         <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
-          {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="mb-3 text-sm text-[var(--error)]">{error}</p>}
           <div className="mb-3">
             <label htmlFor="media-type" className="mb-1 block text-sm font-medium">Type</label>
             <select

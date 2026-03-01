@@ -126,7 +126,7 @@ export default function PublishPage() {
         </p>
         <div aria-live="polite" aria-atomic="true">
           {fileMsg && (
-            <p role="status" className={`mt-2 text-sm ${fileMsg.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+            <p role="status" className={`mt-2 text-sm ${fileMsg.includes("successfully") ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
               {fileMsg}
             </p>
           )}

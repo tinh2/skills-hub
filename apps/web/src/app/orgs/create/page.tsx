@@ -41,7 +41,7 @@ export default function CreateOrgPage() {
     <div className="mx-auto max-w-lg">
       <h1 className="mb-6 text-3xl font-bold">Create Organization</h1>
 
-      {error && <p role="alert" className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mb-4 text-sm text-[var(--error)]">{error}</p>}
 
       <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
         <div className="mb-4">

@@ -11,8 +11,10 @@
   --card: #ffffff;
   --card-border: #e5e7eb;
   --success: #16a34a;
+  --success-subtle: #f0fdf4;
   --warning: #d97706;
   --error: #dc2626;
+  --error-subtle: #fef2f2;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,8 +29,10 @@
     --card: #18181b;
     --card-border: #27272a;
     --success: #22c55e;
+    --success-subtle: #052e16;
     --warning: #f59e0b;
     --error: #ef4444;
+    --error-subtle: #450a0a;
   }
 }
 
