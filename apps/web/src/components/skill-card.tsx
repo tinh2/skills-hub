@@ -110,7 +110,7 @@ export function SkillCard({
             type="button"
             onClick={handleLikeClick}
             disabled={toggleLike.isPending}
-            className="flex items-center gap-1 px-1 py-1 hover:text-red-500 disabled:opacity-50"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-1 rounded px-2 py-1 transition-colors hover:bg-[var(--accent)] hover:text-red-500 disabled:opacity-50"
             aria-label={skill.userLiked ? `Unlike ${skill.name}` : `Like ${skill.name}`}
           >
             <span className={skill.userLiked ? "text-red-500" : ""}>{skill.userLiked ? "\u2665" : "\u2661"}</span>
