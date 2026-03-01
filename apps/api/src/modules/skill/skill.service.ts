@@ -346,13 +346,13 @@ export async function updateSkill(
   }
 
   const updateData: Prisma.SkillUpdateInput = {};
-  if (input.name) updateData.name = input.name;
-  if (input.description) updateData.description = input.description;
-  if (input.platforms) updateData.platforms = input.platforms as any;
-  if (input.visibility) updateData.visibility = input.visibility as any;
+  if (input.name !== undefined) updateData.name = input.name;
+  if (input.description !== undefined) updateData.description = input.description;
+  if (input.platforms !== undefined) updateData.platforms = input.platforms as any;
+  if (input.visibility !== undefined) updateData.visibility = input.visibility as any;
   if (input.githubRepoUrl !== undefined) updateData.githubRepoUrl = input.githubRepoUrl;
 
-  if (input.categorySlug) {
+  if (input.categorySlug !== undefined) {
     const category = await prisma.category.findUnique({ where: { slug: input.categorySlug } });
     if (!category) throw new NotFoundError("Category");
     updateData.category = { connect: { id: category.id } };

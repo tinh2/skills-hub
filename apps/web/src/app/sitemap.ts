@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// Server components use API_INTERNAL_URL for Docker service-to-service calls,
+// falling back to NEXT_PUBLIC_API_URL for local development
+const API_BASE = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://skills-hub.ai";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -14,20 +16,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const res = await fetch(`${API_BASE}/api/v1/skills?limit=500&sort=recently_updated`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return staticPages;
+    const allSkills: MetadataRoute.Sitemap = [];
+    let cursor: string | undefined;
 
-    const data = await res.json();
-    const skills: MetadataRoute.Sitemap = (data.data || []).map((skill: { slug: string; updatedAt: string }) => ({
-      url: `${SITE_URL}/skills/${skill.slug}`,
-      lastModified: new Date(skill.updatedAt),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
+    // Paginate through all published skills
+    for (let page = 0; page < 100; page++) {
+      const params = new URLSearchParams({ limit: "200", sort: "recently_updated" });
+      if (cursor) params.set("cursor", cursor);
 
-    return [...staticPages, ...skills];
+      const res = await fetch(`${API_BASE}/api/v1/skills?${params}`, {
+        next: { revalidate: 3600 },
+      });
+      if (!res.ok) break;
+
+      const data = await res.json();
+      for (const skill of data.data || []) {
+        allSkills.push({
+          url: `${SITE_URL}/skills/${skill.slug}`,
+          lastModified: new Date(skill.updatedAt),
+          changeFrequency: "weekly" as const,
+          priority: 0.7,
+        });
+      }
+
+      if (!data.hasMore || !data.cursor) break;
+      cursor = data.cursor;
+    }
+
+    return [...staticPages, ...allSkills];
   } catch {
     return staticPages;
   }

@@ -390,7 +390,7 @@ export const agents = {
   get: (agentId: string) =>
     apiFetch<AgentDetail>(`/api/v1/agents/${agentId}`),
   update: (agentId: string, data: { name?: string; triggerType?: string; triggerConfig?: Record<string, unknown>; channelType?: string | null; channelConfig?: Record<string, unknown>; modelProvider?: string; modelId?: string }) =>
-    apiFetch<AgentDetail>(`/api/v1/agents/${agentId}`, {
+    apiFetch<AgentSummary>(`/api/v1/agents/${agentId}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),

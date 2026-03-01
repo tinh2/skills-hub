@@ -24,8 +24,8 @@ export default function PrivacyPage() {
 
       <h2>3. Data Storage</h2>
       <p>
-        Your data is stored in secure, encrypted databases. API keys are hashed before storage.
-        GitHub access tokens are encrypted at rest.
+        Your data is stored in secure databases. API keys are hashed before storage
+        and cannot be retrieved in plaintext.
       </p>
 
       <h2>4. Data Sharing</h2>

@@ -37,11 +37,13 @@ function BrowseContent() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setDebouncedQuery(searchQuery);
+      // Reset sort from "relevance" when query is cleared (option no longer visible)
+      if (!searchQuery && sort === "relevance") setSort("newest");
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery]);
+  }, [searchQuery, sort]);
 
   const updateUrl = useCallback(
     (params: Record<string, string>) => {

@@ -50,16 +50,25 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
       .join(" & ");
 
     if (tsQuery) {
-      // Determine which visibility to filter in the raw query
-      const visFilter = query.org ? "ORG" : "PUBLIC";
-      const tsvectorResults = await prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM "Skill"
-        WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
-          AND status = 'PUBLISHED'
-          AND visibility = ${visFilter}
-        ORDER BY ts_rank("searchVector", to_tsquery('english', ${tsQuery + ":*"})) DESC
-        LIMIT 200
-      `;
+      // Raw tsvector query must match the same visibility rules as the Prisma where clause
+      const isOrgSearch = !!where.AND;
+      const tsvectorResults = isOrgSearch
+        ? await prisma.$queryRaw<{ id: string }[]>`
+            SELECT id FROM "Skill"
+            WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
+              AND status = 'PUBLISHED'
+              AND (visibility = 'PUBLIC' OR visibility = 'ORG')
+            ORDER BY ts_rank("searchVector", to_tsquery('english', ${tsQuery + ":*"})) DESC
+            LIMIT 200
+          `
+        : await prisma.$queryRaw<{ id: string }[]>`
+            SELECT id FROM "Skill"
+            WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
+              AND status = 'PUBLISHED'
+              AND visibility = 'PUBLIC'
+            ORDER BY ts_rank("searchVector", to_tsquery('english', ${tsQuery + ":*"})) DESC
+            LIMIT 200
+          `;
       tsvectorIds = tsvectorResults.map((r) => r.id);
     }
 
@@ -117,7 +126,9 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     },
   };
 
-  if (query.cursor) {
+  // Cursor pagination is incompatible with relevance sort (results are re-sorted
+  // by tsvector rank after fetching, making cursor position meaningless for page 2+)
+  if (query.cursor && !useRelevanceSort) {
     findArgs.cursor = { id: query.cursor };
     findArgs.skip = 1;
   }
