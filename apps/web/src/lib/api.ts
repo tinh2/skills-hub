@@ -13,6 +13,10 @@ import type {
   AuthTokens,
   ApiError,
   SkillQuery,
+  CreateSkillInput,
+  UpdateSkillInput,
+  CreateVersionInput,
+  CreateReviewInput,
   OrgDetail,
   OrgMember,
   OrgInviteData,
@@ -154,12 +158,12 @@ export const skills = {
   },
   get: (slug: string) =>
     apiFetch<SkillDetail>(`/api/v1/skills/${slug}`),
-  create: (data: any) =>
+  create: (data: Omit<CreateSkillInput, "platforms" | "visibility"> & { platforms: string[]; visibility: string }) =>
     apiFetch<SkillSummary>("/api/v1/skills", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: (slug: string, data: any) =>
+  update: (slug: string, data: Partial<Omit<UpdateSkillInput, "platforms" | "visibility"> & { platforms: string[]; visibility: string }>) =>
     apiFetch<SkillSummary>(`/api/v1/skills/${slug}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -183,7 +187,7 @@ export const versions = {
     apiFetch<VersionSummary[]>(`/api/v1/skills/${slug}/versions`),
   get: (slug: string, version: string) =>
     apiFetch<VersionDetail>(`/api/v1/skills/${slug}/versions/${version}`),
-  create: (slug: string, data: any) =>
+  create: (slug: string, data: CreateVersionInput) =>
     apiFetch<VersionSummary>(`/api/v1/skills/${slug}/versions`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -196,7 +200,7 @@ export const reviews = {
     apiFetch<ReviewSummary[]>(`/api/v1/skills/${slug}/reviews`),
   stats: (slug: string) =>
     apiFetch<ReviewStats>(`/api/v1/skills/${slug}/reviews/stats`),
-  create: (slug: string, data: any) =>
+  create: (slug: string, data: CreateReviewInput) =>
     apiFetch<ReviewSummary>(`/api/v1/skills/${slug}/reviews`, {
       method: "POST",
       body: JSON.stringify(data),

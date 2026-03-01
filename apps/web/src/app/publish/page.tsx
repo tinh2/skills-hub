@@ -12,7 +12,6 @@ export default function PublishPage() {
   const { isAuthenticated } = useAuthStore();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"form" | "paste">("form");
 
   const [form, setForm] = useState({
     name: "",
@@ -71,21 +70,6 @@ export default function PublishPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-3xl font-bold">Publish a Skill</h1>
-
-      <div className="mb-6 flex gap-2">
-        <button
-          onClick={() => setMode("form")}
-          className={`rounded-lg px-4 py-2 text-sm ${mode === "form" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "bg-[var(--accent)]"}`}
-        >
-          Form
-        </button>
-        <button
-          onClick={() => setMode("paste")}
-          className={`rounded-lg px-4 py-2 text-sm ${mode === "paste" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "bg-[var(--accent)]"}`}
-        >
-          Paste SKILL.md
-        </button>
-      </div>
 
       {error && (
         <div role="alert" className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
