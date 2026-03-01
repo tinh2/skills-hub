@@ -78,13 +78,14 @@ export default function SettingsPage() {
       <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">Profile</h2>
         {profileMsg && (
-          <p className={`mb-3 text-sm ${profileMsg.includes("updated") ? "text-green-600" : "text-red-600"}`}>
+          <p role="status" className={`mb-3 text-sm ${profileMsg.includes("updated") ? "text-green-600" : "text-red-600"}`}>
             {profileMsg}
           </p>
         )}
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium">Username</label>
+          <label htmlFor="settings-username" className="mb-1 block text-sm font-medium">Username</label>
           <input
+            id="settings-username"
             type="text"
             value={me?.username ?? ""}
             disabled
@@ -93,8 +94,9 @@ export default function SettingsPage() {
           <p className="mt-1 text-xs text-[var(--muted)]">Username cannot be changed</p>
         </div>
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium">Display Name</label>
+          <label htmlFor="settings-display-name" className="mb-1 block text-sm font-medium">Display Name</label>
           <input
+            id="settings-display-name"
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -103,8 +105,9 @@ export default function SettingsPage() {
           />
         </div>
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium">Bio</label>
+          <label htmlFor="settings-bio" className="mb-1 block text-sm font-medium">Bio</label>
           <textarea
+            id="settings-bio"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -130,12 +133,12 @@ export default function SettingsPage() {
         </p>
 
         {newKey && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4">
-            <p className="mb-2 text-sm font-medium text-green-800">New API key created — copy it now, it won&apos;t be shown again:</p>
-            <code className="block break-all rounded bg-green-100 p-2 text-xs text-green-900">{newKey}</code>
+          <div role="alert" className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
+            <p className="mb-2 text-sm font-medium text-green-800 dark:text-green-200">New API key created — copy it now, it won&apos;t be shown again:</p>
+            <code className="block break-all rounded bg-green-100 p-2 text-xs text-green-900 dark:bg-green-900 dark:text-green-100">{newKey}</code>
             <button
               onClick={() => setNewKey(null)}
-              className="mt-2 text-xs text-green-700 underline"
+              className="mt-2 text-xs text-green-700 underline dark:text-green-300"
             >
               Dismiss
             </button>
@@ -143,7 +146,9 @@ export default function SettingsPage() {
         )}
 
         <div className="mb-4 flex gap-2">
+          <label htmlFor="api-key-name" className="sr-only">API key name</label>
           <input
+            id="api-key-name"
             type="text"
             value={keyName}
             onChange={(e) => setKeyName(e.target.value)}
@@ -172,7 +177,9 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => deleteKey.mutate(key.id)}
-                  className="text-xs text-red-600 hover:underline"
+                  disabled={deleteKey.isPending}
+                  className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+                  aria-label={`Revoke API key ${key.name}`}
                 >
                   Revoke
                 </button>

@@ -37,8 +37,8 @@ export default function HomePage() {
       </section>
 
       {/* Categories */}
-      <section className="py-12">
-        <h2 className="mb-6 text-2xl font-bold">Browse by Category</h2>
+      <section aria-labelledby="categories-heading" className="py-12">
+        <h2 id="categories-heading" className="mb-6 text-2xl font-bold">Browse by Category</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {CATEGORIES.map((cat) => (
             <Link
@@ -56,8 +56,8 @@ export default function HomePage() {
       </section>
 
       {/* How it works */}
-      <section className="py-12">
-        <h2 className="mb-6 text-2xl font-bold">How it works</h2>
+      <section aria-labelledby="how-it-works-heading" className="py-12">
+        <h2 id="how-it-works-heading" className="mb-6 text-2xl font-bold">How it works</h2>
         <div className="grid gap-6 sm:grid-cols-3">
           <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
             <div className="mb-3 text-2xl font-bold text-[var(--primary)]">1</div>

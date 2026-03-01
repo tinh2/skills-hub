@@ -109,7 +109,7 @@ export default function DashboardPage() {
                 className="flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 hover:shadow-sm"
               >
                 {m.org.avatarUrl && (
-                  <img src={m.org.avatarUrl} alt="" className="h-6 w-6 rounded-full" />
+                  <img src={m.org.avatarUrl} alt={`${m.org.name} logo`} className="h-6 w-6 rounded-full" />
                 )}
                 <span className="text-sm font-medium">{m.org.name}</span>
                 <span className="rounded bg-[var(--accent)] px-1.5 py-0.5 text-xs">{m.role}</span>
@@ -163,6 +163,7 @@ export default function DashboardPage() {
                 href={`/skills/${skill.slug}/edit`}
                 className="rounded bg-[var(--card)] px-2 py-1 text-xs shadow-sm hover:bg-[var(--accent)]"
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Edit ${skill.name}`}
               >
                 Edit
               </Link>
@@ -173,7 +174,9 @@ export default function DashboardPage() {
                     e.stopPropagation();
                     publishSkill.mutate(skill.slug);
                   }}
-                  className="rounded bg-green-100 px-2 py-1 text-xs text-green-800 hover:bg-green-200"
+                  disabled={publishSkill.isPending}
+                  className="rounded bg-green-100 px-2 py-1 text-xs text-green-800 hover:bg-green-200 disabled:opacity-50 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800"
+                  aria-label={`Publish ${skill.name}`}
                 >
                   Publish
                 </button>
@@ -184,7 +187,9 @@ export default function DashboardPage() {
                   e.stopPropagation();
                   if (confirm("Archive this skill?")) archiveSkill.mutate(skill.slug);
                 }}
-                className="rounded bg-red-100 px-2 py-1 text-xs text-red-800 hover:bg-red-200"
+                disabled={archiveSkill.isPending}
+                className="rounded bg-red-100 px-2 py-1 text-xs text-red-800 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800"
+                aria-label={`Archive ${skill.name}`}
               >
                 Archive
               </button>

@@ -101,7 +101,7 @@ export default function OrgAnalyticsPage() {
             <section>
               <h2 className="mb-3 text-lg font-semibold">Install Activity (Last 30 Days)</h2>
               <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
-                <div className="flex items-end gap-1" style={{ height: 120 }}>
+                <div className="flex items-end gap-1" role="img" aria-label={`Bar chart showing install activity over the last 30 days, total ${analytics.recentInstalls.reduce((s, d) => s + d.count, 0)} installs`} style={{ height: 120 }}>
                   {analytics.recentInstalls.map((day) => {
                     const maxCount = Math.max(...analytics.recentInstalls.map((d) => d.count));
                     const height = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
@@ -111,6 +111,7 @@ export default function OrgAnalyticsPage() {
                         className="flex-1 rounded-t bg-[var(--primary)]"
                         style={{ height: `${Math.max(height, 2)}%` }}
                         title={`${day.date}: ${day.count} installs`}
+                        aria-hidden="true"
                       />
                     );
                   })}

@@ -41,12 +41,13 @@ export default function CreateOrgPage() {
     <div className="mx-auto max-w-lg">
       <h1 className="mb-6 text-3xl font-bold">Create Organization</h1>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mb-4 text-sm text-red-600">{error}</p>}
 
       <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium">Organization Name</label>
+          <label htmlFor="org-create-name" className="mb-1 block text-sm font-medium">Organization Name</label>
           <input
+            id="org-create-name"
             type="text"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
@@ -57,8 +58,9 @@ export default function CreateOrgPage() {
         </div>
 
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium">Slug</label>
+          <label htmlFor="org-create-slug" className="mb-1 block text-sm font-medium">Slug</label>
           <input
+            id="org-create-slug"
             type="text"
             value={slug}
             onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
@@ -72,8 +74,9 @@ export default function CreateOrgPage() {
         </div>
 
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium">Description (optional)</label>
+          <label htmlFor="org-create-description" className="mb-1 block text-sm font-medium">Description (optional)</label>
           <textarea
+            id="org-create-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"

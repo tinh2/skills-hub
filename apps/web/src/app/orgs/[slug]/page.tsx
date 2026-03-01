@@ -41,7 +41,7 @@ export default function OrgDetailPage() {
         <div>
           <div className="flex items-center gap-3">
             {org.avatarUrl && (
-              <img src={org.avatarUrl} alt="" className="h-12 w-12 rounded-full" />
+              <img src={org.avatarUrl} alt={`${org.name} logo`} className="h-12 w-12 rounded-full" />
             )}
             <div>
               <h1 className="text-3xl font-bold">{org.name}</h1>
@@ -111,7 +111,7 @@ export default function OrgDetailPage() {
                 className="flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-3 py-1.5"
               >
                 {m.user.avatarUrl && (
-                  <img src={m.user.avatarUrl} alt="" className="h-5 w-5 rounded-full" />
+                  <img src={m.user.avatarUrl} alt={`${m.user.username}'s avatar`} className="h-5 w-5 rounded-full" />
                 )}
                 <Link href={`/u/${m.user.username}`} className="text-sm hover:underline">
                   {m.user.username}

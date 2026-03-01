@@ -144,12 +144,12 @@ export default function SkillDetailPage() {
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold">{skill.name}</h1>
               {skill.isComposition && (
-                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800">
+                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                   Composition
                 </span>
               )}
               {skill.visibility !== "PUBLIC" && (
-                <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                   {skill.visibility === "PRIVATE" ? "Private" : "Unlisted"}
                 </span>
               )}
@@ -193,11 +193,12 @@ export default function SkillDetailPage() {
               <div
                 className={`rounded-full px-3 py-1 text-sm font-bold ${
                   skill.qualityScore >= 70
-                    ? "bg-green-100 text-green-800"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                     : skill.qualityScore >= 40
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                 }`}
+                aria-label={`Quality score: ${skill.qualityScore} out of 100`}
               >
                 Quality: {skill.qualityScore}/100
               </div>
@@ -267,7 +268,7 @@ export default function SkillDetailPage() {
                     {child.skill.name}
                   </Link>
                   {child.isParallel && (
-                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-200">
                       parallel
                     </span>
                   )}
@@ -319,27 +320,31 @@ export default function SkillDetailPage() {
           {showReviewForm && (
             <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
               {reviewError && (
-                <p className="mb-3 text-sm text-red-600">{reviewError}</p>
+                <p role="alert" className="mb-3 text-sm text-red-600">{reviewError}</p>
               )}
               <div className="mb-3">
-                <label className="mb-1 block text-sm font-medium">Rating</label>
-                <div className="flex gap-1">
+                <label className="mb-1 block text-sm font-medium" id="rating-label">Rating</label>
+                <div className="flex gap-1" role="radiogroup" aria-labelledby="rating-label">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
                       type="button"
+                      role="radio"
+                      aria-checked={reviewForm.rating === n}
+                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
                       onClick={() => setReviewForm({ ...reviewForm, rating: n })}
                       className={`px-2 py-1 text-lg ${n <= reviewForm.rating ? "text-yellow-500" : "text-gray-300"}`}
                     >
-                      *
+                      {"\u2605"}
                     </button>
                   ))}
                   <span className="ml-2 self-center text-sm text-[var(--muted)]">{reviewForm.rating}/5</span>
                 </div>
               </div>
               <div className="mb-3">
-                <label className="mb-1 block text-sm font-medium">Title (optional)</label>
+                <label htmlFor="review-title" className="mb-1 block text-sm font-medium">Title (optional)</label>
                 <input
+                  id="review-title"
                   type="text"
                   value={reviewForm.title}
                   onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
@@ -348,8 +353,9 @@ export default function SkillDetailPage() {
                 />
               </div>
               <div className="mb-3">
-                <label className="mb-1 block text-sm font-medium">Review</label>
+                <label htmlFor="review-body" className="mb-1 block text-sm font-medium">Review</label>
                 <textarea
+                  id="review-body"
                   value={reviewForm.body}
                   onChange={(e) => setReviewForm({ ...reviewForm, body: e.target.value })}
                   className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"

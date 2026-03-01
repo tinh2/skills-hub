@@ -34,7 +34,7 @@ export default function UserProfilePage() {
         {user.avatarUrl && (
           <Image
             src={user.avatarUrl}
-            alt={user.username}
+            alt={`${user.username}'s avatar`}
             width={80}
             height={80}
             className="rounded-full"
