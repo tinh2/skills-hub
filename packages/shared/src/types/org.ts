@@ -26,6 +26,7 @@ export interface OrgMember {
 
 export interface OrgInviteData {
   id: string;
+  token: string;
   inviteeUsername: string | null;
   role: OrgRole;
   status: string;

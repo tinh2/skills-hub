@@ -567,6 +567,7 @@ function formatOrgDetail(
 function formatInvite(invite: any): OrgInviteData {
   return {
     id: invite.id,
+    token: invite.token,
     inviteeUsername: invite.inviteeUsername,
     role: invite.role,
     status: invite.status,
