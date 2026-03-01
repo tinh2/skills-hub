@@ -1,6 +1,15 @@
 {
   "name": "@skills-hub-ai/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "description": "CLI for skills-hub.ai — discover, install, and publish Claude Code skills",
+  "license": "MIT",
+  "keywords": ["claude-code", "cursor", "skills", "ai", "cli", "marketplace"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tinh2/skills-hub.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://skills-hub.ai",
   "type": "module",
   "bin": {
     "skills-hub": "dist/index.js"
