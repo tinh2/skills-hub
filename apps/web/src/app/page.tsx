@@ -65,7 +65,13 @@ function SkillCardSimple({ skill }: { skill: SkillSummaryData }) {
   );
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const authError = params.error === "auth_failed";
   const [trending, recent] = await Promise.all([
     fetchSkills("sort=most_installed&limit=6"),
     fetchSkills("sort=newest&limit=6"),
@@ -73,6 +79,12 @@ export default async function HomePage() {
 
   return (
     <div>
+      {authError && (
+        <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+          Authentication failed. Please try signing in again.
+        </div>
+      )}
+
       {/* Hero */}
       <section className="py-16 text-center">
         <h1 className="text-5xl font-bold tracking-tight">

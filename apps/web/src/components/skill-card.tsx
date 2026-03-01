@@ -19,7 +19,6 @@ export function SkillCard({
   const toggleLike = useMutation({
     mutationFn: () => likes.toggle(skill.slug),
     onSuccess: (result) => {
-      // Optimistic-style: update all queries that might contain this skill
       queryClient.setQueriesData(
         { queryKey: ["skills"] },
         (old: any) => {
@@ -48,14 +47,18 @@ export function SkillCard({
   }
 
   return (
-    <Link
-      href={`/skills/${skill.slug}`}
-      className="block rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5 transition-shadow hover:shadow-md"
-    >
+    <article className="relative rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5 transition-shadow hover:shadow-md">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{skill.name}</h3>
+            <h3 className="font-semibold">
+              <Link
+                href={`/skills/${skill.slug}`}
+                className="after:absolute after:inset-0"
+              >
+                {skill.name}
+              </Link>
+            </h3>
             {isFeatured && (
               <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                 Top Liked
@@ -103,7 +106,7 @@ export function SkillCard({
           </span>
           <span>v{skill.latestVersion}</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="relative z-10 flex items-center gap-3">
           {skill.avgRating !== null && <span>{skill.avgRating.toFixed(1)} stars</span>}
           <span>{skill.installCount.toLocaleString()} installs</span>
           <button
@@ -131,6 +134,6 @@ export function SkillCard({
           ))}
         </div>
       )}
-    </Link>
+    </article>
   );
 }

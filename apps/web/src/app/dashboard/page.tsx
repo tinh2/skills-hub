@@ -183,10 +183,10 @@ export default function DashboardPage() {
         {(tab === "published" ? myPublished : myDrafts).map((skill) => (
           <div key={skill.id} className="relative">
             <SkillCard skill={skill} />
-            <div className="absolute right-2 top-2 flex gap-1">
+            <div className="absolute right-2 top-2 z-10 flex gap-1">
               <Link
                 href={`/skills/${skill.slug}/edit`}
-                className="inline-flex min-h-[36px] items-center rounded bg-[var(--card)] px-3 py-1.5 text-xs shadow-sm transition-colors hover:bg-[var(--accent)]"
+                className="inline-flex min-h-[44px] items-center rounded bg-[var(--card)] px-3 py-1.5 text-xs shadow-sm transition-colors hover:bg-[var(--accent)]"
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Edit ${skill.name}`}
               >
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                     publishSkill.mutate(skill.slug);
                   }}
                   disabled={publishSkill.isPending}
-                  className="min-h-[36px] rounded bg-green-100 px-3 py-1.5 text-xs text-green-800 transition-colors hover:bg-green-200 disabled:opacity-50 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800"
+                  className="min-h-[44px] rounded bg-green-100 px-3 py-1.5 text-xs text-green-800 transition-colors hover:bg-green-200 disabled:opacity-50 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800"
                   aria-label={`Publish ${skill.name}`}
                 >
                   Publish
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                   if (confirm("Archive this skill?")) archiveSkill.mutate(skill.slug);
                 }}
                 disabled={archiveSkill.isPending}
-                className="min-h-[36px] rounded bg-red-100 px-3 py-1.5 text-xs text-red-800 transition-colors hover:bg-red-200 disabled:opacity-50 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800"
+                className="min-h-[44px] rounded bg-red-100 px-3 py-1.5 text-xs text-red-800 transition-colors hover:bg-red-200 disabled:opacity-50 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800"
                 aria-label={`Archive ${skill.name}`}
               >
                 Archive
