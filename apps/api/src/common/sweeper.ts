@@ -10,11 +10,17 @@ const SWEEP_INTERVAL_MS = 2 * 60 * 1000; // every 2 minutes
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
-export async function sweepStaleRecords(): Promise<{ sandbox: number; agent: number }> {
+export async function sweepStaleRecords(): Promise<{
+  sandbox: number;
+  agent: number;
+  expiredTokens: number;
+  expiredInvites: number;
+}> {
   const sandboxCutoff = new Date(Date.now() - SANDBOX_STALE_MS);
   const agentCutoff = new Date(Date.now() - AGENT_STALE_MS);
+  const now = new Date();
 
-  const [sandboxResult, agentResult] = await Promise.all([
+  const [sandboxResult, agentResult, tokenResult, inviteResult] = await Promise.all([
     prisma.sandboxRun.updateMany({
       where: {
         status: { in: ["PENDING", "RUNNING"] },
@@ -35,9 +41,26 @@ export async function sweepStaleRecords(): Promise<{ sandbox: number; agent: num
         errorMessage: "Swept: execution stuck in RUNNING state",
       },
     }),
+    // Delete expired refresh tokens
+    prisma.refreshToken.deleteMany({
+      where: { expiresAt: { lt: now } },
+    }),
+    // Mark expired pending invites as EXPIRED
+    prisma.orgInvite.updateMany({
+      where: {
+        status: "PENDING",
+        expiresAt: { lt: now },
+      },
+      data: { status: "EXPIRED" },
+    }),
   ]);
 
-  return { sandbox: sandboxResult.count, agent: agentResult.count };
+  return {
+    sandbox: sandboxResult.count,
+    agent: agentResult.count,
+    expiredTokens: tokenResult.count,
+    expiredInvites: inviteResult.count,
+  };
 }
 
 export function startSweeper(logger?: { info: (msg: string) => void }): void {
@@ -46,8 +69,14 @@ export function startSweeper(logger?: { info: (msg: string) => void }): void {
   intervalId = setInterval(async () => {
     try {
       const result = await sweepStaleRecords();
-      if (result.sandbox > 0 || result.agent > 0) {
-        logger?.info(`[sweeper] Cleaned up ${result.sandbox} sandbox runs, ${result.agent} agent executions`);
+      const total = result.sandbox + result.agent + result.expiredTokens + result.expiredInvites;
+      if (total > 0) {
+        const parts: string[] = [];
+        if (result.sandbox > 0) parts.push(`${result.sandbox} sandbox runs`);
+        if (result.agent > 0) parts.push(`${result.agent} agent executions`);
+        if (result.expiredTokens > 0) parts.push(`${result.expiredTokens} expired tokens`);
+        if (result.expiredInvites > 0) parts.push(`${result.expiredInvites} expired invites`);
+        logger?.info(`[sweeper] Cleaned up ${parts.join(", ")}`);
       }
     } catch (err) {
       // Non-critical — log and continue
