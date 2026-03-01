@@ -27,7 +27,11 @@ COPY apps/web/ apps/web/
 RUN pnpm --filter @skills-hub/shared build
 RUN pnpm --filter @skills-hub/skill-parser build
 
-# Build Next.js app
+# Build Next.js app (NEXT_PUBLIC_* vars must be set at build time)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN pnpm --filter @skills-hub/web build
 
 # Production image
