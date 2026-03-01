@@ -463,9 +463,16 @@ export async function setComposition(
   slug: string,
   input: CompositionInput,
 ): Promise<SkillDetail> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("You can only edit your own skills");
+  // Allow author OR org PUBLISHER+ to manage composition
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("You can only edit your own skills");
+    }
+  }
 
   // Resolve child skill slugs to IDs
   const childSlugs = input.children.map((c) => c.skillSlug);
@@ -512,9 +519,16 @@ export async function setComposition(
 }
 
 export async function removeComposition(userId: string, slug: string): Promise<void> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("You can only edit your own skills");
+  // Allow author OR org PUBLISHER+ to remove composition
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("You can only edit your own skills");
+    }
+  }
 
   await prisma.composition.deleteMany({ where: { skillId: skill.id } });
 }

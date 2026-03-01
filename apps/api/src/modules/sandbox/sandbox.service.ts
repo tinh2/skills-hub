@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../common/errors.js";
-import { isOrgMember } from "../org/org.auth.js";
+import { isOrgMember, requireOrgRole } from "../org/org.auth.js";
 import { SANDBOX_LIMITS } from "@skills-hub/shared";
 import type { RunSandboxInput, CreateTestCaseInput, UpdateTestCaseInput, SandboxRunSummary, TestCaseData } from "@skills-hub/shared";
 import { createHash } from "crypto";
@@ -284,10 +284,17 @@ export async function createTestCase(
 ): Promise<TestCaseData> {
   const skill = await prisma.skill.findUnique({
     where: { slug: skillSlug },
-    select: { id: true, authorId: true },
+    select: { id: true, authorId: true, org: { select: { slug: true } } },
   });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("Only the skill author can manage test cases");
+  // Allow author OR org PUBLISHER+ to manage test cases
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("Only the skill author can manage test cases");
+    }
+  }
 
   const count = await prisma.testCase.count({ where: { skillId: skill.id } });
   if (count >= SANDBOX_LIMITS.MAX_TEST_CASES_PER_SKILL) {
@@ -327,11 +334,16 @@ export async function updateTestCase(
 ): Promise<TestCaseData> {
   const testCase = await prisma.testCase.findUnique({
     where: { id: testCaseId },
-    select: { id: true, skill: { select: { authorId: true } } },
+    select: { id: true, skill: { select: { authorId: true, org: { select: { slug: true } } } } },
   });
   if (!testCase) throw new NotFoundError("TestCase");
+  // Allow author OR org PUBLISHER+ to manage test cases
   if (testCase.skill.authorId !== userId) {
-    throw new ForbiddenError("Only the skill author can manage test cases");
+    if (testCase.skill.org) {
+      await requireOrgRole(userId, testCase.skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("Only the skill author can manage test cases");
+    }
   }
 
   const updated = await prisma.testCase.update({
@@ -350,11 +362,16 @@ export async function updateTestCase(
 export async function deleteTestCase(userId: string, testCaseId: string): Promise<void> {
   const testCase = await prisma.testCase.findUnique({
     where: { id: testCaseId },
-    select: { id: true, skill: { select: { authorId: true } } },
+    select: { id: true, skill: { select: { authorId: true, org: { select: { slug: true } } } } },
   });
   if (!testCase) throw new NotFoundError("TestCase");
+  // Allow author OR org PUBLISHER+ to manage test cases
   if (testCase.skill.authorId !== userId) {
-    throw new ForbiddenError("Only the skill author can manage test cases");
+    if (testCase.skill.org) {
+      await requireOrgRole(userId, testCase.skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("Only the skill author can manage test cases");
+    }
   }
 
   await prisma.testCase.delete({ where: { id: testCaseId } });
