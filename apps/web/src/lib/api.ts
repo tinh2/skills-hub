@@ -250,6 +250,10 @@ export const search = {
 
 // Categories
 export const categories = {
+  list: () =>
+    apiFetch<{ slug: string; name: string; description: string | null }[]>("/api/v1/categories"),
+  get: (slug: string) =>
+    apiFetch<{ slug: string; name: string; description: string | null }>(`/api/v1/categories/${slug}`),
   featured: () =>
     apiFetch<Record<string, SkillSummary | null>>("/api/v1/categories/featured"),
 };
@@ -409,6 +413,8 @@ export const agents = {
       method: "POST",
       body: JSON.stringify({ input }),
     }),
+  getExecution: (agentId: string, executionId: string) =>
+    apiFetch<AgentExecutionSummary>(`/api/v1/agents/${agentId}/executions/${executionId}`),
   remove: (agentId: string) =>
     apiFetch(`/api/v1/agents/${agentId}`, { method: "DELETE" }),
 };
@@ -420,6 +426,8 @@ export const sandbox = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getRun: (slug: string, runId: string) =>
+    apiFetch<SandboxRunSummary>(`/api/v1/skills/${slug}/sandbox/${runId}`),
   listRuns: (slug: string, query?: { cursor?: string; limit?: number }) => {
     const params = new URLSearchParams();
     if (query?.cursor) params.set("cursor", query.cursor);
