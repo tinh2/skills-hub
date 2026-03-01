@@ -13,7 +13,10 @@ export const updateReviewSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   body: z.string().max(5000).optional(),
   usedFor: z.string().max(500).optional(),
-});
+}).refine(
+  (d) => Object.values(d).some((v) => v !== undefined),
+  { message: "At least one field is required" },
+);
 
 export const reviewVoteSchema = z.object({
   helpful: z.boolean(),

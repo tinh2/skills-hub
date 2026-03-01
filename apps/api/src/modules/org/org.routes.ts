@@ -201,13 +201,18 @@ export async function orgRoutes(app: FastifyInstance) {
         userId,
       );
 
+      const instructions = body.instructions ?? template.instructions;
+      if (!instructions || instructions.length < 50) {
+        throw new ValidationError("Instructions must be at least 50 characters (provide in request or template)");
+      }
+
       const { createSkill } = await import("../skill/skill.service.js");
       return createSkill(userId, {
         name: body.name ?? template.name,
         description: body.description ?? template.description ?? "",
         categorySlug: body.categorySlug ?? template.categorySlug ?? "productivity",
         platforms: (body.platforms ?? template.platforms ?? ["CLAUDE_CODE"]) as ("CLAUDE_CODE" | "CURSOR" | "CODEX_CLI" | "OTHER")[],
-        instructions: body.instructions ?? template.instructions ?? "",
+        instructions,
         visibility: "ORG",
         version: body.version ?? "1.0.0",
         orgSlug: request.params.slug,
