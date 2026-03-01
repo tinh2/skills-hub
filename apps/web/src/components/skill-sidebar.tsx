@@ -8,7 +8,7 @@ import { VersionHistory } from "./version-history";
 
 export function SkillSidebar({ skill }: { skill: SkillDetail }) {
   return (
-    <aside className="space-y-6">
+    <aside aria-label="Skill details" className="space-y-6">
       <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between">

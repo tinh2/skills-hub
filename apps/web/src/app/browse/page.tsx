@@ -5,7 +5,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { skills as skillsApi, categories as categoriesApi, search as searchApi } from "@/lib/api";
 import { SkillCard } from "@/components/skill-card";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
-import { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, useId, Suspense } from "react";
 import Link from "next/link";
 
 function BrowseContent() {
@@ -19,7 +19,9 @@ function BrowseContent() {
   const [minScore, setMinScore] = useState(searchParams.get("minScore") || "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -137,65 +139,110 @@ function BrowseContent() {
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative" ref={suggestionsRef}>
-          <input
-            type="search"
-            placeholder="Search skills..."
-            aria-label="Search skills"
-            aria-expanded={showSuggestions && !!suggestions && (suggestions.skills.length > 0 || suggestions.tags.length > 0)}
-            aria-haspopup="listbox"
-            aria-autocomplete="list"
-            value={searchQuery}
-            onChange={(e) => {
-              handleFilterChange("q", e.target.value);
-              setShowSuggestions(true);
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setShowSuggestions(false);
-            }}
-            className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
-          />
-          {showSuggestions && searchQuery.length >= 2 && suggestions && (suggestions.skills.length > 0 || suggestions.tags.length > 0) && (
-            <div
-              role="listbox"
-              className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-[var(--border)] bg-[var(--background)] py-1 shadow-lg"
-            >
-              {suggestions.skills.length > 0 && (
-                <div>
-                  <p className="px-3 py-1 text-xs font-medium text-[var(--muted)]">Skills</p>
-                  {suggestions.skills.map((s) => (
-                    <Link
-                      key={s.slug}
-                      href={`/skills/${s.slug}`}
-                      role="option"
-                      onClick={() => setShowSuggestions(false)}
-                      className="block min-h-[44px] px-3 py-2 text-sm hover:bg-[var(--accent)]"
-                    >
-                      {s.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-              {suggestions.tags.length > 0 && (
-                <div>
-                  <p className="px-3 py-1 text-xs font-medium text-[var(--muted)]">Tags</p>
-                  {suggestions.tags.map((tag) => (
-                    <button
-                      key={tag}
-                      role="option"
-                      onClick={() => {
-                        setSearchQuery(tag);
-                        setShowSuggestions(false);
-                      }}
-                      className="block min-h-[44px] w-full px-3 py-2 text-left text-sm hover:bg-[var(--accent)]"
-                    >
-                      #{tag}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {(() => {
+            const allItems = [
+              ...(suggestions?.skills.map((s) => ({ type: "skill" as const, ...s })) ?? []),
+              ...(suggestions?.tags.map((t) => ({ type: "tag" as const, name: t })) ?? []),
+            ];
+            const isOpen = showSuggestions && searchQuery.length >= 2 && allItems.length > 0;
+            const activeItem = activeIndex >= 0 && activeIndex < allItems.length ? allItems[activeIndex] : null;
+            const activeDescendant = activeItem ? `${listboxId}-option-${activeIndex}` : undefined;
+
+            return (
+              <>
+                <input
+                  type="search"
+                  placeholder="Search skills..."
+                  role="combobox"
+                  aria-label="Search skills"
+                  aria-expanded={isOpen}
+                  aria-haspopup="listbox"
+                  aria-autocomplete="list"
+                  aria-controls={listboxId}
+                  aria-activedescendant={activeDescendant}
+                  value={searchQuery}
+                  onChange={(e) => {
+                    handleFilterChange("q", e.target.value);
+                    setShowSuggestions(true);
+                    setActiveIndex(-1);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setShowSuggestions(false);
+                      setActiveIndex(-1);
+                    } else if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      if (!isOpen) { setShowSuggestions(true); return; }
+                      setActiveIndex((prev) => (prev + 1) % allItems.length);
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setActiveIndex((prev) => (prev <= 0 ? allItems.length - 1 : prev - 1));
+                    } else if (e.key === "Enter" && activeItem) {
+                      e.preventDefault();
+                      if (activeItem.type === "skill") {
+                        router.push(`/skills/${(activeItem as any).slug}`);
+                      } else {
+                        setSearchQuery(activeItem.name);
+                      }
+                      setShowSuggestions(false);
+                      setActiveIndex(-1);
+                    }
+                  }}
+                  className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
+                />
+                {isOpen && (
+                  <div
+                    id={listboxId}
+                    role="listbox"
+                    className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-[var(--border)] bg-[var(--background)] py-1 shadow-lg"
+                  >
+                    {suggestions!.skills.length > 0 && (
+                      <div>
+                        <p className="px-3 py-1 text-xs font-medium text-[var(--muted)]">Skills</p>
+                        {suggestions!.skills.map((s, i) => (
+                          <Link
+                            key={s.slug}
+                            href={`/skills/${s.slug}`}
+                            id={`${listboxId}-option-${i}`}
+                            role="option"
+                            aria-selected={activeIndex === i}
+                            onClick={() => setShowSuggestions(false)}
+                            className={`block min-h-[44px] px-3 py-2 text-sm ${activeIndex === i ? "bg-[var(--accent)]" : "hover:bg-[var(--accent)]"}`}
+                          >
+                            {s.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    {suggestions!.tags.length > 0 && (
+                      <div>
+                        <p className="px-3 py-1 text-xs font-medium text-[var(--muted)]">Tags</p>
+                        {suggestions!.tags.map((tag, j) => {
+                          const idx = (suggestions!.skills.length) + j;
+                          return (
+                            <button
+                              key={tag}
+                              id={`${listboxId}-option-${idx}`}
+                              role="option"
+                              aria-selected={activeIndex === idx}
+                              onClick={() => {
+                                setSearchQuery(tag);
+                                setShowSuggestions(false);
+                              }}
+                              className={`block min-h-[44px] w-full px-3 py-2 text-left text-sm ${activeIndex === idx ? "bg-[var(--accent)]" : "hover:bg-[var(--accent)]"}`}
+                            >
+                              #{tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
         <select
           value={category}

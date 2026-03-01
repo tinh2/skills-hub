@@ -42,9 +42,9 @@ export function MediaGallery({
   if (mediaItems.length === 0 && !isAuthor) return null;
 
   return (
-    <section className="mb-8">
+    <section aria-labelledby="media-heading" className="mb-8">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Media</h2>
+        <h2 id="media-heading" className="text-xl font-bold">Media</h2>
         {isAuthor && !showForm && (
           <button
             onClick={() => setShowForm(true)}
