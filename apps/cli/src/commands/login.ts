@@ -20,6 +20,7 @@ export const loginCommand = new Command("login")
     const server = createServer(async (req, res) => {
       const url = new URL(req.url!, `http://localhost:${port}`);
       const code = url.searchParams.get("code");
+      const state = url.searchParams.get("state");
 
       if (!code) {
         res.writeHead(400);
@@ -32,7 +33,7 @@ export const loginCommand = new Command("login")
         const tokenRes = await fetch(`${config.apiUrl}/api/v1/auth/github/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, state: state || "" }),
         });
 
         if (!tokenRes.ok) throw new Error("Auth failed");

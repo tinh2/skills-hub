@@ -47,7 +47,7 @@ export const publishCommand = new Command("publish")
           name: skill.name,
           description: skill.description,
           version: skill.version,
-          category: skill.category,
+          categorySlug: skill.category,
           platforms,
           instructions: skill.instructions,
           visibility,
