@@ -18,7 +18,11 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default("http://localhost:3001"),
   API_URL: z.string().url().default("http://localhost:3000"),
 
-  GITHUB_TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
+  GITHUB_TOKEN_ENCRYPTION_KEY: z.string().min(32).optional()
+    .refine(
+      (val) => process.env.NODE_ENV !== "production" || !!val,
+      { message: "GITHUB_TOKEN_ENCRYPTION_KEY is required in production" },
+    ),
 
   REDIS_URL: z.string().url().optional(),
   S3_BUCKET_NAME: z.string().optional(),

@@ -289,6 +289,8 @@ export default function EditSkillPage() {
             <input
               id="version-number"
               type="text"
+              pattern="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+              title="Semver format required (e.g. 1.1.0)"
               value={versionNum}
               onChange={(e) => setVersionNum(e.target.value)}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"

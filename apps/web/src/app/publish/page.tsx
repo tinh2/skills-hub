@@ -235,6 +235,8 @@ export default function PublishPage() {
             id="publish-version"
             type="text"
             required
+            pattern="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+            title="Semver format required (e.g. 1.0.0)"
             value={form.version}
             onChange={(e) => setForm({ ...form, version: e.target.value })}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2"
