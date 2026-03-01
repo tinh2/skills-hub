@@ -86,10 +86,19 @@ export default function SkillDetailPage() {
     if (!skill?.composition) return;
     setIsDownloading(true);
     try {
-      // Fetch all child skills in parallel
-      const children = await Promise.all(
+      // Fetch all child skills in parallel, settling individually
+      const results = await Promise.allSettled(
         skill.composition.children.map((c) => skillsApi.get(c.skill.slug)),
       );
+
+      const children = results
+        .filter((r): r is PromiseFulfilledResult<SkillDetail> => r.status === "fulfilled")
+        .map((r) => r.value);
+
+      if (children.length === 0) {
+        alert("Failed to fetch child skills. Please try again.");
+        return;
+      }
 
       // Build zip: root SKILL.md + each child in its own folder
       const files: Record<string, Uint8Array> = {
@@ -104,6 +113,13 @@ export default function SkillDetailPage() {
       buf.set(zipped);
       const blob = new Blob([buf], { type: "application/zip" });
       triggerBlobDownload(blob, `${skill.slug}.zip`);
+
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed > 0) {
+        alert(`Bundle downloaded but ${failed} child skill(s) could not be fetched.`);
+      }
+    } catch {
+      alert("Download failed. Please try again.");
     } finally {
       setIsDownloading(false);
     }
@@ -289,7 +305,7 @@ export default function SkillDetailPage() {
             <h2 className="text-xl font-bold">
               Reviews ({skill.reviewCount})
             </h2>
-            {isAuthenticated && !showReviewForm && (
+            {isAuthenticated && !showReviewForm && !reviewList?.some((r) => r.author.username === authUser?.username) && (
               <button
                 onClick={() => setShowReviewForm(true)}
                 className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
