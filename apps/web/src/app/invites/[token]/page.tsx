@@ -45,7 +45,7 @@ export default function InviteAcceptPage() {
         </p>
         <button
           onClick={() => router.push("/dashboard")}
-          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
+          className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90"
         >
           Go to Dashboard
         </button>
@@ -75,14 +75,14 @@ export default function InviteAcceptPage() {
         <button
           onClick={() => acceptInvite.mutate()}
           disabled={acceptInvite.isPending}
-          className="rounded-lg bg-[var(--primary)] px-6 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-50"
+          className="min-h-[44px] rounded-lg bg-[var(--primary)] px-6 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {acceptInvite.isPending ? "Accepting..." : "Accept"}
         </button>
         <button
           onClick={() => declineInvite.mutate()}
           disabled={declineInvite.isPending}
-          className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-6 py-2 text-sm disabled:opacity-50"
+          className="min-h-[44px] rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-6 py-2 text-sm transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
         >
           Decline
         </button>

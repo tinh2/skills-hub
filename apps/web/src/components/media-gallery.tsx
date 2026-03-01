@@ -44,7 +44,7 @@ export function MediaGallery({
         {isAuthor && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
+            className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90"
           >
             Add Media
           </button>
@@ -98,13 +98,13 @@ export function MediaGallery({
             <button
               onClick={() => addMedia.mutate()}
               disabled={addMedia.isPending || !form.url}
-              className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+              className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
             >
               {addMedia.isPending ? "Adding..." : "Add Media"}
             </button>
             <button
               onClick={() => { setShowForm(false); setError(""); }}
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm"
+              className="min-h-[44px] rounded-lg bg-[var(--accent)] px-4 py-2 text-sm transition-colors hover:bg-[var(--border)]"
             >
               Cancel
             </button>

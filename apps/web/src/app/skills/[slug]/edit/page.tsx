@@ -119,14 +119,14 @@ export default function EditSkillPage() {
             <button
               onClick={() => publishSkill.mutate()}
               disabled={publishSkill.isPending}
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="min-h-[44px] rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
             >
               Publish
             </button>
           )}
           <button
             onClick={() => router.push(`/skills/${slug}`)}
-            className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm"
+            className="min-h-[44px] rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)]"
           >
             View Skill
           </button>
@@ -240,7 +240,7 @@ export default function EditSkillPage() {
           <button
             onClick={() => updateSkill.mutate()}
             disabled={updateSkill.isPending}
-            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+            className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {updateSkill.isPending ? "Saving..." : "Save Changes"}
           </button>
@@ -293,7 +293,7 @@ export default function EditSkillPage() {
           <button
             onClick={() => createVersion.mutate()}
             disabled={createVersion.isPending || !versionNum.trim() || !instructions.trim()}
-            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+            className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {createVersion.isPending ? "Creating..." : "Create Version"}
           </button>

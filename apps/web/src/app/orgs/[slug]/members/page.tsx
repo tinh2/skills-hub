@@ -110,7 +110,7 @@ export default function OrgMembersPage() {
             <button
               onClick={() => inviteMember.mutate()}
               disabled={inviteMember.isPending || !inviteUsername.trim()}
-              className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+              className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
             >
               Invite
             </button>

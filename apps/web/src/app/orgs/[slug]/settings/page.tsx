@@ -133,7 +133,7 @@ export default function OrgSettingsPage() {
         <button
           onClick={() => updateOrg.mutate()}
           disabled={updateOrg.isPending}
-          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+          className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
         >
           Save Changes
         </button>
@@ -153,7 +153,7 @@ export default function OrgSettingsPage() {
               <button
                 onClick={() => syncGithub.mutate()}
                 disabled={syncGithub.isPending}
-                className="rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-4 py-2 text-sm disabled:opacity-50"
+                className="min-h-[44px] rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)] disabled:opacity-50"
               >
                 {syncGithub.isPending ? "Syncing..." : "Sync Members"}
               </button>
@@ -162,7 +162,7 @@ export default function OrgSettingsPage() {
                   if (confirm("Disconnect GitHub org?")) disconnectGithub.mutate();
                 }}
                 disabled={disconnectGithub.isPending}
-                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 disabled:opacity-50 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+                className="min-h-[44px] rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50 dark:border-red-800 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
               >
                 Disconnect
               </button>
@@ -182,7 +182,7 @@ export default function OrgSettingsPage() {
             <button
               onClick={() => connectGithub.mutate()}
               disabled={connectGithub.isPending || !githubOrgSlug.trim()}
-              className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+              className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
             >
               Connect
             </button>
@@ -201,7 +201,7 @@ export default function OrgSettingsPage() {
             if (confirm(`Delete ${org.name}? This cannot be undone.`)) deleteOrg.mutate();
           }}
           disabled={deleteOrg.isPending}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700 disabled:opacity-50"
         >
           Delete Organization
         </button>

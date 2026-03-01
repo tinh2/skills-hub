@@ -89,7 +89,7 @@ export default function CreateOrgPage() {
         <button
           onClick={() => createOrg.mutate()}
           disabled={createOrg.isPending || !name.trim() || !slug.trim()}
-          className="w-full rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-50"
+          className="w-full min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {createOrg.isPending ? "Creating..." : "Create Organization"}
         </button>

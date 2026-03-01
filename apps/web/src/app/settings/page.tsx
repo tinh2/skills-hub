@@ -131,7 +131,7 @@ export default function SettingsPage() {
         <button
           onClick={() => updateProfile.mutate()}
           disabled={updateProfile.isPending}
-          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+          className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {updateProfile.isPending ? "Saving..." : "Save Profile"}
         </button>
@@ -174,7 +174,7 @@ export default function SettingsPage() {
           <button
             onClick={() => createKey.mutate()}
             disabled={createKey.isPending || !keyName.trim()}
-            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+            className="min-h-[44px] rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
           >
             Create
           </button>

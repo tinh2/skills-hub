@@ -67,13 +67,13 @@ export default function OrgDetailPage() {
           <div className="flex gap-2">
             <Link
               href={`/orgs/${slug}/settings`}
-              className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm"
+              className="inline-flex min-h-[44px] items-center rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)]"
             >
               Settings
             </Link>
             <Link
               href={`/orgs/${slug}/analytics`}
-              className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm"
+              className="inline-flex min-h-[44px] items-center rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)]"
             >
               Analytics
             </Link>

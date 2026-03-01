@@ -62,13 +62,13 @@ export default function DashboardPage() {
         <div className="flex gap-2">
           <Link
             href="/publish"
-            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)]"
+            className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90"
           >
             New Skill
           </Link>
           <Link
             href="/settings"
-            className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm"
+            className="inline-flex min-h-[44px] items-center rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)]"
           >
             Settings
           </Link>

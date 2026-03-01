@@ -170,13 +170,13 @@ export default function SkillDetailPage() {
             : "We couldn't load this skill. Please try again."}
         </p>
         <div className="flex gap-3">
-          <Link href="/browse" className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)]">
+          <Link href="/browse" className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
             Browse Skills
           </Link>
           {!is404 && (
             <button
               onClick={() => window.location.reload()}
-              className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm"
+              className="min-h-[44px] rounded-lg border border-[var(--border)] px-4 py-2 text-sm transition-colors hover:bg-[var(--accent)]"
             >
               Try Again
             </button>
@@ -191,7 +191,7 @@ export default function SkillDetailPage() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <h1 className="mb-2 text-2xl font-bold">Skill not found</h1>
         <p className="mb-6 text-[var(--muted)]">This skill may have been removed or the URL is incorrect.</p>
-        <Link href="/browse" className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)]">
+        <Link href="/browse" className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90">
           Browse Skills
         </Link>
       </div>
