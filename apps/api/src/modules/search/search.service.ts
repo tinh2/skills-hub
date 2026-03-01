@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { isOrgMember } from "../org/org.auth.js";
 import { batchHasUserLiked } from "../like/like.service.js";
+import { skillSummarySelect, formatSkillSummary } from "../skill/skill-summary.js";
 import type { SkillQuery } from "@skills-hub/shared";
 
 /**
@@ -98,32 +99,7 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     where,
     orderBy,
     take: query.limit + 1,
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      status: true,
-      visibility: true,
-      platforms: true,
-      qualityScore: true,
-      installCount: true,
-      likeCount: true,
-      avgRating: true,
-      reviewCount: true,
-      createdAt: true,
-      updatedAt: true,
-      category: { select: { name: true, slug: true } },
-      author: { select: { username: true, avatarUrl: true } },
-      tags: { select: { tag: { select: { name: true } } } },
-      versions: {
-        where: { isLatest: true },
-        select: { version: true },
-        take: 1,
-      },
-      compositionOf: { select: { id: true } },
-      org: { select: { slug: true, name: true } },
-    },
+    select: skillSummarySelect,
   };
 
   // Cursor pagination is incompatible with relevance sort (results are re-sorted
@@ -155,29 +131,7 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
   }
 
   return {
-    data: data.map((s) => ({
-      id: s.id,
-      slug: s.slug,
-      name: s.name,
-      description: s.description,
-      category: s.category,
-      author: s.author,
-      status: s.status,
-      visibility: s.visibility,
-      platforms: s.platforms,
-      qualityScore: s.qualityScore,
-      installCount: s.installCount,
-      likeCount: s.likeCount ?? 0,
-      userLiked: likedSet.has(s.id),
-      avgRating: s.avgRating,
-      reviewCount: s.reviewCount,
-      latestVersion: s.versions[0]?.version ?? "0.0.0",
-      tags: s.tags.map((t: any) => t.tag.name),
-      isComposition: !!s.compositionOf,
-      org: s.org ? { slug: s.org.slug, name: s.org.name } : null,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
-    })),
+    data: data.map((s: any) => formatSkillSummary(s, likedSet.has(s.id))),
     cursor: hasMore ? data[data.length - 1].id : null,
     hasMore,
   };
