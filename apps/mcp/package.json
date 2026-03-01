@@ -1,0 +1,33 @@
+{
+  "name": "@skills-hub-ai/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for skills-hub.ai — serve installed skills as prompts in any MCP-compatible AI tool",
+  "license": "MIT",
+  "keywords": ["mcp", "model-context-protocol", "claude-code", "cursor", "skills", "ai", "prompts"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tinh2/skills-hub.git",
+    "directory": "apps/mcp"
+  },
+  "homepage": "https://skills-hub.ai",
+  "type": "module",
+  "bin": {
+    "skills-hub-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@skills-hub/skill-parser": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
+  }
+}
