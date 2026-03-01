@@ -67,7 +67,7 @@ export default function SkillDetailPage() {
 
   function handleCopyInstall() {
     const cmd = `npx skills-hub install ${skill?.slug}`;
-    navigator.clipboard.writeText(cmd);
+    navigator.clipboard.writeText(cmd).catch(() => {});
     trackInstall.mutate();
     setCopyFeedback(true);
     setTimeout(() => setCopyFeedback(false), 2000);

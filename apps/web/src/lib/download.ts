@@ -1,9 +1,16 @@
 import type { SkillDetail } from "@skills-hub/shared";
 
+function yamlEscape(value: string): string {
+  if (/[:\-#{}\[\]&*!|>'"%@`]/.test(value) || value.includes("\n")) {
+    return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  }
+  return value;
+}
+
 export function buildSkillMd(s: SkillDetail | { name: string; latestVersion: string; category: { slug: string }; platforms: string[]; tags: string[]; description: string; instructions: string }) {
   const frontmatter = [
     "---",
-    `name: ${s.name}`,
+    `name: ${yamlEscape(s.name)}`,
     `version: ${s.latestVersion}`,
     `category: ${s.category.slug}`,
     `platforms: [${s.platforms.join(", ")}]`,
@@ -11,8 +18,7 @@ export function buildSkillMd(s: SkillDetail | { name: string; latestVersion: str
   if (s.tags.length > 0) {
     frontmatter.push(`tags: [${s.tags.join(", ")}]`);
   }
-  frontmatter.push(`description: |`);
-  frontmatter.push(`  ${s.description}`);
+  frontmatter.push(`description: ${yamlEscape(s.description)}`);
   frontmatter.push("---", "");
   return frontmatter.join("\n") + s.instructions;
 }

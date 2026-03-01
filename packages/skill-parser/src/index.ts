@@ -131,6 +131,7 @@ export function validateSemver(version: string): boolean {
 }
 
 export function compareSemver(a: string, b: string): number {
+  if (!validateSemver(a) || !validateSemver(b)) return 0;
   const pa = a.split(".").map(Number);
   const pb = b.split(".").map(Number);
   for (let i = 0; i < 3; i++) {
