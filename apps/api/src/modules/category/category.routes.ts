@@ -1,11 +1,17 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../../common/db.js";
 import { NotFoundError } from "../../common/errors.js";
+import * as categoryService from "./category.service.js";
 
 export async function categoryRoutes(app: FastifyInstance) {
   // GET /api/v1/categories — list all categories
   app.get("/", async () => {
     return prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+  });
+
+  // GET /api/v1/categories/featured — featured skill per category
+  app.get("/featured", async () => {
+    return categoryService.getFeaturedSkillPerCategory();
   });
 
   // GET /api/v1/categories/:slug — category detail

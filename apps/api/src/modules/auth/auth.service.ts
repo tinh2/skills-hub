@@ -63,6 +63,7 @@ export async function exchangeGithubCode(code: string) {
     update: {
       avatarUrl: githubUser.avatar_url,
       email: githubUser.email,
+      githubAccessToken: tokenData.access_token,
     },
     create: {
       githubId: githubUser.id,
@@ -71,8 +72,17 @@ export async function exchangeGithubCode(code: string) {
       avatarUrl: githubUser.avatar_url,
       githubUrl: githubUser.html_url,
       email: githubUser.email,
+      githubAccessToken: tokenData.access_token,
     },
   });
+
+  // Auto-join GitHub-connected orgs
+  try {
+    const { autoJoinGithubOrgs } = await import("../org/github-sync.service.js");
+    await autoJoinGithubOrgs(user.id, tokenData.access_token);
+  } catch {
+    // Non-critical — don't block login
+  }
 
   const accessToken = await createAccessToken(user.id, user.username);
   const refreshToken = await createRefreshToken();

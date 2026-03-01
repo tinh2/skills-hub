@@ -58,6 +58,11 @@ describe("skillQuerySchema", () => {
     expect(() => skillQuerySchema.parse({ sort: "invalid" })).toThrow();
   });
 
+  it("accepts most_liked sort", () => {
+    const result = skillQuerySchema.parse({ sort: "most_liked" });
+    expect(result.sort).toBe("most_liked");
+  });
+
   it("coerces string limit to number", () => {
     const result = skillQuerySchema.parse({ limit: "50" });
     expect(result.limit).toBe(50);

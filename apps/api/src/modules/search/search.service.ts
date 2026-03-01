@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
+import { isOrgMember } from "../org/org.auth.js";
+import { batchHasUserLiked } from "../like/like.service.js";
 import type { SkillQuery } from "@skills-hub/shared";
 
 /**
@@ -7,8 +9,20 @@ import type { SkillQuery } from "@skills-hub/shared";
  * Uses ILIKE for v1 — will be replaced with tsvector/GIN index for production scale.
  * The SearchService interface stays the same regardless of backend.
  */
-export async function searchSkills(query: SkillQuery) {
+export async function searchSkills(query: SkillQuery, requesterId?: string | null) {
   const where: Prisma.SkillWhereInput = { status: "PUBLISHED", visibility: "PUBLIC" };
+
+  // Org-scoped search
+  if (query.org && requesterId) {
+    const org = await prisma.organization.findUnique({ where: { slug: query.org } });
+    if (org) {
+      const member = await isOrgMember(requesterId, org.id);
+      if (member) {
+        where.visibility = "ORG";
+        where.orgId = org.id;
+      }
+    }
+  }
 
   if (query.category) {
     where.category = { slug: query.category };
@@ -35,6 +49,7 @@ export async function searchSkills(query: SkillQuery) {
   const orderBy: Prisma.SkillOrderByWithRelationInput = (() => {
     switch (query.sort) {
       case "most_installed": return { installCount: "desc" as const };
+      case "most_liked": return { likeCount: "desc" as const };
       case "highest_rated": return { avgRating: "desc" as const };
       case "recently_updated": return { updatedAt: "desc" as const };
       default: return { createdAt: "desc" as const };
@@ -55,6 +70,7 @@ export async function searchSkills(query: SkillQuery) {
         take: 1,
       },
       compositionOf: { select: { id: true } },
+      org: { select: { slug: true, name: true } },
     },
   };
 
@@ -67,6 +83,12 @@ export async function searchSkills(query: SkillQuery) {
 
   const hasMore = skills.length > query.limit;
   const data = skills.slice(0, query.limit);
+
+  // Batch check userLiked
+  let likedSet = new Set<string>();
+  if (requesterId) {
+    likedSet = await batchHasUserLiked(requesterId, data.map((s: any) => s.id));
+  }
 
   return {
     data: data.map((s) => ({
@@ -81,11 +103,14 @@ export async function searchSkills(query: SkillQuery) {
       platforms: s.platforms,
       qualityScore: s.qualityScore,
       installCount: s.installCount,
+      likeCount: s.likeCount ?? 0,
+      userLiked: likedSet.has(s.id),
       avgRating: s.avgRating,
       reviewCount: s.reviewCount,
       latestVersion: s.versions[0]?.version ?? "0.0.0",
       tags: s.tags.map((t: any) => t.tag.name),
       isComposition: !!s.compositionOf,
+      org: s.org ? { slug: s.org.slug, name: s.org.name } : null,
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
     })),

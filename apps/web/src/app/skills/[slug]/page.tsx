@@ -3,17 +3,18 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { skills as skillsApi, reviews as reviewsApi, installs } from "@/lib/api";
+import { skills as skillsApi, versions as versionsApi, reviews as reviewsApi, installs, likes, media as mediaApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { PLATFORM_LABELS } from "@skills-hub/shared";
-import type { Platform } from "@skills-hub/shared";
+import type { Platform, SkillDetail } from "@skills-hub/shared";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { zipSync, strToU8 } from "fflate";
 
 export default function SkillDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user: authUser } = useAuthStore();
   const queryClient = useQueryClient();
 
   const { data: skill, isLoading } = useQuery({
@@ -44,6 +45,45 @@ export default function SkillDetailPage() {
     onError: (err: Error) => setReviewError(err.message),
   });
 
+  // Like toggle
+  const toggleLike = useMutation({
+    mutationFn: () => likes.toggle(slug),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
+    },
+  });
+
+  // Media management
+  const [showMediaForm, setShowMediaForm] = useState(false);
+  const [mediaForm, setMediaForm] = useState({ type: "SCREENSHOT" as "SCREENSHOT" | "YOUTUBE", url: "", caption: "" });
+  const [mediaError, setMediaError] = useState("");
+
+  const addMedia = useMutation({
+    mutationFn: () =>
+      mediaApi.add(slug, {
+        type: mediaForm.type,
+        url: mediaForm.url,
+        caption: mediaForm.caption || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
+      setShowMediaForm(false);
+      setMediaForm({ type: "SCREENSHOT", url: "", caption: "" });
+      setMediaError("");
+    },
+    onError: (err: Error) => setMediaError(err.message),
+  });
+
+  const removeMedia = useMutation({
+    mutationFn: (mediaId: string) => mediaApi.remove(slug, mediaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
+    },
+  });
+
+  // Download state
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Install tracking
   const trackInstall = useMutation({
     mutationFn: () => installs.record(slug),
@@ -53,6 +93,85 @@ export default function SkillDetailPage() {
     const cmd = `npx skills-hub install ${skill?.slug}`;
     navigator.clipboard.writeText(cmd);
     trackInstall.mutate();
+  }
+
+  function buildSkillMd(s: SkillDetail) {
+    const frontmatter = [
+      "---",
+      `name: ${s.name}`,
+      `version: ${s.latestVersion}`,
+      `category: ${s.category.slug}`,
+      `platforms: [${s.platforms.join(", ")}]`,
+    ];
+    if (s.tags.length > 0) {
+      frontmatter.push(`tags: [${s.tags.join(", ")}]`);
+    }
+    frontmatter.push(`description: |`);
+    frontmatter.push(`  ${s.description}`);
+    frontmatter.push("---", "");
+    return frontmatter.join("\n") + s.instructions;
+  }
+
+  function triggerFileDownload(content: string, filename: string) {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function triggerBlobDownload(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function handleDownloadSkillMd() {
+    if (!skill) return;
+    triggerFileDownload(buildSkillMd(skill), "SKILL.md");
+  }
+
+  async function handleDownloadVersion(version: string) {
+    if (!skill) return;
+    const detail = await versionsApi.get(slug, version);
+    const content = buildSkillMd({ ...skill, instructions: detail.instructions, latestVersion: version });
+    triggerFileDownload(content, `SKILL-v${version}.md`);
+  }
+
+  async function handleDownloadBundle() {
+    if (!skill?.composition) return;
+    setIsDownloading(true);
+    try {
+      // Fetch all child skills in parallel
+      const children = await Promise.all(
+        skill.composition.children.map((c) => skillsApi.get(c.skill.slug)),
+      );
+
+      // Build zip: root SKILL.md + each child in its own folder
+      const files: Record<string, Uint8Array> = {
+        "SKILL.md": strToU8(buildSkillMd(skill)),
+      };
+      for (const child of children) {
+        files[`${child.slug}/SKILL.md`] = strToU8(buildSkillMd(child));
+      }
+
+      const zipped = zipSync(files, { level: 6 });
+      const buf = new Uint8Array(zipped.length);
+      buf.set(zipped);
+      const blob = new Blob([buf], { type: "application/zip" });
+      triggerBlobDownload(blob, `${skill.slug}.zip`);
+    } finally {
+      setIsDownloading(false);
+    }
   }
 
   if (isLoading) {
@@ -94,19 +213,37 @@ export default function SkillDetailPage() {
               </Link>
             </p>
           </div>
-          {skill.qualityScore !== null && (
-            <div
-              className={`rounded-full px-3 py-1 text-sm font-bold ${
-                skill.qualityScore >= 70
-                  ? "bg-green-100 text-green-800"
-                  : skill.qualityScore >= 40
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-red-100 text-red-800"
-              }`}
-            >
-              Quality: {skill.qualityScore}/100
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={() => toggleLike.mutate()}
+                disabled={toggleLike.isPending}
+                className="flex items-center gap-1 rounded-full border border-[var(--card-border)] px-3 py-1 text-sm hover:bg-[var(--accent)] disabled:opacity-50"
+                aria-label={skill.userLiked ? "Unlike skill" : "Like skill"}
+              >
+                <span className={skill.userLiked ? "text-red-500" : ""}>{skill.userLiked ? "\u2665" : "\u2661"}</span>
+                <span>{skill.likeCount}</span>
+              </button>
+            )}
+            {!isAuthenticated && (
+              <span className="flex items-center gap-1 rounded-full border border-[var(--card-border)] px-3 py-1 text-sm text-[var(--muted)]">
+                {"\u2661"} {skill.likeCount}
+              </span>
+            )}
+            {skill.qualityScore !== null && (
+              <div
+                className={`rounded-full px-3 py-1 text-sm font-bold ${
+                  skill.qualityScore >= 70
+                    ? "bg-green-100 text-green-800"
+                    : skill.qualityScore >= 40
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                }`}
+              >
+                Quality: {skill.qualityScore}/100
+              </div>
+            )}
+          </div>
         </div>
 
         <p className="mb-6 text-lg text-[var(--muted)]">{skill.description}</p>
@@ -125,6 +262,24 @@ export default function SkillDetailPage() {
             >
               Copy
             </button>
+          </div>
+          <div className="mt-3 flex items-center gap-2 border-t border-[var(--card-border)] pt-3">
+            <span className="text-xs text-[var(--muted)]">Or download directly:</span>
+            <button
+              onClick={handleDownloadSkillMd}
+              className="rounded border border-[var(--card-border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--card)]"
+            >
+              Download SKILL.md
+            </button>
+            {skill.composition && (
+              <button
+                onClick={handleDownloadBundle}
+                disabled={isDownloading}
+                className="rounded border border-[var(--card-border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--card)] disabled:opacity-50"
+              >
+                {isDownloading ? "Bundling..." : "Download All (.zip)"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -177,6 +332,116 @@ export default function SkillDetailPage() {
             </ReactMarkdown>
           </div>
         </section>
+
+        {/* Media */}
+        {(skill.media.length > 0 || skill.author.username === authUser?.username) && (
+          <section className="mb-8">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold">Media</h2>
+              {skill.author.username === authUser?.username && !showMediaForm && (
+                <button
+                  onClick={() => setShowMediaForm(true)}
+                  className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
+                >
+                  Add Media
+                </button>
+              )}
+            </div>
+
+            {showMediaForm && (
+              <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
+                {mediaError && <p className="mb-3 text-sm text-red-600">{mediaError}</p>}
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium">Type</label>
+                  <select
+                    value={mediaForm.type}
+                    onChange={(e) => setMediaForm({ ...mediaForm, type: e.target.value as "SCREENSHOT" | "YOUTUBE" })}
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+                  >
+                    <option value="SCREENSHOT">Screenshot</option>
+                    <option value="YOUTUBE">YouTube Video</option>
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium">URL</label>
+                  <input
+                    type="url"
+                    value={mediaForm.url}
+                    onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+                    placeholder={mediaForm.type === "SCREENSHOT" ? "https://i.imgur.com/example.png" : "https://www.youtube.com/watch?v=..."}
+                  />
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {mediaForm.type === "SCREENSHOT"
+                      ? "Allowed: imgur.com, raw.githubusercontent.com, user-images.githubusercontent.com"
+                      : "Allowed: youtube.com, youtu.be"}
+                  </p>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium">Caption (optional)</label>
+                  <input
+                    type="text"
+                    value={mediaForm.caption}
+                    onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })}
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+                    placeholder="Brief description"
+                    maxLength={200}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => addMedia.mutate()}
+                    disabled={addMedia.isPending || !mediaForm.url}
+                    className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
+                  >
+                    {addMedia.isPending ? "Adding..." : "Add Media"}
+                  </button>
+                  <button
+                    onClick={() => { setShowMediaForm(false); setMediaError(""); }}
+                    className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {skill.media.length > 0 && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {skill.media.map((m) => (
+                  <div key={m.id} className="relative rounded-lg border border-[var(--card-border)] bg-[var(--card)] overflow-hidden">
+                    {skill.author.username === authUser?.username && (
+                      <button
+                        onClick={() => removeMedia.mutate(m.id)}
+                        className="absolute right-2 top-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white hover:bg-black/70"
+                        aria-label="Remove media"
+                      >
+                        x
+                      </button>
+                    )}
+                    {m.type === "SCREENSHOT" ? (
+                      <img src={m.url} alt={m.caption || "Skill screenshot"} className="w-full" loading="lazy" />
+                    ) : (
+                      <div className="sm:col-span-2">
+                        <iframe
+                          src={m.url}
+                          className="aspect-video w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          sandbox="allow-scripts allow-same-origin allow-popups"
+                          allowFullScreen
+                          title={m.caption || "Skill video"}
+                        />
+                      </div>
+                    )}
+                    {m.caption && (
+                      <p className="p-2 text-xs text-[var(--muted)]">{m.caption}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Reviews */}
         <section>
@@ -368,17 +633,27 @@ export default function SkillDetailPage() {
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
           <h3 className="mb-3 text-sm font-medium">Version History</h3>
           <ul className="space-y-2">
-            {skill.versions.slice(0, 5).map((v) => (
-              <li key={v.id} className="text-sm">
-                <span className="font-medium">v{v.version}</span>
-                <span className="ml-2 text-xs text-[var(--muted)]">
-                  {new Date(v.createdAt).toLocaleDateString()}
-                </span>
-                {v.changelog && (
-                  <p className="mt-0.5 text-xs text-[var(--muted)]">
-                    {v.changelog}
-                  </p>
-                )}
+            {skill.versions.slice(0, 5).map((v, i) => (
+              <li key={v.id} className="flex items-start justify-between text-sm">
+                <div>
+                  <span className="font-medium">v{v.version}</span>
+                  <span className="ml-2 text-xs text-[var(--muted)]">
+                    {new Date(v.createdAt).toLocaleDateString()}
+                  </span>
+                  {v.changelog && (
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
+                      {v.changelog}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => i === 0 ? handleDownloadSkillMd() : handleDownloadVersion(v.version)}
+                  className="ml-2 shrink-0 text-xs text-[var(--primary)] hover:underline"
+                  aria-label={`Download version ${v.version}`}
+                  title={`Download v${v.version}`}
+                >
+                  .md
+                </button>
               </li>
             ))}
           </ul>

@@ -17,8 +17,11 @@ function yamlEscape(value: string): string {
 }
 
 /** Core install logic — reusable from update command */
-export async function installSkill(slug: string, options: { version?: string; target?: string }) {
-  const skill = await apiRequest<SkillDetail>(`/api/v1/skills/${slug}`);
+export async function installSkill(slug: string, options: { version?: string; target?: string; team?: string }) {
+  const endpoint = options.team
+    ? `/api/v1/orgs/${options.team}/skills/${slug}`
+    : `/api/v1/skills/${slug}`;
+  const skill = await apiRequest<SkillDetail>(endpoint);
 
   let instructions = skill.instructions;
   let version = skill.latestVersion;
@@ -67,6 +70,7 @@ export const installCommand = new Command("install")
   .argument("<slug>", "Skill slug or name")
   .option("-v, --version <version>", "Install a specific version")
   .option("-t, --target <target>", "Install target: claude-code, cursor")
+  .option("--team <org-slug>", "Install from an organization")
   .action(async (slug: string, options) => {
     const spinner = ora(`Installing ${slug}...`).start();
 

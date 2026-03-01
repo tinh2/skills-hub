@@ -1,11 +1,12 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { skills as skillsApi } from "@/lib/api";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { skills as skillsApi, categories as categoriesApi } from "@/lib/api";
 import { SkillCard } from "@/components/skill-card";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
 import { useState, useCallback, Suspense } from "react";
+import Link from "next/link";
 
 function BrowseContent() {
   const searchParams = useSearchParams();
@@ -35,6 +36,15 @@ function BrowseContent() {
     if (key === "sort") setSort(value);
     updateUrl(updated);
   }
+
+  // Featured skill for the active category
+  const { data: featuredMap } = useQuery({
+    queryKey: ["featured"],
+    queryFn: () => categoriesApi.featured(),
+    staleTime: 60_000,
+  });
+
+  const featuredSkill = category && featuredMap ? featuredMap[category] : null;
 
   const {
     data,
@@ -109,10 +119,43 @@ function BrowseContent() {
         >
           <option value="newest">Newest</option>
           <option value="most_installed">Most Installed</option>
+          <option value="most_liked">Most Liked</option>
           <option value="highest_rated">Highest Rated</option>
           <option value="recently_updated">Recently Updated</option>
         </select>
       </div>
+
+      {/* Featured Hero Card */}
+      {featuredSkill && category && (
+        <Link
+          href={`/skills/${featuredSkill.slug}`}
+          className="mb-8 block rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 transition-shadow hover:shadow-lg"
+        >
+          <div className="mb-2 flex items-center gap-2">
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+              Top Liked
+            </span>
+            <span className="rounded bg-[var(--accent)] px-2 py-0.5 text-xs">
+              {featuredSkill.category.name}
+            </span>
+          </div>
+          <h2 className="mb-1 text-xl font-bold">{featuredSkill.name}</h2>
+          <p className="mb-1 text-sm text-[var(--muted)]">
+            by {featuredSkill.author.username}
+          </p>
+          <p className="mb-3 text-sm text-[var(--muted)]">
+            {featuredSkill.description}
+          </p>
+          <div className="flex items-center gap-4 text-xs text-[var(--muted)]">
+            <span>{"\u2665"} {featuredSkill.likeCount} likes</span>
+            <span>{featuredSkill.installCount.toLocaleString()} installs</span>
+            {featuredSkill.avgRating !== null && (
+              <span>{featuredSkill.avgRating.toFixed(1)} stars</span>
+            )}
+            <span>v{featuredSkill.latestVersion}</span>
+          </div>
+        </Link>
+      )}
 
       {/* Results */}
       {isLoading && <p className="text-[var(--muted)]">Loading skills...</p>}
@@ -124,7 +167,11 @@ function BrowseContent() {
       {allSkills.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {allSkills.map((skill) => (
-            <SkillCard key={skill.id} skill={skill} />
+            <SkillCard
+              key={skill.id}
+              skill={skill}
+              isFeatured={!!featuredSkill && skill.id === featuredSkill.id}
+            />
           ))}
         </div>
       )}

@@ -9,6 +9,7 @@ export const searchCommand = new Command("search")
   .option("-c, --category <category>", "Filter by category")
   .option("-s, --sort <sort>", "Sort by: newest, most_installed, highest_rated", "most_installed")
   .option("-l, --limit <n>", "Number of results", "10")
+  .option("--org <org-slug>", "Search within an organization")
   .action(async (query: string, options) => {
     try {
       const params = new URLSearchParams({
@@ -17,6 +18,7 @@ export const searchCommand = new Command("search")
         limit: options.limit,
       });
       if (options.category) params.set("category", options.category);
+      if (options.org) params.set("org", options.org);
 
       const result = await apiRequest<PaginatedResponse<SkillSummary>>(
         `/api/v1/search?${params}`,

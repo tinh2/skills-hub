@@ -17,6 +17,8 @@ const envSchema = z.object({
 
   FRONTEND_URL: z.string().url().default("http://localhost:3001"),
   API_URL: z.string().url().default("http://localhost:3000"),
+
+  GITHUB_TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

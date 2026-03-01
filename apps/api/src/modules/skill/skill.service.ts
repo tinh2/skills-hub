@@ -3,7 +3,9 @@ import { prisma } from "../../common/db.js";
 import { uniqueSlug } from "../../common/slug.js";
 import { NotFoundError, ConflictError, ForbiddenError, ValidationError } from "../../common/errors.js";
 import { computeQualityScore } from "../validation/validation.service.js";
+import { requireOrgRole, isOrgMember } from "../org/org.auth.js";
 import { QUALITY_SCORE } from "@skills-hub/shared";
+import { batchHasUserLiked, hasUserLiked } from "../like/like.service.js";
 import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail, CompositionInput } from "@skills-hub/shared";
 
 const skillSummarySelect = {
@@ -18,6 +20,7 @@ const skillSummarySelect = {
   platforms: true,
   qualityScore: true,
   installCount: true,
+  likeCount: true,
   avgRating: true,
   reviewCount: true,
   createdAt: true,
@@ -29,9 +32,10 @@ const skillSummarySelect = {
     take: 1,
   },
   compositionOf: { select: { id: true } },
+  org: { select: { slug: true, name: true } },
 } satisfies Prisma.SkillSelect;
 
-function formatSkillSummary(row: any): SkillSummary {
+function formatSkillSummary(row: any, userLiked = false): SkillSummary {
   return {
     id: row.id,
     slug: row.slug,
@@ -44,11 +48,14 @@ function formatSkillSummary(row: any): SkillSummary {
     platforms: row.platforms,
     qualityScore: row.qualityScore,
     installCount: row.installCount,
+    likeCount: row.likeCount ?? 0,
+    userLiked,
     avgRating: row.avgRating,
     reviewCount: row.reviewCount,
     latestVersion: row.versions[0]?.version ?? "0.0.0",
     tags: row.tags.map((t: any) => t.tag.name),
     isComposition: !!row.compositionOf,
+    org: row.org ? { slug: row.org.slug, name: row.org.name } : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -58,8 +65,17 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
   const category = await prisma.category.findUnique({ where: { slug: input.categorySlug } });
   if (!category) throw new NotFoundError("Category");
 
+  // Org-scoped skill: validate membership and resolve orgId
+  let orgId: string | undefined;
+  if (input.orgSlug) {
+    const membership = await requireOrgRole(authorId, input.orgSlug, "PUBLISHER");
+    orgId = membership.org.id;
+  }
+
   const slug = await uniqueSlug(input.name);
   const qualityScore = computeQualityScore(input);
+
+  const visibility = input.orgSlug && !input.visibility ? "ORG" : (input.visibility ?? "PUBLIC");
 
   const skill = await prisma.$transaction(async (tx) => {
     const skill = await tx.skill.create({
@@ -69,7 +85,8 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
         description: input.description,
         categoryId: category.id,
         authorId,
-        visibility: (input.visibility ?? "PUBLIC") as any,
+        orgId,
+        visibility: visibility as any,
         platforms: input.platforms as any,
         qualityScore,
         githubRepoUrl: input.githubRepoUrl,
@@ -136,6 +153,9 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
           },
         },
       },
+      media: {
+        orderBy: { sortOrder: "asc" },
+      },
     },
   });
 
@@ -144,6 +164,13 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
   // Visibility check: private skills only visible to their author
   if (skill.visibility === "PRIVATE" && skill.authorId !== requesterId) {
     throw new NotFoundError("Skill");
+  }
+
+  // ORG visibility: only visible to org members
+  if (skill.visibility === "ORG" && skill.orgId) {
+    if (!requesterId) throw new NotFoundError("Skill");
+    const member = await isOrgMember(requesterId, skill.orgId);
+    if (!member) throw new NotFoundError("Skill");
   }
 
   const latestVersion = await prisma.skillVersion.findFirst({
@@ -166,8 +193,11 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
       }
     : null;
 
+  // Check if requester has liked this skill
+  const userLiked = requesterId ? await hasUserLiked(requesterId, skill.id) : false;
+
   return {
-    ...formatSkillSummary({ ...skill, versions: [{ version: latestVersion?.version ?? "0.0.0" }] }),
+    ...formatSkillSummary({ ...skill, versions: [{ version: latestVersion?.version ?? "0.0.0" }] }, userLiked),
     instructions: latestVersion?.instructions ?? "",
     githubRepoUrl: skill.githubRepoUrl,
     versions: skill.versions.map((v) => ({
@@ -178,6 +208,13 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
       createdAt: v.createdAt.toISOString(),
     })),
     composition,
+    media: (skill as any).media?.map((m: any) => ({
+      id: m.id,
+      type: m.type,
+      url: m.url,
+      caption: m.caption,
+      sortOrder: m.sortOrder,
+    })) ?? [],
   };
 }
 
@@ -195,6 +232,15 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
     // Unlisted skills are not browsable — they're accessed by direct slug
     where.visibility = "UNLISTED";
     if (requesterId) where.authorId = requesterId;
+  } else if (query.visibility === "ORG") {
+    if (!requesterId) throw new ForbiddenError("Authentication required to view org skills");
+    if (!query.org) throw new ValidationError("org parameter required for ORG visibility");
+    const org = await prisma.organization.findUnique({ where: { slug: query.org } });
+    if (!org) throw new NotFoundError("Organization");
+    const member = await isOrgMember(requesterId, org.id);
+    if (!member) throw new ForbiddenError("Not a member of this organization");
+    where.orgId = org.id;
+    where.visibility = "ORG";
   } else {
     where.visibility = "PUBLIC";
   }
@@ -223,6 +269,7 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
   const orderBy: Prisma.SkillOrderByWithRelationInput = (() => {
     switch (query.sort) {
       case "most_installed": return { installCount: "desc" as const };
+      case "most_liked": return { likeCount: "desc" as const };
       case "highest_rated": return { avgRating: "desc" as const };
       case "recently_updated": return { updatedAt: "desc" as const };
       default: return { createdAt: "desc" as const };
@@ -246,8 +293,14 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
   const hasMore = skills.length > query.limit;
   const data = skills.slice(0, query.limit);
 
+  // Batch check userLiked
+  let likedSet = new Set<string>();
+  if (requesterId) {
+    likedSet = await batchHasUserLiked(requesterId, data.map((s: any) => s.id));
+  }
+
   return {
-    data: data.map(formatSkillSummary),
+    data: data.map((s: any) => formatSkillSummary(s, likedSet.has(s.id))),
     cursor: hasMore ? data[data.length - 1].id : null,
     hasMore,
   };
@@ -258,9 +311,17 @@ export async function updateSkill(
   slug: string,
   input: UpdateSkillInput,
 ): Promise<SkillSummary> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("You can only edit your own skills");
+
+  // Allow author OR org PUBLISHER+ to edit
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("You can only edit your own skills");
+    }
+  }
 
   const updateData: Prisma.SkillUpdateInput = {};
   if (input.name) updateData.name = input.name;
@@ -300,9 +361,17 @@ export async function updateSkill(
 }
 
 export async function publishSkill(userId: string, slug: string): Promise<SkillSummary> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("You can only publish your own skills");
+
+  // Allow author OR org PUBLISHER+ to publish
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("You can only publish your own skills");
+    }
+  }
   if (skill.status === "PUBLISHED") throw new ConflictError("Skill is already published");
   if (skill.qualityScore !== null && skill.qualityScore < QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE) {
     throw new ValidationError(`Quality score must be at least ${QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE} to publish (current: ${skill.qualityScore})`);
@@ -318,9 +387,17 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
 }
 
 export async function archiveSkill(userId: string, slug: string): Promise<void> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({ where: { slug }, include: { org: { select: { slug: true } } } });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("You can only archive your own skills");
+
+  // Allow author OR org PUBLISHER+ to archive
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("You can only archive your own skills");
+    }
+  }
 
   await prisma.skill.update({
     where: { slug },

@@ -16,15 +16,20 @@ model User {
   bio         String?
   githubUrl   String
   email       String?
+  githubAccessToken String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  skills        Skill[]
-  reviews       Review[]
-  reviewVotes   ReviewVote[]
-  apiKeys       ApiKey[]
-  installs      Install[]
-  refreshTokens RefreshToken[]
+  skills           Skill[]
+  reviews          Review[]
+  reviewVotes      ReviewVote[]
+  apiKeys          ApiKey[]
+  installs         Install[]
+  skillLikes       SkillLike[]
+  refreshTokens    RefreshToken[]
+  orgMemberships   OrgMembership[]
+  invitesSent      OrgInvite[]     @relation("InviteSender")
+  invitesReceived  OrgInvite[]     @relation("InviteRecipient")
 }
 
 model ApiKey {
@@ -62,11 +67,14 @@ model Skill {
   category      Category    @relation(fields: [categoryId], references: [id])
   authorId      String
   author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  orgId         String?
+  org           Organization? @relation(fields: [orgId], references: [id])
   status        SkillStatus @default(DRAFT)
   visibility    Visibility  @default(PUBLIC)
   platforms     Platform[]
   qualityScore  Int?
   installCount  Int         @default(0)
+  likeCount     Int         @default(0)
   avgRating     Float?
   reviewCount   Int         @default(0)
   githubRepoUrl String?
@@ -77,14 +85,18 @@ model Skill {
   tags               SkillTag[]
   reviews            Review[]
   installs           Install[]
+  likes              SkillLike[]
+  media              SkillMedia[]
   compositionParents CompositionSkill[] @relation("ChildSkill")
   compositionOf      Composition?       @relation("CompositionRoot")
 
   @@index([categoryId])
   @@index([authorId])
+  @@index([orgId])
   @@index([status, visibility])
   @@index([qualityScore(sort: Desc)])
   @@index([installCount(sort: Desc)])
+  @@index([likeCount(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@index([updatedAt(sort: Desc)])
 }
@@ -230,4 +242,116 @@ enum Visibility {
   PUBLIC
   PRIVATE
   UNLISTED
+  ORG
+}
+
+enum OrgRole {
+  ADMIN
+  PUBLISHER
+  MEMBER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  avatarUrl   String?
+  githubOrgId Int?     @unique
+  githubOrg   String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships    OrgMembership[]
+  invites        OrgInvite[]
+  skills         Skill[]
+  skillTemplates OrgSkillTemplate[]
+}
+
+model OrgMembership {
+  id        String   @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      OrgRole  @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orgId, userId])
+  @@index([userId])
+}
+
+model OrgInvite {
+  id              String       @id @default(cuid())
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invitedByUserId String
+  invitedBy       User         @relation("InviteSender", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  inviteeUsername String?
+  inviteeUserId   String?
+  invitee         User?        @relation("InviteRecipient", fields: [inviteeUserId], references: [id])
+  role            OrgRole      @default(MEMBER)
+  status          InviteStatus @default(PENDING)
+  token           String       @unique
+  expiresAt       DateTime
+  createdAt       DateTime     @default(now())
+
+  @@index([orgId])
+  @@index([inviteeUserId])
+  @@index([token])
+}
+
+model OrgSkillTemplate {
+  id           String       @id @default(cuid())
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  categorySlug String?
+  platforms    Platform[]
+  instructions String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+model SkillLike {
+  id        String   @id @default(cuid())
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([skillId, userId])
+  @@index([skillId])
+  @@index([userId])
+}
+
+model SkillMedia {
+  id        String    @id @default(cuid())
+  skillId   String
+  skill     Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  type      MediaType
+  url       String
+  caption   String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([skillId])
+}
+
+enum MediaType {
+  SCREENSHOT
+  YOUTUBE
 }
