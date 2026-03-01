@@ -311,6 +311,7 @@ model OrgInvite {
 
   @@index([orgId])
   @@index([inviteeUserId])
+  @@index([invitedByUserId])
 }
 
 model OrgSkillTemplate {

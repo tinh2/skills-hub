@@ -1,5 +1,16 @@
 import { prisma } from "../../common/db.js";
+import { NotFoundError } from "../../common/errors.js";
 import type { SkillSummary } from "@skills-hub/shared";
+
+export async function listCategories() {
+  return prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+}
+
+export async function getCategoryBySlug(slug: string) {
+  const category = await prisma.category.findUnique({ where: { slug } });
+  if (!category) throw new NotFoundError("Category");
+  return category;
+}
 
 const summarySelect = {
   id: true,
