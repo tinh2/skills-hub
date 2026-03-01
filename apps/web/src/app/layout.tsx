@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "skills-hub.ai — Claude Code Skill Marketplace",
   description:
     "Discover, share, and install Claude Code skills. Browse quality-scored skills from the community.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     title: "skills-hub.ai",
     description: "The marketplace for Claude Code skills",
     type: "website",
+    siteName: "skills-hub.ai",
   },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://skills-hub.ai"),
 };
 
 export default function RootLayout({
@@ -30,6 +36,7 @@ export default function RootLayout({
           <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             {children}
           </main>
+          <Footer />
         </Providers>
       </body>
     </html>

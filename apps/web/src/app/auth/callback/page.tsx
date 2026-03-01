@@ -22,7 +22,10 @@ function CallbackContent() {
       .callback(code, state)
       .then((result) => {
         login(result.user, result.accessToken);
-        router.push("/");
+        const redirect = sessionStorage.getItem("auth_redirect");
+        sessionStorage.removeItem("auth_redirect");
+        const safePath = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
+        router.push(safePath);
       })
       .catch(() => {
         router.push("/?error=auth_failed");

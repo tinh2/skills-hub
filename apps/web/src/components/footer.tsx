@@ -1,0 +1,37 @@
+import Link from "next/link";
+
+export function Footer() {
+  return (
+    <footer className="border-t border-[var(--border)] bg-[var(--card)]">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-8 sm:grid-cols-3">
+          <div>
+            <h3 className="mb-3 text-sm font-semibold">Product</h3>
+            <ul className="space-y-2">
+              <li><Link href="/browse" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Browse Skills</Link></li>
+              <li><Link href="/categories" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Categories</Link></li>
+              <li><Link href="/publish" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Publish a Skill</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="mb-3 text-sm font-semibold">Developers</h3>
+            <ul className="space-y-2">
+              <li><a href="https://github.com/tinh2/skills-hub" target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">GitHub</a></li>
+              <li><Link href="/about" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">About</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="mb-3 text-sm font-semibold">Legal</h3>
+            <ul className="space-y-2">
+              <li><Link href="/terms" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Privacy Policy</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-8 border-t border-[var(--border)] pt-6 text-center text-xs text-[var(--muted)]">
+          &copy; {new Date().getFullYear()} skills-hub.ai
+        </div>
+      </div>
+    </footer>
+  );
+}

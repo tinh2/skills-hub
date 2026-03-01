@@ -50,6 +50,12 @@ export function Header() {
                   Dashboard
                 </Link>
                 <Link
+                  href="/settings"
+                  className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+                >
+                  Settings
+                </Link>
+                <Link
                   href={`/u/${user?.username}`}
                   className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
                 >
@@ -67,7 +73,10 @@ export function Header() {
               </>
             ) : (
               <button
-                onClick={() => auth.githubLogin()}
+                onClick={() => {
+                  sessionStorage.setItem("auth_redirect", window.location.pathname);
+                  auth.githubLogin();
+                }}
                 className="rounded-lg bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)]"
               >
                 Sign in with GitHub
@@ -127,7 +136,11 @@ export function Header() {
               </>
             ) : (
               <button
-                onClick={() => { auth.githubLogin(); setMobileOpen(false); }}
+                onClick={() => {
+                  sessionStorage.setItem("auth_redirect", window.location.pathname);
+                  auth.githubLogin();
+                  setMobileOpen(false);
+                }}
                 className="text-left text-sm font-medium text-[var(--foreground)]"
               >
                 Sign in with GitHub
