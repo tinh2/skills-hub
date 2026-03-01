@@ -56,6 +56,15 @@ export async function agentRoutes(app: FastifyInstance) {
     return agentService.executeAgent(userId, request.params.agentId, parsed.data);
   });
 
+  // GET /api/v1/agents/:agentId/executions/:executionId — poll execution status
+  app.get<{ Params: { agentId: string; executionId: string } }>(
+    "/:agentId/executions/:executionId",
+    async (request) => {
+      const { userId } = await requireAuth(request);
+      return agentService.getExecution(userId, request.params.agentId, request.params.executionId);
+    },
+  );
+
   // DELETE /api/v1/agents/:agentId — delete agent
   app.delete<{ Params: { agentId: string } }>("/:agentId", async (request) => {
     const { userId } = await requireAuth(request);

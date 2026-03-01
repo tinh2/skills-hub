@@ -14,6 +14,8 @@ import type {
 import { isOrgMember } from "../org/org.auth.js";
 import { getOpenFangClient } from "./openfang.client.js";
 import { translateToHand, serializeHandToml } from "@skills-hub/skill-parser/openfang";
+import { isQueueAvailable, getQueue, AGENT_QUEUE } from "../../common/queue.js";
+import type { AgentJobData } from "./agent.worker.js";
 
 function toJsonInput(value: Record<string, unknown> | undefined | null): Prisma.InputJsonValue | typeof Prisma.JsonNull {
   if (!value || Object.keys(value).length === 0) return Prisma.JsonNull;
@@ -323,7 +325,25 @@ export async function executeAgent(
     select: executionSelect,
   });
 
-  // Execute via OpenFang or simulate
+  // Dispatch to job queue if Redis is available, otherwise execute inline
+  if (isQueueAvailable()) {
+    const queue = getQueue(AGENT_QUEUE);
+    const jobData: AgentJobData = {
+      executionId: execution.id,
+      agentId,
+      openfangHandId: agent.openfangHandId,
+      input: input.input ?? null,
+    };
+    await queue.add("execute", jobData, {
+      attempts: 2,
+      backoff: { type: "exponential", delay: 1000 },
+      removeOnComplete: 100,
+      removeOnFail: 50,
+    });
+    return formatExecution(execution);
+  }
+
+  // Inline fallback (no Redis)
   const startTime = Date.now();
   let output: string;
   let tokenCount = 0;
@@ -378,6 +398,27 @@ export async function executeAgent(
   });
 
   return formatExecution(updated);
+}
+
+export async function getExecution(
+  userId: string,
+  agentId: string,
+  executionId: string,
+): Promise<AgentExecutionSummary> {
+  const agent = await prisma.agent.findUnique({
+    where: { id: agentId },
+    select: { ownerId: true },
+  });
+  if (!agent) throw new NotFoundError("Agent");
+  if (agent.ownerId !== userId) throw new ForbiddenError("You can only view your own agent executions");
+
+  const execution = await prisma.agentExecution.findUnique({
+    where: { id: executionId },
+    select: executionSelect,
+  });
+  if (!execution) throw new NotFoundError("Execution");
+
+  return formatExecution(execution);
 }
 
 // --- Selects & Formatters ---

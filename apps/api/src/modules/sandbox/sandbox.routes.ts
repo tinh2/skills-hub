@@ -33,6 +33,15 @@ export async function sandboxRoutes(app: FastifyInstance) {
     },
   );
 
+  // GET /api/v1/skills/:slug/sandbox/:runId — poll sandbox run status
+  app.get<{ Params: { slug: string; runId: string } }>(
+    "/:slug/sandbox/:runId",
+    async (request) => {
+      const { userId } = await requireAuth(request);
+      return sandboxService.getSandboxRunById(request.params.runId, userId);
+    },
+  );
+
   // GET /api/v1/skills/:slug/test-cases — list test cases (respects visibility)
   app.get<{ Params: { slug: string } }>("/:slug/test-cases", async (request) => {
     const auth = await optionalAuth(request);

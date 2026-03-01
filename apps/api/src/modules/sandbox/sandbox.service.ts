@@ -5,6 +5,8 @@ import { isOrgMember } from "../org/org.auth.js";
 import { SANDBOX_LIMITS } from "@skills-hub/shared";
 import type { RunSandboxInput, CreateTestCaseInput, UpdateTestCaseInput, SandboxRunSummary, TestCaseData } from "@skills-hub/shared";
 import { createHash } from "crypto";
+import { isQueueAvailable, getQueue, SANDBOX_QUEUE } from "../../common/queue.js";
+import type { SandboxJobData } from "./sandbox.worker.js";
 
 function hashInput(input: string): string {
   return createHash("sha256").update(input).digest("hex");
@@ -100,10 +102,21 @@ export async function runSandbox(
     select: sandboxRunSelect,
   });
 
-  // Execute asynchronously — in production this would dispatch to a worker queue.
-  // For the prototype, we simulate execution inline.
-  const result = await executeSandbox(run.id, skill.id, input.input);
+  // Dispatch to job queue if Redis is available, otherwise execute inline
+  if (isQueueAvailable()) {
+    const queue = getQueue(SANDBOX_QUEUE);
+    const jobData: SandboxJobData = { runId: run.id, skillId: skill.id, input: input.input };
+    await queue.add("execute", jobData, {
+      attempts: 2,
+      backoff: { type: "exponential", delay: 1000 },
+      removeOnComplete: 100,
+      removeOnFail: 50,
+    });
+    return formatSandboxRun(run);
+  }
 
+  // Inline fallback (no Redis)
+  const result = await executeSandbox(run.id, skill.id, input.input);
   return formatSandboxRun(result);
 }
 
@@ -242,6 +255,26 @@ export async function getSandboxRuns(
     cursor: hasMore ? data[data.length - 1].id : null,
     hasMore,
   };
+}
+
+export async function getSandboxRunById(
+  runId: string,
+  userId: string,
+): Promise<SandboxRunSummary> {
+  const run = await prisma.sandboxRun.findUnique({
+    where: { id: runId },
+    select: sandboxRunSelect,
+  });
+  if (!run) throw new NotFoundError("SandboxRun");
+
+  // Users can only poll their own runs
+  const fullRun = await prisma.sandboxRun.findUnique({
+    where: { id: runId },
+    select: { userId: true },
+  });
+  if (fullRun?.userId !== userId) throw new NotFoundError("SandboxRun");
+
+  return formatSandboxRun(run);
 }
 
 // --- Test Cases ---
