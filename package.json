@@ -9,7 +9,8 @@
     "db:migrate": "pnpm --filter @skills-hub/api exec prisma migrate dev",
     "db:generate": "pnpm --filter @skills-hub/api exec prisma generate",
     "db:seed": "pnpm --filter @skills-hub/api exec prisma db seed",
-    "db:studio": "pnpm --filter @skills-hub/api exec prisma studio"
+    "db:studio": "pnpm --filter @skills-hub/api exec prisma studio",
+    "db:seed:registry": "pnpm --filter @skills-hub/api seed:registry"
   },
   "packageManager": "pnpm@9.15.4",
   "engines": {

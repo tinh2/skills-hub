@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "seed:registry": "tsx prisma/seed-registry.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",

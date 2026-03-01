@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { skills as skillsApi, categories as categoriesApi } from "@/lib/api";
+import { skills as skillsApi, categories as categoriesApi, search as searchApi } from "@/lib/api";
 import { SkillCard } from "@/components/skill-card";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
 import { useState, useCallback, useEffect, useRef, Suspense } from "react";
@@ -87,16 +87,19 @@ function BrowseContent() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ["skills", debouncedQuery, category, platform, sort, minScore],
-    queryFn: ({ pageParam }) =>
-      skillsApi.list({
+    queryFn: ({ pageParam }) => {
+      const params = {
         q: debouncedQuery || undefined,
         category: category || undefined,
         platform: (platform || undefined) as any,
-        sort: sort as any,
+        sort: (debouncedQuery && sort === "newest" ? "relevance" : sort) as any,
         minScore: minScore ? Number(minScore) : undefined,
         limit: 20,
         cursor: pageParam,
-      }),
+      };
+      // Use tsvector search endpoint when query is present
+      return debouncedQuery ? searchApi.query(params) : skillsApi.list(params);
+    },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.cursor ?? undefined : undefined,
@@ -152,6 +155,7 @@ function BrowseContent() {
           onChange={(e) => handleFilterChange("sort", e.target.value)}
           className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
+          {debouncedQuery && <option value="relevance">Best Match</option>}
           <option value="newest">Newest</option>
           <option value="most_installed">Most Installed</option>
           <option value="most_liked">Most Liked</option>

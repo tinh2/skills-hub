@@ -44,7 +44,7 @@ export const skillQuerySchema = z.object({
   org: z.string().optional(),
   minScore: z.coerce.number().int().min(0).max(100).optional(),
   sort: z
-    .enum(["newest", "most_installed", "most_liked", "highest_rated", "recently_updated"])
+    .enum(["newest", "most_installed", "most_liked", "highest_rated", "recently_updated", "relevance"])
     .default("newest"),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),

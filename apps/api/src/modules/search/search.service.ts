@@ -65,7 +65,12 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     ];
   }
 
+  // For "relevance" sort with tsvector results, we preserve the tsvector rank ordering
+  // by not applying a Prisma orderBy (the ID list from tsvector is already ranked)
+  const useRelevanceSort = query.sort === "relevance" && tsvectorIds && tsvectorIds.length > 0;
+
   const orderBy: Prisma.SkillOrderByWithRelationInput = (() => {
+    if (useRelevanceSort) return { createdAt: "desc" as const }; // fallback, re-sorted below
     switch (query.sort) {
       case "most_installed": return { installCount: "desc" as const };
       case "most_liked": return { likeCount: "desc" as const };
@@ -112,7 +117,17 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
     findArgs.skip = 1;
   }
 
-  const skills = await prisma.skill.findMany(findArgs) as any[];
+  let skills = await prisma.skill.findMany(findArgs) as any[];
+
+  // Re-sort by tsvector rank for relevance sort
+  if (useRelevanceSort && tsvectorIds) {
+    const rankMap = new Map(tsvectorIds.map((id, i) => [id, i]));
+    skills.sort((a: any, b: any) => {
+      const ra = rankMap.get(a.id) ?? Infinity;
+      const rb = rankMap.get(b.id) ?? Infinity;
+      return ra - rb;
+    });
+  }
 
   const hasMore = skills.length > query.limit;
   const data = skills.slice(0, query.limit);
