@@ -21,6 +21,7 @@ export async function mediaRoutes(app: FastifyInstance) {
   // DELETE /api/v1/skills/:slug/media/:id — remove media
   app.delete<{ Params: { slug: string; id: string } }>(
     "/:slug/media/:id",
+    writeRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       await mediaService.removeMedia(userId, request.params.slug, request.params.id);
@@ -31,6 +32,7 @@ export async function mediaRoutes(app: FastifyInstance) {
   // PUT /api/v1/skills/:slug/media/reorder — reorder media
   app.put<{ Params: { slug: string } }>(
     "/:slug/media/reorder",
+    writeRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
       const parsed = reorderMediaSchema.safeParse(request.body);
