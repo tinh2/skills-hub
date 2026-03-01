@@ -84,6 +84,7 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
       githubRepoUrl: true,
       versions: {
         orderBy: { createdAt: "desc" },
+        take: 50,
         select: {
           id: true,
           version: true,
