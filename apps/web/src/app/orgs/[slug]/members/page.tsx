@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orgs as orgsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { ORG_ROLES } from "@skills-hub/shared";
+import Image from "next/image";
 
 export default function OrgMembersPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -133,7 +134,7 @@ export default function OrgMembersPage() {
                 <button
                   onClick={() => revokeInvite.mutate(inv.id)}
                   disabled={revokeInvite.isPending}
-                  className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+                  className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
                   aria-label={`Revoke invite for ${inv.inviteeUsername ?? "open invite"}`}
                 >
                   Revoke
@@ -145,14 +146,19 @@ export default function OrgMembersPage() {
       )}
 
       {/* Members list */}
-      {isLoading && <p className="text-[var(--muted)]">Loading...</p>}
+      {isLoading && (
+        <div className="flex items-center py-8">
+          <span className="loading-spinner" aria-hidden="true" />
+          <span className="ml-3 text-[var(--muted)]">Loading members...</span>
+        </div>
+      )}
       {membersData && (
         <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--card-border)] bg-[var(--card)]">
           {membersData.data.map((m) => (
             <div key={m.user.id} className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 {m.user.avatarUrl && (
-                  <img src={m.user.avatarUrl} alt={`${m.user.username}'s avatar`} className="h-8 w-8 rounded-full" />
+                  <Image src={m.user.avatarUrl} alt={`${m.user.username}'s avatar`} width={32} height={32} className="rounded-full" />
                 )}
                 <div>
                   <Link href={`/u/${m.user.username}`} className="text-sm font-medium hover:underline">
@@ -184,7 +190,7 @@ export default function OrgMembersPage() {
                       if (confirm(`Remove ${m.user.username}?`)) removeMember.mutate(m.user.id);
                     }}
                     disabled={removeMember.isPending}
-                    className="px-1 py-1 text-xs text-red-600 hover:underline disabled:opacity-50"
+                    className="min-h-[44px] min-w-[44px] rounded px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 hover:underline disabled:opacity-50 dark:hover:bg-red-950"
                     aria-label={`Remove ${m.user.username}`}
                   >
                     Remove

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { orgs as orgsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { SkillCard } from "@/components/skill-card";
+import Image from "next/image";
 
 export default function OrgDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -28,7 +29,12 @@ export default function OrgDetailPage() {
     enabled: !!org?.currentUserRole,
   });
 
-  if (isLoading) return <p className="text-[var(--muted)]">Loading...</p>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-16">
+      <span className="loading-spinner" aria-hidden="true" />
+      <span className="ml-3 text-[var(--muted)]">Loading organization...</span>
+    </div>
+  );
   if (!org) return <p className="text-red-600">Organization not found.</p>;
 
   const isAdmin = org.currentUserRole === "ADMIN";
@@ -41,7 +47,7 @@ export default function OrgDetailPage() {
         <div>
           <div className="flex items-center gap-3">
             {org.avatarUrl && (
-              <img src={org.avatarUrl} alt={`${org.name} logo`} className="h-12 w-12 rounded-full" />
+              <Image src={org.avatarUrl} alt={`${org.name} logo`} width={48} height={48} className="rounded-full" />
             )}
             <div>
               <h1 className="text-3xl font-bold">{org.name}</h1>
@@ -111,7 +117,7 @@ export default function OrgDetailPage() {
                 className="flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-3 py-1.5"
               >
                 {m.user.avatarUrl && (
-                  <img src={m.user.avatarUrl} alt={`${m.user.username}'s avatar`} className="h-5 w-5 rounded-full" />
+                  <Image src={m.user.avatarUrl} alt={`${m.user.username}'s avatar`} width={20} height={20} className="rounded-full" />
                 )}
                 <Link href={`/u/${m.user.username}`} className="text-sm hover:underline">
                   {m.user.username}
