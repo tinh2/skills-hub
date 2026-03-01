@@ -91,7 +91,7 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
         qualityScore,
         githubRepoUrl: input.githubRepoUrl,
       },
-      include: skillSummarySelect,
+      select: skillSummarySelect,
     });
 
     await tx.skillVersion.create({
@@ -120,7 +120,7 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
 
   const full = await prisma.skill.findUniqueOrThrow({
     where: { id: skill.id },
-    include: skillSummarySelect,
+    select: skillSummarySelect,
   });
 
   return formatSkillSummary(full);
@@ -129,8 +129,11 @@ export async function createSkill(authorId: string, input: CreateSkillInput): Pr
 export async function getSkillBySlug(slug: string, requesterId?: string | null): Promise<SkillDetail> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    include: {
+    select: {
       ...skillSummarySelect,
+      authorId: true,
+      orgId: true,
+      githubRepoUrl: true,
       versions: {
         orderBy: { createdAt: "desc" },
         select: {
@@ -142,10 +145,13 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
         },
       },
       compositionOf: {
-        include: {
+        select: {
+          description: true,
           children: {
             orderBy: { sortOrder: "asc" },
-            include: {
+            select: {
+              sortOrder: true,
+              isParallel: true,
               childSkill: {
                 select: { slug: true, name: true, qualityScore: true },
               },
@@ -155,6 +161,13 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
       },
       media: {
         orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          type: true,
+          url: true,
+          caption: true,
+          sortOrder: true,
+        },
       },
     },
   });
@@ -208,13 +221,13 @@ export async function getSkillBySlug(slug: string, requesterId?: string | null):
       createdAt: v.createdAt.toISOString(),
     })),
     composition,
-    media: (skill as any).media?.map((m: any) => ({
+    media: skill.media.map((m) => ({
       id: m.id,
       type: m.type,
       url: m.url,
       caption: m.caption,
       sortOrder: m.sortOrder,
-    })) ?? [],
+    })),
   };
 }
 
@@ -289,7 +302,7 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
     where,
     orderBy,
     take: query.limit + 1,
-    include: skillSummarySelect,
+    select: skillSummarySelect,
   };
 
   if (query.cursor) {
@@ -363,7 +376,7 @@ export async function updateSkill(
 
   const updated = await prisma.skill.findUniqueOrThrow({
     where: { slug },
-    include: skillSummarySelect,
+    select: skillSummarySelect,
   });
 
   return formatSkillSummary(updated);
@@ -389,7 +402,7 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
   const updated = await prisma.skill.update({
     where: { slug },
     data: { status: "PUBLISHED" },
-    include: skillSummarySelect,
+    select: skillSummarySelect,
   });
 
   return formatSkillSummary(updated);
