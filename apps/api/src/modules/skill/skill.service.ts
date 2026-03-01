@@ -251,9 +251,9 @@ export async function listSkills(query: SkillQuery, requesterId?: string | null)
     where.visibility = "PRIVATE";
     where.authorId = requesterId;
   } else if (query.visibility === "UNLISTED") {
-    // Unlisted skills are not browsable — they're accessed by direct slug
+    if (!requesterId) throw new ForbiddenError("Authentication required to list unlisted skills");
     where.visibility = "UNLISTED";
-    if (requesterId) where.authorId = requesterId;
+    where.authorId = requesterId;
   } else if (query.visibility === "ORG") {
     if (!requesterId) throw new ForbiddenError("Authentication required to view org skills");
     if (!query.org) throw new ValidationError("org parameter required for ORG visibility");

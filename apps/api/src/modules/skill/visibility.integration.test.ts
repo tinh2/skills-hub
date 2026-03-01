@@ -119,6 +119,27 @@ describe("skill visibility (integration)", () => {
     expect(result.data[0].name).toBe("Public");
   });
 
+  it("unauthenticated user cannot list UNLISTED skills", async () => {
+    const user = await createTestUser();
+    await createTestSkill(user.id, "build", { name: "Unlisted", slug: "unlisted", visibility: "UNLISTED" });
+
+    await expect(
+      skillService.listSkills({ limit: 10, sort: "newest", visibility: "UNLISTED" }),
+    ).rejects.toThrow("Authentication required");
+  });
+
+  it("author can list their own UNLISTED skills", async () => {
+    const user = await createTestUser();
+    await createTestSkill(user.id, "build", { name: "My Unlisted", slug: "my-unlisted", visibility: "UNLISTED" });
+
+    const result = await skillService.listSkills(
+      { limit: 10, sort: "newest", visibility: "UNLISTED" },
+      user.id,
+    );
+    expect(result.data.length).toBe(1);
+    expect(result.data[0].name).toBe("My Unlisted");
+  });
+
   it("author can list their own PRIVATE skills", async () => {
     const user = await createTestUser();
     await createTestSkill(user.id, "build", { name: "My Private", slug: "my-priv", visibility: "PRIVATE" });
