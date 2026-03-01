@@ -18,6 +18,8 @@ import { likeRoutes } from "./modules/like/like.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { orgRoutes } from "./modules/org/org.routes.js";
 import { inviteRoutes } from "./modules/org/invite.routes.js";
+import { sandboxRoutes } from "./modules/sandbox/sandbox.routes.js";
+import { agentRoutes } from "./modules/agent/agent.routes.js";
 
 const env = getEnv();
 
@@ -100,6 +102,8 @@ await app.register(
     await api.register(tagRoutes, { prefix: "/tags" });
     await api.register(orgRoutes, { prefix: "/orgs" });
     await api.register(inviteRoutes, { prefix: "/invites" });
+    await api.register(sandboxRoutes, { prefix: "/skills" });
+    await api.register(agentRoutes, { prefix: "/agents" });
   },
   { prefix: "/api/v1" },
 );
