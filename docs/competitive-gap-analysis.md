@@ -273,6 +273,13 @@
 5. You can use OpenFang's binary AS your execution backend (it's MIT licensed)
 6. Non-technical deployment expands your TAM beyond developers
 
+**Monetization (decided):**
+- Flat-tier pricing at launch: Free / Pro $9/mo / Team $29/seat/mo
+- Platform pays for LLM tokens with smart model routing for margin
+- BYOK discount: Pro $5/mo, Team $19/seat/mo (pure margin for platform)
+- Usage-based pricing deferred until usage data proves need
+- See: `docs/NEW_FEATURES.md` (pricing + BYOK) and `docs/FUTURE_FEATURES.md` (usage-based)
+
 ---
 
 ## 6. Differentiators — Where skills-hub.ai Wins

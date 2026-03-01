@@ -41,10 +41,14 @@ A "Deploy as Agent" button on every skill detail page that provisions a managed,
 - Graceful shutdown and state persistence across restarts
 
 **Revenue model:**
-- Free tier: 3 agents, 100 executions/month (loss leader for marketplace adoption)
-- Pro: $9/month — 20 agents, 5,000 executions, all channels
-- Team: $29/month/seat — unlimited agents, priority execution, SLA
-- Enterprise: Custom pricing — dedicated infrastructure, compliance
+See `docs/NEW_FEATURES.md` for full pricing breakdown. Summary:
+- Free: $0 — 3 agents, 100 execs/mo, webhook only
+- Pro: $9/mo ($5 BYOK) — 20 agents, 5K execs/mo, all channels
+- Team: $29/seat/mo ($19 BYOK) — unlimited agents, 25K execs/seat
+- Enterprise: Custom
+- Platform pays for LLM tokens (2x margin via smart model routing)
+- BYOK users get discounted tier price (platform saves on LLM costs)
+- Usage-based pricing deferred to `docs/FUTURE_FEATURES.md`
 
 **Why this is the #1 feature:**
 - Transforms skills-hub.ai from "npm" to "npm + Heroku" — discovery AND deployment
@@ -256,16 +260,19 @@ Chain multiple running agents into a workflow. Agent A's output feeds into Agent
 **Gap addressed:** Cost control, trust, enterprise requirements
 
 **Description:**
-Users provide their own LLM API keys instead of using platform-provided inference. This reduces hosting costs for skills-hub.ai and gives users cost control.
+Users provide their own LLM API keys and get a discounted tier price ($5/mo Pro, $19/seat Team). Platform saves on LLM costs; users get cost control and full billing visibility.
+
+See `docs/NEW_FEATURES.md` for full BYOK specification including key vault, supported providers, routing logic, and hybrid mode.
 
 **Key Requirements:**
-- API key vault: encrypted storage for user's Anthropic, OpenAI, Groq, etc. keys
-- Key validation: verify key works before saving
-- Per-agent key selection: different agents can use different API keys
-- Cost tracking: even with BYOK, track token usage for user's awareness
-- Platform-provided fallback: if user's key hits rate limits, optionally fall back to platform key (with consent)
-- Key rotation: notify user when key is expiring or has errors
-- LiteLLM integration: route through LiteLLM proxy for unified interface across providers
+- API key vault: AES-256-GCM encrypted storage, keys never logged or exposed
+- Key validation: test API call on save to verify working
+- Per-agent key selection: different agents can use different providers/keys
+- Cost tracking: track tokens for user awareness even on their own keys
+- Hybrid mode: BYOK for expensive models (Opus, GPT-4o), platform keys for cheap models (Haiku, GPT-4o-mini)
+- Supported providers (via LiteLLM): Anthropic, OpenAI, Google, Groq, DeepSeek, OpenRouter, Together, Ollama
+- Discount applied automatically when user has valid BYOK key on file
+- Platform-provided fallback: if user's key hits rate limits, fall back to platform key (counts against tier limit, with consent)
 
 ---
 
@@ -370,15 +377,23 @@ Users provide their own LLM API keys instead of using platform-provided inferenc
 
 ## Revenue Projections
 
-| Revenue Stream | Free Tier | Pro ($9/mo) | Team ($29/seat/mo) | Enterprise |
-|----------------|-----------|-------------|---------------------|------------|
-| Agent hosting | 3 agents, 100 exec/mo | 20 agents, 5K exec/mo | Unlimited | Dedicated infra |
-| Marketplace commission | — | 20% on premium sales | 20% on premium sales | Custom |
-| BYOK discount | — | -$2/mo if BYOK | -$5/seat/mo if BYOK | — |
-| White-label | — | — | — | $499+/mo |
-| API access | 100 req/day | 10K req/day | 100K req/day | Unlimited |
+See `docs/NEW_FEATURES.md` for detailed margin analysis and cost economics.
 
-**Target:** 1,000 pro users by end of Year 1 = $108K ARR from hosting alone, plus marketplace commissions.
+| Revenue Stream | Free | Pro ($9/mo) | Pro BYOK ($5/mo) | Team ($29/seat) | Team BYOK ($19/seat) |
+|---|---|---|---|---|---|
+| Agent hosting | 3 agents | 20 agents | 20 agents | Unlimited | Unlimited |
+| Executions/mo | 100 | 5,000 | 5,000 | 25,000/seat | 25,000/seat |
+| Platform LLM cost | ~$0.09 | ~$7.50 | $0 | ~$40/seat | $0 |
+| Margin | -$0.09 | ~$1.50 (17%) | $5.00 (100%) | -$11/seat | $19/seat (100%) |
+| Marketplace commission | — | 20% on premium | 20% on premium | 20% on premium | 20% on premium |
+
+**Key insight:** BYOK users are pure margin. Push Team tier toward BYOK with $10/seat discount.
+
+**Target:** 1,000 pro users by Year 1
+- 60% standard ($9) = $64.8K ARR
+- 40% BYOK ($5) = $24K ARR
+- Total hosting: ~$89K ARR + marketplace commissions
+- Usage-based pricing (future) could 2-3x this for power users
 
 ---
 
