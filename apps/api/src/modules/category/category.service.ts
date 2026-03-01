@@ -105,21 +105,3 @@ export async function getFeaturedSkillPerCategory(): Promise<Record<string, Skil
   return result;
 }
 
-export async function getFeaturedSkill(categorySlug: string): Promise<SkillSummary | null> {
-  const category = await prisma.category.findUnique({
-    where: { slug: categorySlug },
-  });
-  if (!category) return null;
-
-  const skill = await prisma.skill.findFirst({
-    where: {
-      categoryId: category.id,
-      status: "PUBLISHED",
-      visibility: "PUBLIC",
-    },
-    orderBy: [{ likeCount: "desc" }, { installCount: "desc" }],
-    select: summarySelect,
-  });
-
-  return skill ? toSummary(skill) : null;
-}

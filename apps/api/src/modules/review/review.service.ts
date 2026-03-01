@@ -14,9 +14,16 @@ export async function listReviews(
     where: { skillId: skill.id },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: {
+    select: {
+      id: true,
+      rating: true,
+      title: true,
+      body: true,
+      usedFor: true,
+      createdAt: true,
+      updatedAt: true,
       author: { select: { username: true, avatarUrl: true } },
-      response: true,
+      response: { select: { body: true, createdAt: true } },
     },
   });
 
@@ -113,7 +120,14 @@ export async function createReview(
         body: input.body,
         usedFor: input.usedFor,
       },
-      include: {
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        usedFor: true,
+        createdAt: true,
+        updatedAt: true,
         author: { select: { username: true, avatarUrl: true } },
       },
     });
@@ -223,7 +237,7 @@ export async function respondToReview(
 ): Promise<void> {
   const review = await prisma.review.findUnique({
     where: { id: reviewId },
-    include: { skill: { select: { authorId: true } } },
+    select: { id: true, skill: { select: { authorId: true } } },
   });
   if (!review) throw new NotFoundError("Review");
   if (review.skill.authorId !== userId) {
