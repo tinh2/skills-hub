@@ -46,6 +46,12 @@ export function Header() {
                 Publish Skill
               </Link>
               <Link
+                href="/dashboard"
+                className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+              >
+                Dashboard
+              </Link>
+              <Link
                 href={`/u/${user?.username}`}
                 className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
               >

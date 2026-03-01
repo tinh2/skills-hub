@@ -13,6 +13,12 @@ import type {
   AuthTokens,
   ApiError,
   SkillQuery,
+  OrgDetail,
+  OrgMember,
+  OrgInviteData,
+  OrgSkillTemplateSummary,
+  OrgAnalytics,
+  UserOrgMembership,
 } from "@skills-hub/shared";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -250,6 +256,86 @@ export const media = {
       method: "PUT",
       body: JSON.stringify({ mediaIds }),
     }),
+};
+
+// Organizations
+export const orgs = {
+  list: () =>
+    apiFetch<UserOrgMembership[]>("/api/v1/orgs"),
+  get: (slug: string) =>
+    apiFetch<OrgDetail>(`/api/v1/orgs/${slug}`),
+  create: (data: { name: string; slug: string; description?: string }) =>
+    apiFetch<OrgDetail>("/api/v1/orgs", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (slug: string, data: { name?: string; description?: string; avatarUrl?: string | null }) =>
+    apiFetch<OrgDetail>(`/api/v1/orgs/${slug}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  remove: (slug: string) =>
+    apiFetch(`/api/v1/orgs/${slug}`, { method: "DELETE" }),
+  members: (slug: string, query?: { q?: string; cursor?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (query?.q) params.set("q", query.q);
+    if (query?.cursor) params.set("cursor", query.cursor);
+    if (query?.limit) params.set("limit", String(query.limit));
+    return apiFetch<PaginatedResponse<OrgMember>>(`/api/v1/orgs/${slug}/members?${params}`);
+  },
+  updateMemberRole: (slug: string, userId: string, role: string) =>
+    apiFetch<OrgMember>(`/api/v1/orgs/${slug}/members/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  removeMember: (slug: string, userId: string) =>
+    apiFetch(`/api/v1/orgs/${slug}/members/${userId}`, { method: "DELETE" }),
+  invites: (slug: string) =>
+    apiFetch<OrgInviteData[]>(`/api/v1/orgs/${slug}/invites`),
+  invite: (slug: string, data: { username: string; role?: string }) =>
+    apiFetch<OrgInviteData>(`/api/v1/orgs/${slug}/invites`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  revokeInvite: (slug: string, inviteId: string) =>
+    apiFetch(`/api/v1/orgs/${slug}/invites/${inviteId}`, { method: "DELETE" }),
+  skills: (slug: string, query?: { q?: string; category?: string; sort?: string; cursor?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (query) {
+      for (const [k, v] of Object.entries(query)) {
+        if (v !== undefined) params.set(k, String(v));
+      }
+    }
+    return apiFetch<PaginatedResponse<SkillSummary>>(`/api/v1/orgs/${slug}/skills?${params}`);
+  },
+  templates: (slug: string) =>
+    apiFetch<OrgSkillTemplateSummary[]>(`/api/v1/orgs/${slug}/templates`),
+  createTemplate: (slug: string, data: { name: string; description?: string; categorySlug?: string; platforms?: string[]; instructions?: string }) =>
+    apiFetch<OrgSkillTemplateSummary>(`/api/v1/orgs/${slug}/templates`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteTemplate: (slug: string, templateId: string) =>
+    apiFetch(`/api/v1/orgs/${slug}/templates/${templateId}`, { method: "DELETE" }),
+  analytics: (slug: string) =>
+    apiFetch<OrgAnalytics>(`/api/v1/orgs/${slug}/analytics`),
+  connectGithub: (slug: string, data: { githubOrgSlug: string; defaultRole?: string }) =>
+    apiFetch(`/api/v1/orgs/${slug}/github`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  disconnectGithub: (slug: string) =>
+    apiFetch(`/api/v1/orgs/${slug}/github`, { method: "DELETE" }),
+  syncGithub: (slug: string) =>
+    apiFetch(`/api/v1/orgs/${slug}/github/sync`, { method: "POST" }),
+};
+
+// Invites
+export const invites = {
+  accept: (token: string) =>
+    apiFetch(`/api/v1/invites/${token}/accept`, { method: "POST" }),
+  decline: (token: string) =>
+    apiFetch(`/api/v1/invites/${token}/decline`, { method: "POST" }),
 };
 
 // Install
