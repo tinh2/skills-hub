@@ -17,7 +17,10 @@ export const updateTestCaseSchema = z.object({
   input: z.string().min(1).max(10_000).optional(),
   expectedOutput: z.string().max(50_000).nullable().optional(),
   sortOrder: z.number().int().min(0).optional(),
-});
+}).refine(
+  (d) => Object.values(d).some((v) => v !== undefined),
+  { message: "At least one field is required" },
+);
 
 export type RunSandboxInput = z.infer<typeof runSandboxSchema>;
 export type CreateTestCaseInput = z.infer<typeof createTestCaseSchema>;

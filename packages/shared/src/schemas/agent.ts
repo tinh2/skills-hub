@@ -30,7 +30,10 @@ export const updateAgentSchema = z.object({
   channelConfig: channelConfigSchema,
   modelProvider: z.string().max(50).optional(),
   modelId: z.string().max(100).optional(),
-});
+}).refine(
+  (d) => Object.values(d).some((v) => v !== undefined),
+  { message: "At least one field is required" },
+);
 
 export const agentQuerySchema = z.object({
   status: z.enum(["RUNNING", "PAUSED", "STOPPED", "ERROR"]).optional(),

@@ -73,9 +73,9 @@ describe("createAgentSchema", () => {
 });
 
 describe("updateAgentSchema", () => {
-  it("accepts empty update (no changes)", () => {
+  it("rejects empty update (requires at least one field)", () => {
     const result = updateAgentSchema.safeParse({});
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it("accepts partial update", () => {

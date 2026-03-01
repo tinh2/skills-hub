@@ -27,7 +27,10 @@ export const updateSkillSchema = z.object({
   visibility: z.enum(VISIBILITY).optional(),
   tags: z.array(z.string().min(1).max(50)).max(10).optional(),
   githubRepoUrl: z.string().url().nullable().optional(),
-});
+}).refine(
+  (d) => Object.values(d).some((v) => v !== undefined),
+  { message: "At least one field is required" },
+);
 
 export const importGithubSchema = z.object({
   repoUrl: z.string().url(),

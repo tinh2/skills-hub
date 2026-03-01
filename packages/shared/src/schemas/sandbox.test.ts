@@ -85,9 +85,9 @@ describe("updateTestCaseSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts empty object (no changes)", () => {
+  it("rejects empty object (requires at least one field)", () => {
     const result = updateTestCaseSchema.safeParse({});
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it("accepts null expectedOutput (clear it)", () => {
