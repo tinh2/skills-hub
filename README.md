@@ -223,6 +223,7 @@ CI/CD: Pushes to `main` trigger GitHub Actions to build, test, push Docker image
 - **Media Showcase** -- Screenshots and YouTube embeds with URL allowlisting
 - **Sandbox Testing** -- Run skills in sandboxed environments with test cases
 - **Agent Deployment** -- Deploy skills as persistent agents with manual, scheduled, webhook, or channel triggers
+- **AI-Powered Skill Generation** -- Describe what you want on the publish page and generate name, description, category, tags, and instructions via OpenRouter (supports Claude Sonnet 4, Claude Haiku 4, GPT-4o, Gemini 2.0 Flash). Per-field "Suggest" buttons for targeted regeneration. Client-side only -- your API key stays in the browser
 - **Visibility Controls** -- Public, Private, Unlisted, and Organization-scoped skills
 - **API Key Auth** -- Named API keys with optional expiry for CLI and programmatic access
 
