@@ -102,12 +102,12 @@ export default function SkillDetailPage() {
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold">{skill.name}</h1>
               {skill.isComposition && (
-                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                <span className="rounded bg-[var(--primary)]/10 px-2 py-1 text-xs font-medium text-[var(--primary)]">
                   Composition
                 </span>
               )}
               {skill.visibility !== "PUBLIC" && (
-                <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                <span className="rounded bg-[var(--accent)] px-2 py-1 text-xs font-medium text-[var(--muted)]">
                   {skill.visibility === "PRIVATE" ? "Private" : "Unlisted"}
                 </span>
               )}
@@ -151,10 +151,10 @@ export default function SkillDetailPage() {
               <div
                 className={`rounded-full px-3 py-1 text-sm font-bold ${
                   skill.qualityScore >= 70
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    ? "bg-[var(--success-subtle)] text-[var(--success)]"
                     : skill.qualityScore >= 40
-                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
+                      : "bg-[var(--error-subtle)] text-[var(--error)]"
                 }`}
                 aria-label={`Quality score: ${skill.qualityScore} out of 100`}
               >
@@ -171,7 +171,7 @@ export default function SkillDetailPage() {
         {/* Composition */}
         {skill.composition && (
           <section className="mb-8">
-            <h2 className="mb-4 text-xl font-bold">Composed Skills</h2>
+            <h2 className="mb-4 text-lg font-semibold">Composed Skills</h2>
             {skill.composition.description && (
               <p className="mb-3 text-sm text-[var(--muted)]">
                 {skill.composition.description}
@@ -193,7 +193,7 @@ export default function SkillDetailPage() {
                     {child.skill.name}
                   </Link>
                   {child.isParallel && (
-                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                    <span className="rounded bg-[var(--info-subtle)] px-1.5 py-0.5 text-xs text-[var(--info)]">
                       parallel
                     </span>
                   )}
@@ -210,7 +210,7 @@ export default function SkillDetailPage() {
 
         {/* Instructions */}
         <section aria-labelledby="instructions-heading" className="mb-8">
-          <h2 id="instructions-heading" className="mb-4 text-xl font-bold">Instructions</h2>
+          <h2 id="instructions-heading" className="mb-4 text-lg font-semibold">Instructions</h2>
           <div className="prose max-w-none rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
               {skill.instructions}

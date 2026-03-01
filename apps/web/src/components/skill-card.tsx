@@ -60,17 +60,17 @@ export function SkillCard({
               </Link>
             </h3>
             {isFeatured && (
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+              <span className="rounded bg-[var(--warning-subtle)] px-1.5 py-0.5 text-xs font-medium text-[var(--warning)]">
                 Top Liked
               </span>
             )}
             {skill.isComposition && (
-              <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+              <span className="rounded bg-[var(--primary)]/10 px-1.5 py-0.5 text-xs font-medium text-[var(--primary)]">
                 Composition
               </span>
             )}
             {skill.visibility !== "PUBLIC" && (
-              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+              <span className="rounded bg-[var(--accent)] px-1.5 py-0.5 text-xs font-medium text-[var(--muted)]">
                 {skill.visibility === "PRIVATE" ? "Private" : skill.visibility === "ORG" ? "Org" : "Unlisted"}
               </span>
             )}
@@ -83,10 +83,10 @@ export function SkillCard({
           <div
             className={`rounded-full px-2 py-0.5 text-xs font-bold ${
               skill.qualityScore >= 70
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                ? "bg-[var(--success-subtle)] text-[var(--success)]"
                 : skill.qualityScore >= 40
-                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
+                  : "bg-[var(--error-subtle)] text-[var(--error)]"
             }`}
             aria-label={`Quality score: ${skill.qualityScore} out of 100`}
           >

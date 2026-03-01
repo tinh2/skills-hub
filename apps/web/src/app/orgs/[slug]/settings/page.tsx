@@ -174,7 +174,7 @@ export default function OrgSettingsPage() {
                   if (confirm("Disconnect GitHub org?")) disconnectGithub.mutate();
                 }}
                 disabled={disconnectGithub.isPending}
-                className="min-h-[44px] rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50 dark:border-red-800 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
+                className="min-h-[44px] rounded-lg border border-[var(--error)] bg-[var(--error-subtle)] px-4 py-2 text-sm text-[var(--error)] transition-colors hover:opacity-80 disabled:opacity-50"
               >
                 Disconnect
               </button>
@@ -203,9 +203,9 @@ export default function OrgSettingsPage() {
       </section>
 
       {/* Danger Zone */}
-      <section className="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950">
-        <h2 className="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">Danger Zone</h2>
-        <p className="mb-4 text-sm text-red-700 dark:text-red-300">
+      <section className="rounded-lg border border-[var(--error)] bg-[var(--error-subtle)] p-6">
+        <h2 className="mb-2 text-lg font-semibold text-[var(--error)]">Danger Zone</h2>
+        <p className="mb-4 text-sm text-[var(--error)]">
           Deleting this organization will archive all its skills and remove all members.
         </p>
         <button

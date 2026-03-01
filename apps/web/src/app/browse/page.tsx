@@ -348,8 +348,8 @@ function BrowseContent() {
         </div>
       )}
       {error && (
-        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
-          <p className="text-sm text-red-800 dark:text-red-200">
+        <div role="alert" className="rounded-lg border border-[var(--error)] bg-[var(--error-subtle)] p-4">
+          <p className="text-sm text-[var(--error)]">
             Failed to load skills. Please try again.
           </p>
         </div>

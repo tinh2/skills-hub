@@ -44,10 +44,10 @@ function SkillCardSimple({ skill }: { skill: SkillSummaryData }) {
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-bold ${
               skill.qualityScore >= 70
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                ? "bg-[var(--success-subtle)] text-[var(--success)]"
                 : skill.qualityScore >= 40
-                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
+                  : "bg-[var(--error-subtle)] text-[var(--error)]"
             }`}
             aria-label={`Quality score: ${skill.qualityScore} out of 100`}
           >
@@ -80,7 +80,7 @@ export default async function HomePage({
   return (
     <div>
       {authError && (
-        <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+        <div role="alert" className="mb-6 rounded-lg border border-[var(--error)] bg-[var(--error-subtle)] p-4 text-sm text-[var(--error)]">
           Authentication failed. Please try signing in again.
         </div>
       )}

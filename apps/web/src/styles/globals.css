@@ -13,8 +13,11 @@
   --success: #16a34a;
   --success-subtle: #f0fdf4;
   --warning: #d97706;
+  --warning-subtle: #fffbeb;
   --error: #dc2626;
   --error-subtle: #fef2f2;
+  --info: #2563eb;
+  --info-subtle: #eff6ff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,8 +34,11 @@
     --success: #22c55e;
     --success-subtle: #052e16;
     --warning: #f59e0b;
+    --warning-subtle: #422006;
     --error: #ef4444;
     --error-subtle: #450a0a;
+    --info: #3b82f6;
+    --info-subtle: #172554;
   }
 }
 

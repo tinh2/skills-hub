@@ -200,7 +200,7 @@ export default function DashboardPage() {
                     publishSkill.mutate(skill.slug);
                   }}
                   disabled={publishSkill.isPending}
-                  className="min-h-[44px] rounded bg-green-100 px-3 py-1.5 text-xs text-green-800 transition-colors hover:bg-green-200 disabled:opacity-50 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800"
+                  className="min-h-[44px] rounded bg-[var(--success-subtle)] px-3 py-1.5 text-xs text-[var(--success)] transition-colors hover:opacity-80 disabled:opacity-50"
                   aria-label={`Publish ${skill.name}`}
                 >
                   Publish
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                   if (confirm("Archive this skill?")) archiveSkill.mutate(skill.slug);
                 }}
                 disabled={archiveSkill.isPending}
-                className="min-h-[44px] rounded bg-red-100 px-3 py-1.5 text-xs text-red-800 transition-colors hover:bg-red-200 disabled:opacity-50 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800"
+                className="min-h-[44px] rounded bg-[var(--error-subtle)] px-3 py-1.5 text-xs text-[var(--error)] transition-colors hover:opacity-80 disabled:opacity-50"
                 aria-label={`Archive ${skill.name}`}
               >
                 Archive

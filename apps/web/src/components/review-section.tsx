@@ -47,7 +47,7 @@ export function ReviewSection({
   return (
     <section aria-labelledby="reviews-heading">
       <div className="mb-4 flex items-center justify-between">
-        <h2 id="reviews-heading" className="text-xl font-bold">
+        <h2 id="reviews-heading" className="text-lg font-semibold">
           Reviews ({reviewCount})
         </h2>
         {isAuthenticated && !showReviewForm && !reviewList?.some((r) => r.author.username === authUsername) && (

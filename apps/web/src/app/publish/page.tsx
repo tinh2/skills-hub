@@ -134,7 +134,7 @@ export default function PublishPage() {
       </div>
 
       {error && (
-        <div role="alert" className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        <div role="alert" className="mb-4 rounded-lg bg-[var(--error-subtle)] p-4 text-sm text-[var(--error)]">
           {error}
         </div>
       )}
