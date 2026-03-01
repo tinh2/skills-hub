@@ -1,27 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockPrisma = vi.hoisted(() => ({
-  agent: {
-    count: vi.fn(),
-    create: vi.fn(),
-    findUnique: vi.fn(),
-    findUniqueOrThrow: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-  skill: {
-    findUnique: vi.fn(),
-  },
-  skillVersion: {
-    findFirst: vi.fn(),
-  },
-  agentExecution: {
-    count: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-}));
+const mockPrisma = vi.hoisted(() => {
+  const mock: any = {
+    agent: {
+      count: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    skill: {
+      findUnique: vi.fn(),
+    },
+    skillVersion: {
+      findFirst: vi.fn(),
+    },
+    agentExecution: {
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    $transaction: vi.fn((cb: (tx: any) => Promise<any>) => cb(mock)),
+  };
+  return mock;
+});
 
 vi.mock("../../common/db.js", () => ({
   prisma: mockPrisma,

@@ -144,20 +144,23 @@ export async function executeAgent(
 
   const durationMs = Date.now() - startTime;
 
-  const updated = await prisma.agentExecution.update({
-    where: { id: execution.id },
-    data: { status, output, durationMs, tokenCount, errorMessage },
-    select: executionSelect,
-  });
+  const updated = await prisma.$transaction(async (tx) => {
+    const exec = await tx.agentExecution.update({
+      where: { id: execution.id },
+      data: { status, output, durationMs, tokenCount, errorMessage },
+      select: executionSelect,
+    });
 
-  // Update agent stats
-  await prisma.agent.update({
-    where: { id: agentId },
-    data: {
-      executionCount: { increment: 1 },
-      lastExecutedAt: new Date(),
-      ...(errorMessage && { lastError: errorMessage }),
-    },
+    await tx.agent.update({
+      where: { id: agentId },
+      data: {
+        executionCount: { increment: 1 },
+        lastExecutedAt: new Date(),
+        ...(errorMessage && { lastError: errorMessage }),
+      },
+    });
+
+    return exec;
   });
 
   return formatExecution(updated);

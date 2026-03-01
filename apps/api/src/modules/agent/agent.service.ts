@@ -50,6 +50,7 @@ export async function createAgent(
     throw new NotFoundError("Skill");
   }
   if (skill.visibility === "ORG" && skill.orgId) {
+    if (!userId) throw new NotFoundError("Skill");
     const member = await isOrgMember(userId, skill.orgId);
     if (!member) throw new NotFoundError("Skill");
   }

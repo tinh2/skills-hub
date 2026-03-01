@@ -227,16 +227,15 @@ export async function getSandboxRuns(
 ): Promise<{ data: SandboxRunSummary[]; cursor: string | null; hasMore: boolean }> {
   const skill = await resolveAndCheckVisibility(skillSlug, userId ?? null);
 
+  // Require authentication to view sandbox runs
+  if (!userId) {
+    return { data: [], cursor: null, hasMore: false };
+  }
+
   const where: Prisma.SandboxRunWhereInput = {
     skillId: skill.id,
-    status: "COMPLETED",
+    userId, // Only show the user's own runs
   };
-
-  // If userId is provided, show all their runs; otherwise only completed public runs
-  if (userId) {
-    where.userId = userId;
-    delete where.status; // Show all statuses for own runs
-  }
 
   const findArgs: Prisma.SandboxRunFindManyArgs = {
     where,

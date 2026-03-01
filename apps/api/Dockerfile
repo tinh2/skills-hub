@@ -59,7 +59,10 @@ EXPOSE 3000
 
 WORKDIR /app/apps/api
 
+COPY --chown=appuser:nodejs apps/api/docker-entrypoint.sh /app/apps/api/docker-entrypoint.sh
+RUN chmod +x /app/apps/api/docker-entrypoint.sh
+
 USER appuser
 
-# Run migrations then start server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+ENTRYPOINT ["/app/apps/api/docker-entrypoint.sh"]
+CMD ["node", "dist/server.js"]
