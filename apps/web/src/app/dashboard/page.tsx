@@ -78,16 +78,16 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
-          <p className="text-2xl font-bold">{myPublished.length}</p>
+          <p className="text-2xl font-bold">{publishedData?.hasMore ? `${myPublished.length}+` : myPublished.length}</p>
           <p className="text-sm text-[var(--muted)]">Published Skills</p>
         </div>
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
-          <p className="text-2xl font-bold">{myDrafts.length}</p>
+          <p className="text-2xl font-bold">{draftData?.hasMore ? `${myDrafts.length}+` : myDrafts.length}</p>
           <p className="text-sm text-[var(--muted)]">Drafts</p>
         </div>
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5">
           <p className="text-2xl font-bold">
-            {myPublished.reduce((sum, s) => sum + s.installCount, 0).toLocaleString()}
+            {myPublished.reduce((sum, s) => sum + s.installCount, 0).toLocaleString()}{publishedData?.hasMore ? "+" : ""}
           </p>
           <p className="text-sm text-[var(--muted)]">Total Installs</p>
         </div>
