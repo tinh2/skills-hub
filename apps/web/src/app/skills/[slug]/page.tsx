@@ -214,7 +214,7 @@ export default function SkillDetailPage() {
           <h2 id="instructions-heading" className="mb-4 text-lg font-semibold">Instructions</h2>
           <div className="prose max-w-none rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
             <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]}>
-              {skill.instructions}
+              {skill.instructions.replace(/^={3,}$/gm, "\n---\n")}
             </ReactMarkdown>
           </div>
         </section>
