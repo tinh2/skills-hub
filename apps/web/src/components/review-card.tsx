@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reviews as reviewsApi } from "@/lib/api";
+import type { ReviewSummary } from "@skills-hub/shared";
 
 export function ReviewCard({
   review,
@@ -11,7 +12,7 @@ export function ReviewCard({
   isSkillAuthor,
   isAuthenticated,
 }: {
-  review: any;
+  review: ReviewSummary;
   slug: string;
   isReviewAuthor: boolean;
   isSkillAuthor: boolean;
