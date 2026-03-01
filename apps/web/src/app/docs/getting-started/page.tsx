@@ -85,7 +85,7 @@ that will be injected into the AI assistant's context.`}</code></pre>
           <tr>
             <td><code>platforms</code></td>
             <td>Yes</td>
-            <td>claude-code, cursor, codex-cli, or windsurf</td>
+            <td>claude-code, cursor, codex-cli, or other</td>
           </tr>
           <tr>
             <td><code>version</code></td>
