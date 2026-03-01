@@ -132,6 +132,31 @@ describe("review service (integration)", () => {
     expect(r.response!.body).toBe("Thanks for the feedback!");
   });
 
+  it("switches vote from helpful to not-helpful", async () => {
+    const author = await createTestUser();
+    const reviewer = await createTestUser();
+    const voter = await createTestUser();
+    const skill = await createTestSkill(author.id, "build");
+
+    const review = await reviewService.createReview(reviewer.id, skill.slug, { rating: 4 });
+
+    // Vote helpful
+    await reviewService.voteReview(voter.id, review.id, true);
+    let reviews = await reviewService.listReviews(skill.slug, voter.id);
+    let r = reviews.find((rev) => rev.id === review.id)!;
+    expect(r.helpfulCount).toBe(1);
+    expect(r.notHelpfulCount).toBe(0);
+    expect(r.userVote).toBe(true);
+
+    // Switch to not-helpful
+    await reviewService.voteReview(voter.id, review.id, false);
+    reviews = await reviewService.listReviews(skill.slug, voter.id);
+    r = reviews.find((rev) => rev.id === review.id)!;
+    expect(r.helpfulCount).toBe(0);
+    expect(r.notHelpfulCount).toBe(1);
+    expect(r.userVote).toBe(false);
+  });
+
   it("prevents non-author from responding to a review", async () => {
     const author = await createTestUser();
     const reviewer = await createTestUser();
