@@ -315,8 +315,20 @@ export const orgs = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getTemplate: (slug: string, templateId: string) =>
+    apiFetch<OrgSkillTemplateSummary>(`/api/v1/orgs/${slug}/templates/${templateId}`),
+  updateTemplate: (slug: string, templateId: string, data: { name?: string; description?: string; categorySlug?: string; platforms?: string[]; instructions?: string }) =>
+    apiFetch<OrgSkillTemplateSummary>(`/api/v1/orgs/${slug}/templates/${templateId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
   deleteTemplate: (slug: string, templateId: string) =>
     apiFetch(`/api/v1/orgs/${slug}/templates/${templateId}`, { method: "DELETE" }),
+  createSkillFromTemplate: (slug: string, templateId: string, data?: { name?: string; description?: string; categorySlug?: string; platforms?: string[]; instructions?: string; version?: string }) =>
+    apiFetch<SkillSummary>(`/api/v1/orgs/${slug}/templates/${templateId}/create-skill`, {
+      method: "POST",
+      body: JSON.stringify(data ?? {}),
+    }),
   analytics: (slug: string) =>
     apiFetch<OrgAnalytics>(`/api/v1/orgs/${slug}/analytics`),
   connectGithub: (slug: string, data: { githubOrgSlug: string; defaultRole?: string }) =>

@@ -63,6 +63,7 @@ export {
   orgSkillQuerySchema,
   createTemplateSchema,
   updateTemplateSchema,
+  createSkillFromTemplateSchema,
   type CreateOrgInput,
   type UpdateOrgInput,
   type InviteMemberInput,
@@ -72,4 +73,5 @@ export {
   type OrgSkillQuery,
   type CreateTemplateInput,
   type UpdateTemplateInput,
+  type CreateSkillFromTemplateInput,
 } from "./org.js";
