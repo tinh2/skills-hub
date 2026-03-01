@@ -1,5 +1,6 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../common/errors.js";
+import { fetchWithTimeout } from "../../common/fetch.js";
 import { requireOrgRole } from "./org.auth.js";
 import type { SyncGithubOrgInput } from "@skills-hub/shared";
 
@@ -25,7 +26,7 @@ export async function connectGithubOrg(
   }
 
   // Verify user has admin access to the GitHub org
-  const membershipRes = await fetch(
+  const membershipRes = await fetchWithTimeout(
     `https://api.github.com/orgs/${input.githubOrgSlug}/memberships/${user.username}`,
     {
       headers: {
@@ -45,7 +46,7 @@ export async function connectGithubOrg(
   }
 
   // Get GitHub org details for the org ID
-  const orgRes = await fetch(`https://api.github.com/orgs/${input.githubOrgSlug}`, {
+  const orgRes = await fetchWithTimeout(`https://api.github.com/orgs/${input.githubOrgSlug}`, {
     headers: {
       Authorization: `Bearer ${user.githubAccessToken}`,
       Accept: "application/vnd.github+json",
@@ -112,7 +113,7 @@ export async function autoJoinGithubOrgs(userId: string, githubToken: string): P
   if (connectedOrgs.length === 0) return;
 
   // Check which GitHub orgs the user belongs to
-  const userOrgsRes = await fetch("https://api.github.com/user/orgs?per_page=100", {
+  const userOrgsRes = await fetchWithTimeout("https://api.github.com/user/orgs?per_page=100", {
     headers: {
       Authorization: `Bearer ${githubToken}`,
       Accept: "application/vnd.github+json",
@@ -161,7 +162,7 @@ async function doSync(
   let page = 1;
 
   while (true) {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.github.com/orgs/${githubOrgSlug}/members?per_page=100&page=${page}`,
       {
         headers: {

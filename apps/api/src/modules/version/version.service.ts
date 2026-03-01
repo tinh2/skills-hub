@@ -2,11 +2,25 @@ import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ConflictError } from "../../common/errors.js";
 import { computeQualityScore } from "../validation/validation.service.js";
 import { compareSemver } from "@skills-hub/skill-parser";
+import { isOrgMember } from "../org/org.auth.js";
 import type { VersionSummary, VersionDetail, VersionDiff } from "@skills-hub/shared";
 
-export async function listVersions(slug: string): Promise<VersionSummary[]> {
+/** Enforce visibility rules — private/org skills only visible to authorized users */
+async function checkSkillVisibility(skill: any, requesterId?: string | null): Promise<void> {
+  if (skill.visibility === "PRIVATE" && skill.authorId !== requesterId) {
+    throw new NotFoundError("Skill");
+  }
+  if (skill.visibility === "ORG" && skill.orgId) {
+    if (!requesterId) throw new NotFoundError("Skill");
+    const member = await isOrgMember(requesterId, skill.orgId);
+    if (!member) throw new NotFoundError("Skill");
+  }
+}
+
+export async function listVersions(slug: string, requesterId?: string | null): Promise<VersionSummary[]> {
   const skill = await prisma.skill.findUnique({ where: { slug } });
   if (!skill) throw new NotFoundError("Skill");
+  await checkSkillVisibility(skill, requesterId);
 
   const versions = await prisma.skillVersion.findMany({
     where: { skillId: skill.id },
@@ -22,9 +36,10 @@ export async function listVersions(slug: string): Promise<VersionSummary[]> {
   }));
 }
 
-export async function getVersion(slug: string, version: string): Promise<VersionDetail> {
+export async function getVersion(slug: string, version: string, requesterId?: string | null): Promise<VersionDetail> {
   const skill = await prisma.skill.findUnique({ where: { slug } });
   if (!skill) throw new NotFoundError("Skill");
+  await checkSkillVisibility(skill, requesterId);
 
   const ver = await prisma.skillVersion.findUnique({
     where: { skillId_version: { skillId: skill.id, version } },
@@ -114,9 +129,11 @@ export async function getVersionDiff(
   slug: string,
   fromVersion: string,
   toVersion: string,
+  requesterId?: string | null,
 ): Promise<VersionDiff> {
   const skill = await prisma.skill.findUnique({ where: { slug } });
   if (!skill) throw new NotFoundError("Skill");
+  await checkSkillVisibility(skill, requesterId);
 
   const [from, to] = await Promise.all([
     prisma.skillVersion.findUnique({

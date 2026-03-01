@@ -2,6 +2,7 @@ import { prisma } from "../../common/db.js";
 import { createAccessToken, createRefreshToken, hashToken } from "../../common/auth.js";
 import { getEnv } from "../../config/env.js";
 import { AppError, UnauthorizedError } from "../../common/errors.js";
+import { fetchWithTimeout } from "../../common/fetch.js";
 
 interface GithubUser {
   id: number;
@@ -22,7 +23,7 @@ const MAX_REFRESH_TOKENS_PER_USER = 5;
 export async function exchangeGithubCode(code: string) {
   const env = getEnv();
 
-  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
+  const tokenRes = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +45,7 @@ export async function exchangeGithubCode(code: string) {
     throw new AppError(502, "GITHUB_AUTH_FAILED", "GitHub OAuth: no access token in response");
   }
 
-  const userRes = await fetch("https://api.github.com/user", {
+  const userRes = await fetchWithTimeout("https://api.github.com/user", {
     headers: {
       Authorization: `Bearer ${tokenData.access_token}`,
       Accept: "application/vnd.github+json",
