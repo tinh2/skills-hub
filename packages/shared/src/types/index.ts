@@ -49,3 +49,9 @@ export type {
   OrgAnalytics,
   UserOrgMembership,
 } from "./org.js";
+
+export type {
+  ValidationSeverity,
+  ValidationCheck,
+  ValidationReport,
+} from "./validation.js";

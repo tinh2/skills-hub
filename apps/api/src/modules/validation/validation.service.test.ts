@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeQualityScore, computeDetailedScore } from "./validation.service.js";
+import { computeQualityScore, computeDetailedScore, validateSkill } from "./validation.service.js";
 
 describe("computeQualityScore", () => {
   const minimal = {
@@ -125,5 +125,134 @@ describe("computeQualityScore", () => {
     const breakdown = computeDetailedScore(input);
     expect(breakdown.details.length).toBeGreaterThan(0);
     expect(breakdown.total).toBe(breakdown.schema + breakdown.instructions);
+  });
+});
+
+describe("validateSkill", () => {
+  const good = {
+    slug: "test-skill",
+    name: "Test Skill",
+    description: "A description that is long enough to earn points in the validation",
+    categorySlug: "build",
+    platforms: ["CLAUDE_CODE"],
+    version: "1.0.0",
+    instructions:
+      "x".repeat(600) +
+      "\n## Step 1\nProcess the input and generate output.\n" +
+      "Handle errors gracefully with retry logic.\n" +
+      "IMPORTANT: Never skip validation.\n" +
+      "Example:\n```typescript\nconsole.log('hello');\n```\n" +
+      "Output format: JSON response with status field.",
+  };
+
+  it("returns publishable for a well-formed skill", () => {
+    const report = validateSkill(good);
+    expect(report.publishable).toBe(true);
+    expect(report.summary.errors).toBe(0);
+    expect(report.qualityScore).toBeGreaterThanOrEqual(20);
+  });
+
+  it("returns slug in report", () => {
+    const report = validateSkill(good);
+    expect(report.slug).toBe("test-skill");
+  });
+
+  it("fails schema checks for missing name", () => {
+    const report = validateSkill({ ...good, name: "" });
+    expect(report.publishable).toBe(false);
+    const nameCheck = report.checks.schema.find((c) => c.id === "schema.name");
+    expect(nameCheck?.passed).toBe(false);
+    expect(nameCheck?.severity).toBe("error");
+  });
+
+  it("fails schema checks for missing instructions", () => {
+    const report = validateSkill({ ...good, instructions: "" });
+    expect(report.publishable).toBe(false);
+    const instrCheck = report.checks.schema.find((c) => c.id === "schema.instructions");
+    expect(instrCheck?.passed).toBe(false);
+  });
+
+  it("warns on short description", () => {
+    const report = validateSkill({ ...good, description: "short" });
+    const descCheck = report.checks.schema.find((c) => c.id === "schema.description_length");
+    expect(descCheck?.passed).toBe(false);
+    expect(descCheck?.severity).toBe("warning");
+  });
+
+  it("warns on invalid semver", () => {
+    const report = validateSkill({ ...good, version: "bad" });
+    const versionCheck = report.checks.schema.find((c) => c.id === "schema.version");
+    expect(versionCheck?.passed).toBe(false);
+    expect(versionCheck?.severity).toBe("warning");
+  });
+
+  it("detects TODO markers as error", () => {
+    const report = validateSkill({ ...good, instructions: good.instructions + "\nTODO: finish this section" });
+    const todoCheck = report.checks.structure.find((c) => c.id === "structure.no_todos");
+    expect(todoCheck?.passed).toBe(false);
+    expect(todoCheck?.severity).toBe("error");
+  });
+
+  it("detects FIXME markers as error", () => {
+    const report = validateSkill({ ...good, instructions: good.instructions + "\nFIXME: broken logic" });
+    const todoCheck = report.checks.structure.find((c) => c.id === "structure.no_todos");
+    expect(todoCheck?.passed).toBe(false);
+  });
+
+  it("passes when no TODO markers present", () => {
+    const report = validateSkill(good);
+    const todoCheck = report.checks.structure.find((c) => c.id === "structure.no_todos");
+    expect(todoCheck?.passed).toBe(true);
+  });
+
+  it("detects unlabeled code blocks", () => {
+    const instructions = good.instructions + "\n```\nunlabeled block\n```";
+    const report = validateSkill({ ...good, instructions });
+    const codeCheck = report.checks.structure.find((c) => c.id === "structure.code_block_langs");
+    expect(codeCheck?.passed).toBe(false);
+  });
+
+  it("passes when all code blocks have language hints", () => {
+    const report = validateSkill(good);
+    const codeCheck = report.checks.structure.find((c) => c.id === "structure.code_block_langs");
+    expect(codeCheck?.passed).toBe(true);
+  });
+
+  it("detects heading hierarchy gaps", () => {
+    const instructions = good.instructions + "\n# Heading 1\n### Jump to 3\n";
+    const report = validateSkill({ ...good, instructions });
+    const headingCheck = report.checks.structure.find((c) => c.id === "structure.heading_hierarchy");
+    expect(headingCheck?.passed).toBe(false);
+  });
+
+  it("flags trivial instructions as error", () => {
+    const report = validateSkill({ ...good, instructions: "Do the thing." });
+    const trivialCheck = report.checks.structure.find((c) => c.id === "structure.not_trivial");
+    expect(trivialCheck?.passed).toBe(false);
+    expect(trivialCheck?.severity).toBe("error");
+  });
+
+  it("computes summary counts correctly", () => {
+    const report = validateSkill(good);
+    const all = [
+      ...report.checks.schema,
+      ...report.checks.content,
+      ...report.checks.structure,
+    ];
+    expect(report.summary.total).toBe(all.length);
+    expect(report.summary.passed + report.summary.errors + report.summary.warnings)
+      .toBeLessThanOrEqual(report.summary.total);
+  });
+
+  it("is not publishable when quality score is below threshold", () => {
+    const report = validateSkill({
+      ...good,
+      name: "",
+      description: "",
+      instructions: "",
+      version: "bad",
+      categorySlug: "invalid",
+    });
+    expect(report.publishable).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { writeRateLimit } from "../../config/rate-limits.js";
 import * as skillService from "./skill.service.js";
+import { validateSkillBySlug } from "./skill.validation.js";
 
 export async function skillRoutes(app: FastifyInstance) {
   // GET /api/v1/skills — list/search skills
@@ -55,6 +56,12 @@ export async function skillRoutes(app: FastifyInstance) {
     const parsed = compositionSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
     return skillService.setComposition(userId, request.params.slug, parsed.data);
+  });
+
+  // GET /api/v1/skills/:slug/validate — run validation pipeline
+  app.get<{ Params: { slug: string } }>("/:slug/validate", async (request) => {
+    const auth = await optionalAuth(request);
+    return validateSkillBySlug(request.params.slug, auth?.userId);
   });
 
   // DELETE /api/v1/skills/:slug/composition — remove composition
