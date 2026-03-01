@@ -75,5 +75,15 @@ export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
 export type SyncGithubOrgInput = z.infer<typeof syncGithubOrgSchema>;
 export type OrgQuery = z.infer<typeof orgQuerySchema>;
 export type OrgSkillQuery = z.infer<typeof orgSkillQuerySchema>;
+export const createSkillFromTemplateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(5000).optional(),
+  categorySlug: z.string().optional(),
+  platforms: z.array(z.enum(PLATFORMS)).optional(),
+  instructions: z.string().max(50000).optional(),
+  version: z.string().regex(/^\d+\.\d+\.\d+$/).optional(),
+});
+
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
+export type CreateSkillFromTemplateInput = z.infer<typeof createSkillFromTemplateSchema>;

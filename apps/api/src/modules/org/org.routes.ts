@@ -9,6 +9,7 @@ import {
   syncGithubOrgSchema,
   createTemplateSchema,
   updateTemplateSchema,
+  createSkillFromTemplateSchema,
 } from "@skills-hub/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
@@ -190,19 +191,22 @@ export async function orgRoutes(app: FastifyInstance) {
     writeRateLimit,
     async (request) => {
       const { userId } = await requireAuth(request);
+      const parsed = createSkillFromTemplateSchema.safeParse(request.body);
+      if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
+      const body = parsed.data;
+
       const template = await orgService.getTemplate(
         request.params.slug,
         request.params.id,
         userId,
       );
-      const body = request.body as any;
 
       const { createSkill } = await import("../skill/skill.service.js");
       return createSkill(userId, {
         name: body.name ?? template.name,
         description: body.description ?? template.description ?? "",
         categorySlug: body.categorySlug ?? template.categorySlug ?? "productivity",
-        platforms: body.platforms ?? template.platforms ?? ["CLAUDE_CODE"],
+        platforms: (body.platforms ?? template.platforms ?? ["CLAUDE_CODE"]) as ("CLAUDE_CODE" | "CURSOR" | "CODEX_CLI" | "OTHER")[],
         instructions: body.instructions ?? template.instructions ?? "",
         visibility: "ORG",
         version: body.version ?? "1.0.0",
