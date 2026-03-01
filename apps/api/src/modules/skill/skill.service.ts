@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { uniqueSlug } from "../../common/slug.js";
 import { NotFoundError, ConflictError, ForbiddenError, ValidationError } from "../../common/errors.js";
-import { computeQualityScore } from "../validation/validation.service.js";
+import { computeQualityScore, validateSkill } from "../validation/validation.service.js";
 import { requireOrgRole, isOrgMember } from "../org/org.auth.js";
 import { QUALITY_SCORE } from "@skills-hub/shared";
 import { batchHasUserLiked, hasUserLiked } from "../like/like.service.js";
@@ -365,7 +365,22 @@ export async function updateSkill(
 export async function publishSkill(userId: string, slug: string): Promise<SkillSummary> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    select: { id: true, authorId: true, status: true, qualityScore: true, org: { select: { slug: true } } },
+    select: {
+      id: true,
+      authorId: true,
+      status: true,
+      qualityScore: true,
+      name: true,
+      description: true,
+      platforms: true,
+      org: { select: { slug: true } },
+      category: { select: { slug: true } },
+      versions: {
+        where: { isLatest: true },
+        take: 1,
+        select: { version: true, instructions: true },
+      },
+    },
   });
   if (!skill) throw new NotFoundError("Skill");
 
@@ -378,8 +393,29 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
     }
   }
   if (skill.status === "PUBLISHED") throw new ConflictError("Skill is already published");
-  if (skill.qualityScore !== null && skill.qualityScore < QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE) {
-    throw new ValidationError(`Quality score must be at least ${QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE} to publish (current: ${skill.qualityScore})`);
+
+  // Run validation pipeline for actionable feedback
+  const version = skill.versions[0];
+  const report = validateSkill({
+    slug,
+    name: skill.name,
+    description: skill.description,
+    categorySlug: skill.category.slug,
+    platforms: skill.platforms,
+    instructions: version?.instructions ?? "",
+    version: version?.version ?? "0.0.0",
+  });
+
+  if (!report.publishable) {
+    const failedChecks = [
+      ...report.checks.schema,
+      ...report.checks.content,
+      ...report.checks.structure,
+    ].filter((c) => !c.passed && c.severity === "error");
+    const reasons = failedChecks.map((c) => c.message).join("; ");
+    throw new ValidationError(
+      `Cannot publish (score: ${report.qualityScore}): ${reasons || `Quality score must be at least ${QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE}`}`,
+    );
   }
 
   const updated = await prisma.skill.update({

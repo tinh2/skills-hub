@@ -30,6 +30,7 @@ import type {
   AgentExecutionSummary,
   SandboxRunSummary,
   TestCaseData,
+  ValidationReport,
 } from "@skills-hub/shared";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -181,6 +182,8 @@ export const skills = {
     }),
   removeComposition: (slug: string) =>
     apiFetch(`/api/v1/skills/${slug}/composition`, { method: "DELETE" }),
+  validate: (slug: string) =>
+    apiFetch<ValidationReport>(`/api/v1/skills/${slug}/validate`),
 };
 
 // Versions

@@ -65,9 +65,13 @@ vi.mock("../../common/slug.js", () => ({
   uniqueSlug: vi.fn().mockResolvedValue("test-skill"),
 }));
 
-vi.mock("../validation/validation.service.js", () => ({
-  computeQualityScore: vi.fn().mockReturnValue(75),
-}));
+vi.mock("../validation/validation.service.js", async () => {
+  const actual = await vi.importActual<typeof import("../validation/validation.service.js")>("../validation/validation.service.js");
+  return {
+    ...actual,
+    computeQualityScore: vi.fn().mockReturnValue(75),
+  };
+});
 
 vi.mock("../org/org.auth.js", () => ({
   requireOrgRole: vi.fn(),
@@ -102,7 +106,7 @@ function makeSkillRow(overrides: Record<string, any> = {}) {
     createdAt: NOW,
     updatedAt: NOW,
     tags: [],
-    versions: [{ version: "1.0.0" }],
+    versions: [{ version: "1.0.0", instructions: "x".repeat(600) + "\n## Step 1\nProcess input and generate output.\nHandle errors with retry.\nIMPORTANT: validate first.\nExample:\n```typescript\ncode\n```\nOutput format: JSON" }],
     compositionOf: null,
     org: null,
     authorId: "user-1",
@@ -298,11 +302,18 @@ describe("skill.service", () => {
       await expect(publishSkill("user-1", "test-skill")).rejects.toThrow("only publish your own");
     });
 
-    it("throws ValidationError if quality score is too low", async () => {
-      const skill = makeSkillRow({ status: "DRAFT", authorId: "user-1", qualityScore: 5, org: null });
+    it("throws ValidationError if validation fails", async () => {
+      const skill = makeSkillRow({
+        status: "DRAFT",
+        authorId: "user-1",
+        qualityScore: 5,
+        org: null,
+        description: "",
+        versions: [{ version: "bad", instructions: "tiny" }],
+      });
       mockPrisma.skill.findUnique.mockResolvedValue(skill);
 
-      await expect(publishSkill("user-1", "test-skill")).rejects.toThrow("Quality score");
+      await expect(publishSkill("user-1", "test-skill")).rejects.toThrow("Cannot publish");
     });
   });
 });
