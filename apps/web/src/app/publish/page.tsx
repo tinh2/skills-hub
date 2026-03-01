@@ -226,9 +226,16 @@ export default function PublishPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-[var(--primary)] py-3 font-medium text-[var(--primary-foreground)] disabled:opacity-50"
+          className="w-full min-h-[44px] rounded-lg bg-[var(--primary)] py-3 font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Create Skill"}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="loading-spinner" aria-hidden="true" />
+              Creating...
+            </span>
+          ) : (
+            "Create Skill"
+          )}
         </button>
       </form>
     </div>

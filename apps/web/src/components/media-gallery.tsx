@@ -118,12 +118,16 @@ export function MediaGallery({
             <div key={m.id} className="relative overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--card)]">
               {isAuthor && (
                 <button
-                  onClick={() => removeMedia.mutate(m.id)}
+                  onClick={() => {
+                    if (confirm("Remove this media item?")) removeMedia.mutate(m.id);
+                  }}
                   disabled={removeMedia.isPending}
-                  className="absolute right-2 top-2 z-10 rounded-full bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/70 disabled:opacity-50"
+                  className="absolute right-2 top-2 z-10 flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full bg-black/50 px-2 py-1 text-xs text-white transition-colors hover:bg-black/70 disabled:opacity-50"
                   aria-label={`Remove ${m.caption || "media item"}`}
                 >
-                  x
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M3 3l8 8M11 3l-8 8" />
+                  </svg>
                 </button>
               )}
               {m.type === "SCREENSHOT" ? (

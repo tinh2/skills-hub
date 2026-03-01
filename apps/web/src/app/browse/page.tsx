@@ -5,16 +5,29 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { skills as skillsApi, categories as categoriesApi } from "@/lib/api";
 import { SkillCard } from "@/components/skill-card";
 import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 
 function BrowseContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [platform, setPlatform] = useState(searchParams.get("platform") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery]);
 
   const updateUrl = useCallback(
     (params: Record<string, string>) => {
@@ -28,13 +41,29 @@ function BrowseContent() {
     [router],
   );
 
+  // Update URL when debounced query changes
+  useEffect(() => {
+    updateUrl({ q: debouncedQuery, category, platform, sort });
+  }, [debouncedQuery, category, platform, sort, updateUrl]);
+
   function handleFilterChange(key: string, value: string) {
-    const updated = { q: searchQuery, category, platform, sort, [key]: value };
-    if (key === "q") setSearchQuery(value);
+    if (key === "q") {
+      setSearchQuery(value);
+      return; // URL will update via debounced effect
+    }
     if (key === "category") setCategory(value);
     if (key === "platform") setPlatform(value);
     if (key === "sort") setSort(value);
-    updateUrl(updated);
+  }
+
+  const hasActiveFilters = debouncedQuery || category || platform || sort !== "newest";
+
+  function clearAllFilters() {
+    setSearchQuery("");
+    setDebouncedQuery("");
+    setCategory("");
+    setPlatform("");
+    setSort("newest");
   }
 
   // Featured skill for the active category
@@ -54,10 +83,10 @@ function BrowseContent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["skills", searchQuery, category, platform, sort],
+    queryKey: ["skills", debouncedQuery, category, platform, sort],
     queryFn: ({ pageParam }) =>
       skillsApi.list({
-        q: searchQuery || undefined,
+        q: debouncedQuery || undefined,
         category: category || undefined,
         platform: (platform || undefined) as any,
         sort: sort as any,
@@ -76,20 +105,22 @@ function BrowseContent() {
       <h1 className="mb-6 text-3xl font-bold">Browse Skills</h1>
 
       {/* Filters */}
-      <div className="mb-8 flex flex-wrap gap-3">
-        <input
-          type="text"
-          placeholder="Search skills..."
-          aria-label="Search skills"
-          value={searchQuery}
-          onChange={(e) => handleFilterChange("q", e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
-        />
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="relative">
+          <input
+            type="search"
+            placeholder="Search skills..."
+            aria-label="Search skills"
+            value={searchQuery}
+            onChange={(e) => handleFilterChange("q", e.target.value)}
+            className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
+          />
+        </div>
         <select
           value={category}
           aria-label="Filter by category"
           onChange={(e) => handleFilterChange("category", e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
+          className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
           <option value="">All Categories</option>
           {CATEGORIES.map((cat) => (
@@ -102,7 +133,7 @@ function BrowseContent() {
           value={platform}
           aria-label="Filter by platform"
           onChange={(e) => handleFilterChange("platform", e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
+          className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
           <option value="">All Platforms</option>
           {PLATFORMS.map((p) => (
@@ -115,7 +146,7 @@ function BrowseContent() {
           value={sort}
           aria-label="Sort skills by"
           onChange={(e) => handleFilterChange("sort", e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
+          className="min-h-[44px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm"
         >
           <option value="newest">Newest</option>
           <option value="most_installed">Most Installed</option>
@@ -124,6 +155,19 @@ function BrowseContent() {
           <option value="recently_updated">Recently Updated</option>
         </select>
       </div>
+
+      {/* Active filter indicator + clear */}
+      {hasActiveFilters && (
+        <div className="mb-6 flex items-center gap-2 text-sm text-[var(--muted)]">
+          <span>Filtering results</span>
+          <button
+            onClick={clearAllFilters}
+            className="min-h-[44px] rounded-lg px-3 py-2 text-[var(--primary)] underline hover:no-underline"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
 
       {/* Featured Hero Card */}
       {featuredSkill && category && (
@@ -147,7 +191,7 @@ function BrowseContent() {
             {featuredSkill.description}
           </p>
           <div className="flex items-center gap-4 text-xs text-[var(--muted)]">
-            <span>{"\u2665"} {featuredSkill.likeCount} likes</span>
+            <span>{featuredSkill.likeCount} likes</span>
             <span>{featuredSkill.installCount.toLocaleString()} installs</span>
             {featuredSkill.avgRating !== null && (
               <span>{featuredSkill.avgRating.toFixed(1)} stars</span>
@@ -158,36 +202,65 @@ function BrowseContent() {
       )}
 
       {/* Results */}
-      {isLoading && <p className="text-[var(--muted)]">Loading skills...</p>}
-      {error && (
-        <p role="alert" className="text-[var(--error)]">
-          Failed to load skills. Please try again.
-        </p>
-      )}
-      {allSkills.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {allSkills.map((skill) => (
-            <SkillCard
-              key={skill.id}
-              skill={skill}
-              isFeatured={!!featuredSkill && skill.id === featuredSkill.id}
-            />
-          ))}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <span className="loading-spinner" aria-hidden="true" />
+          <span className="ml-3 text-[var(--muted)]">Loading skills...</span>
         </div>
       )}
+      {error && (
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+          <p className="text-sm text-red-800 dark:text-red-200">
+            Failed to load skills. Please try again.
+          </p>
+        </div>
+      )}
+      {allSkills.length > 0 && (
+        <>
+          <p className="mb-4 text-sm text-[var(--muted)]" aria-live="polite">
+            {allSkills.length} skill{allSkills.length !== 1 ? "s" : ""} found
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {allSkills.map((skill) => (
+              <SkillCard
+                key={skill.id}
+                skill={skill}
+                isFeatured={!!featuredSkill && skill.id === featuredSkill.id}
+              />
+            ))}
+          </div>
+        </>
+      )}
       {!isLoading && allSkills.length === 0 && (
-        <p className="py-12 text-center text-[var(--muted)]">
-          No skills found matching your criteria.
-        </p>
+        <div className="py-12 text-center">
+          <p className="mb-2 text-lg text-[var(--muted)]">
+            No skills found matching your criteria.
+          </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="min-h-[44px] rounded-lg px-4 py-2 text-sm text-[var(--primary)] underline hover:no-underline"
+            >
+              Clear filters and try again
+            </button>
+          )}
+        </div>
       )}
       {hasNextPage && (
         <div className="mt-8 text-center">
           <button
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
-            className="rounded-lg bg-[var(--accent)] px-6 py-2 text-sm font-medium disabled:opacity-50"
+            className="min-h-[44px] rounded-lg bg-[var(--accent)] px-6 py-2 text-sm font-medium transition-colors hover:bg-[var(--border)] disabled:opacity-50"
           >
-            {isFetchingNextPage ? "Loading..." : "Load More"}
+            {isFetchingNextPage ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="loading-spinner" aria-hidden="true" />
+                Loading...
+              </span>
+            ) : (
+              "Load More"
+            )}
           </button>
         </div>
       )}
@@ -197,7 +270,14 @@ function BrowseContent() {
 
 export default function BrowsePage() {
   return (
-    <Suspense fallback={<p className="text-[var(--muted)]">Loading...</p>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">
+          <span className="loading-spinner" aria-hidden="true" />
+          <span className="ml-3 text-[var(--muted)]">Loading...</span>
+        </div>
+      }
+    >
       <BrowseContent />
     </Suspense>
   );

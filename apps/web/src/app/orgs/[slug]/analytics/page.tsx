@@ -38,7 +38,12 @@ export default function OrgAnalyticsPage() {
         <h1 className="text-2xl font-bold">Analytics</h1>
       </div>
 
-      {isLoading && <p className="text-[var(--muted)]">Loading analytics...</p>}
+      {isLoading && (
+        <div className="flex items-center py-8">
+          <span className="loading-spinner" aria-hidden="true" />
+          <span className="ml-3 text-[var(--muted)]">Loading analytics...</span>
+        </div>
+      )}
 
       {analytics && (
         <>
