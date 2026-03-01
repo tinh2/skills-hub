@@ -60,10 +60,11 @@ export async function runSandbox(
     );
   }
 
-  // Check cache: same skill + same input hash = return cached result
+  // Check cache: same user + same skill + same input hash = return cached result
   const inputHash = hashInput(`${skill.id}:${input.input}`);
   const cached = await prisma.sandboxRun.findFirst({
     where: {
+      userId,
       inputHash,
       status: "COMPLETED",
       createdAt: { gte: new Date(Date.now() - SANDBOX_LIMITS.CACHE_TTL_SECONDS * 1000) },
