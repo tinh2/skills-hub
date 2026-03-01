@@ -1,5 +1,6 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../common/errors.js";
+import { requireOrgRole } from "../org/org.auth.js";
 import { validateMediaUrl } from "./media.validation.js";
 import type { AddMediaInput, ReorderMediaInput } from "@skills-hub/shared";
 
@@ -8,10 +9,17 @@ const MAX_MEDIA_PER_SKILL = 10;
 async function getOwnedSkill(userId: string, slug: string) {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    select: { id: true, authorId: true },
+    select: { id: true, authorId: true, org: { select: { slug: true } } },
   });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("Only the skill author can manage media");
+  // Allow author OR org PUBLISHER+ to manage media
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("Only the skill author can manage media");
+    }
+  }
   return skill;
 }
 
