@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import type { SkillDetail } from "@skills-hub/shared";
-import { PLATFORM_LABELS } from "@skills-hub/shared";
-import type { Platform } from "@skills-hub/shared";
+import { PLATFORM_LABELS, VISIBILITY_LABELS } from "@skills-hub/shared";
+import type { Platform, Visibility } from "@skills-hub/shared";
 import { VersionHistory } from "./version-history";
 
 export function SkillSidebar({ skill }: { skill: SkillDetail }) {
@@ -50,7 +50,7 @@ export function SkillSidebar({ skill }: { skill: SkillDetail }) {
           </div>
           <div className="flex justify-between">
             <dt className="text-[var(--muted)]">Visibility</dt>
-            <dd>{skill.visibility}</dd>
+            <dd>{VISIBILITY_LABELS[skill.visibility as Visibility] ?? skill.visibility}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-[var(--muted)]">Published</dt>

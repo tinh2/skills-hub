@@ -29,7 +29,7 @@ export interface OrgInviteData {
   token: string;
   inviteeUsername: string | null;
   role: OrgRole;
-  status: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
   invitedBy: string;
   expiresAt: string;
   createdAt: string;

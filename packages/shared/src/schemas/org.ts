@@ -73,7 +73,7 @@ export type OrgQuery = z.infer<typeof orgQuerySchema>;
 export type OrgSkillQuery = z.infer<typeof orgSkillQuerySchema>;
 export const createSkillFromTemplateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  description: z.string().max(5000).optional(),
+  description: z.string().max(1000).optional(),
   categorySlug: z.string().optional(),
   platforms: z.array(z.enum(PLATFORMS)).optional(),
   instructions: z.string().max(50000).optional(),

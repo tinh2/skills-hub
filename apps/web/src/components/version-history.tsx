@@ -30,9 +30,13 @@ export function VersionHistory({ skill }: { skill: SkillDetail }) {
   }
 
   async function handleDownloadVersion(version: string) {
-    const detail = await versionsApi.get(skill.slug, version);
-    const content = buildSkillMd({ ...skill, instructions: detail.instructions, latestVersion: version });
-    triggerFileDownload(content, `SKILL-v${version}.md`);
+    try {
+      const detail = await versionsApi.get(skill.slug, version);
+      const content = buildSkillMd({ ...skill, instructions: detail.instructions, latestVersion: version });
+      triggerFileDownload(content, `SKILL-v${version}.md`);
+    } catch {
+      // version fetch failed — no download triggered
+    }
   }
 
   return (
