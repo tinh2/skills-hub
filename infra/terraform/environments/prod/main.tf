@@ -53,7 +53,7 @@ module "database" {
   instance_class          = var.db_instance_class
   multi_az                = var.use_vpc
   backup_retention_period = 7
-  deletion_protection     = false
+  deletion_protection     = true
   publicly_accessible     = !var.use_vpc
   private_subnet_ids      = var.use_vpc ? module.network[0].private_subnet_ids : data.aws_subnets.default[0].ids
   security_group_id       = var.use_vpc ? module.network[0].sg_database_id : aws_security_group.database_public[0].id
