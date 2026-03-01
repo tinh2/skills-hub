@@ -217,14 +217,10 @@ export async function pauseAgent(userId: string, agentId: string): Promise<Agent
   if (agent.ownerId !== userId) throw new ForbiddenError("You can only manage your own agents");
   if (agent.status !== "RUNNING") throw new ConflictError("Agent is not running");
 
-  // Pause in OpenFang
+  // Pause in OpenFang — only update DB if runtime call succeeds
   if (agent.openfangHandId) {
-    try {
-      const client = getOpenFangClient();
-      await client.pauseHand(agent.openfangHandId);
-    } catch (err) {
-      console.warn("[agent] OpenFang pause failed:", err instanceof Error ? err.message : err);
-    }
+    const client = getOpenFangClient();
+    await client.pauseHand(agent.openfangHandId);
   }
 
   await prisma.agent.update({ where: { id: agentId }, data: { status: "PAUSED" } });
@@ -246,14 +242,10 @@ export async function resumeAgent(userId: string, agentId: string): Promise<Agen
   if (agent.ownerId !== userId) throw new ForbiddenError("You can only manage your own agents");
   if (agent.status !== "PAUSED") throw new ConflictError("Agent is not paused");
 
-  // Resume in OpenFang
+  // Resume in OpenFang — only update DB if runtime call succeeds
   if (agent.openfangHandId) {
-    try {
-      const client = getOpenFangClient();
-      await client.resumeHand(agent.openfangHandId);
-    } catch (err) {
-      console.warn("[agent] OpenFang resume failed:", err instanceof Error ? err.message : err);
-    }
+    const client = getOpenFangClient();
+    await client.resumeHand(agent.openfangHandId);
   }
 
   await prisma.agent.update({ where: { id: agentId }, data: { status: "RUNNING" } });
