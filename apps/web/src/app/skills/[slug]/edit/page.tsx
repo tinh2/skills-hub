@@ -133,11 +133,13 @@ export default function EditSkillPage() {
         </div>
       </div>
 
-      {msg && (
-        <p role="status" className={`mb-4 text-sm ${msg.includes("updated") || msg.includes("created") || msg.includes("published") ? "text-green-600" : "text-red-600"}`}>
-          {msg}
-        </p>
-      )}
+      <div aria-live="polite" aria-atomic="true">
+        {msg && (
+          <p role="status" className={`mb-4 text-sm ${msg.includes("updated") || msg.includes("created") || msg.includes("published") ? "text-green-600" : "text-red-600"}`}>
+            {msg}
+          </p>
+        )}
+      </div>
 
       {/* Tabs */}
       <div role="tablist" aria-label="Edit skill sections" className="mb-6 flex gap-4 border-b border-[var(--border)]">

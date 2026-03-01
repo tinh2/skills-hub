@@ -89,11 +89,13 @@ export default function SettingsPage() {
       {/* Profile */}
       <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">Profile</h2>
-        {profileMsg && (
-          <p role="status" className={`mb-3 text-sm ${profileMsg.includes("updated") ? "text-green-600" : "text-red-600"}`}>
-            {profileMsg}
-          </p>
-        )}
+        <div aria-live="polite" aria-atomic="true">
+          {profileMsg && (
+            <p role="status" className={`mb-3 text-sm ${profileMsg.includes("updated") ? "text-green-600" : "text-red-600"}`}>
+              {profileMsg}
+            </p>
+          )}
+        </div>
         <div className="mb-4">
           <label htmlFor="settings-username" className="mb-1 block text-sm font-medium">Username</label>
           <input

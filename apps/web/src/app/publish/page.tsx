@@ -119,11 +119,13 @@ export default function PublishPage() {
         <p className="mt-1 text-xs text-[var(--muted)]">
           Upload a SKILL.md file with YAML frontmatter to auto-fill the form.
         </p>
-        {fileMsg && (
-          <p className={`mt-2 text-sm ${fileMsg.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
-            {fileMsg}
-          </p>
-        )}
+        <div aria-live="polite" aria-atomic="true">
+          {fileMsg && (
+            <p role="status" className={`mt-2 text-sm ${fileMsg.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+              {fileMsg}
+            </p>
+          )}
+        </div>
       </div>
 
       {error && (

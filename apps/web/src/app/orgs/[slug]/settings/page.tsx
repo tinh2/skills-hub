@@ -104,11 +104,13 @@ export default function OrgSettingsPage() {
       {/* General */}
       <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">General</h2>
-        {msg && (
-          <p role="status" className={`mb-3 text-sm ${msg.includes("saved") ? "text-green-600" : "text-red-600"}`}>
-            {msg}
-          </p>
-        )}
+        <div aria-live="polite" aria-atomic="true">
+          {msg && (
+            <p role="status" className={`mb-3 text-sm ${msg.includes("saved") ? "text-green-600" : "text-red-600"}`}>
+              {msg}
+            </p>
+          )}
+        </div>
         <div className="mb-4">
           <label htmlFor="org-name" className="mb-1 block text-sm font-medium">Name</label>
           <input
@@ -142,7 +144,9 @@ export default function OrgSettingsPage() {
       {/* GitHub Integration */}
       <section className="mb-8 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">GitHub Integration</h2>
-        {githubMsg && <p className="mb-3 text-sm text-[var(--muted)]">{githubMsg}</p>}
+        <div aria-live="polite" aria-atomic="true">
+          {githubMsg && <p role="status" className="mb-3 text-sm text-[var(--muted)]">{githubMsg}</p>}
+        </div>
 
         {org.githubOrg ? (
           <div>
