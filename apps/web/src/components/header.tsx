@@ -63,7 +63,7 @@ export function Header() {
                 </Link>
                 <button
                   onClick={() => {
-                    auth.logout();
+                    auth.logout().catch(() => {});
                     logout();
                   }}
                   className="inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
@@ -128,7 +128,7 @@ export function Header() {
                   Settings
                 </Link>
                 <button
-                  onClick={() => { auth.logout(); logout(); setMobileOpen(false); }}
+                  onClick={() => { auth.logout().catch(() => {}); logout(); setMobileOpen(false); }}
                   className="flex min-h-[44px] items-center rounded-lg px-3 text-left text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
                 >
                   Sign out
