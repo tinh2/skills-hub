@@ -130,16 +130,16 @@ export default function PublishPage() {
     try {
       const result = await generateSkill(aiPrompt, openRouterKey, preferredModel);
       const validCategory = CATEGORIES.some((c) => c.slug === result.categorySlug);
-      setForm({
-        name: result.name || form.name,
-        description: result.description || form.description,
-        categorySlug: validCategory ? result.categorySlug : form.categorySlug,
-        platforms: form.platforms,
-        visibility: form.visibility,
-        instructions: result.instructions || form.instructions,
-        version: form.version,
-        tags: Array.isArray(result.tags) ? result.tags.join(", ") : form.tags,
-      });
+      setForm((prev) => ({
+        name: result.name || prev.name,
+        description: result.description || prev.description,
+        categorySlug: validCategory ? result.categorySlug : prev.categorySlug,
+        platforms: prev.platforms,
+        visibility: prev.visibility,
+        instructions: result.instructions || prev.instructions,
+        version: prev.version,
+        tags: Array.isArray(result.tags) ? result.tags.join(", ") : prev.tags,
+      }));
     } catch (err) {
       setAiError(err instanceof OpenRouterError ? err.message : "AI generation failed. Try again.");
     } finally {

@@ -81,12 +81,12 @@ export default function SettingsPage() {
 
   // Sync local state after zustand persist rehydrates from localStorage
   useEffect(() => {
-    if (!aiInitialized && openRouterKey !== null) {
-      setAiKeyInput(openRouterKey);
-      setAiModelInput(preferredModel);
-      setAiInitialized(true);
-    }
-  }, [openRouterKey, preferredModel, aiInitialized]);
+    if (aiInitialized) return;
+    const state = useAiStore.getState();
+    setAiKeyInput(state.openRouterKey ?? "");
+    setAiModelInput(state.preferredModel);
+    setAiInitialized(true);
+  }, [aiInitialized, openRouterKey, preferredModel]);
 
   if (!isAuthenticated) {
     router.push("/");
