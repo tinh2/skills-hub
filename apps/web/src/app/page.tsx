@@ -17,13 +17,13 @@ export default function HomePage() {
         <div className="mt-8 flex items-center justify-center gap-4">
           <Link
             href="/browse"
-            className="rounded-lg bg-[var(--primary)] px-6 py-3 font-medium text-[var(--primary-foreground)]"
+            className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-6 py-3 font-medium text-[var(--primary-foreground)] transition-colors hover:opacity-90"
           >
             Browse Skills
           </Link>
           <Link
             href="/publish"
-            className="rounded-lg border border-[var(--border)] px-6 py-3 font-medium"
+            className="inline-flex min-h-[44px] items-center rounded-lg border border-[var(--border)] px-6 py-3 font-medium transition-colors hover:bg-[var(--accent)]"
           >
             Publish a Skill
           </Link>
