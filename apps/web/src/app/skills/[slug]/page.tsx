@@ -11,6 +11,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
 
 export default function SkillDetailPage() {
@@ -212,7 +213,7 @@ export default function SkillDetailPage() {
         <section aria-labelledby="instructions-heading" className="mb-8">
           <h2 id="instructions-heading" className="mb-4 text-lg font-semibold">Instructions</h2>
           <div className="prose max-w-none rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]}>
               {skill.instructions}
             </ReactMarkdown>
           </div>
