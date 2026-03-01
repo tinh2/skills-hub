@@ -356,8 +356,8 @@ export default function SkillDetailPage() {
         )}
 
         {/* Instructions */}
-        <section className="mb-8">
-          <h2 className="mb-4 text-xl font-bold">Instructions</h2>
+        <section aria-labelledby="instructions-heading" className="mb-8">
+          <h2 id="instructions-heading" className="mb-4 text-xl font-bold">Instructions</h2>
           <div className="prose max-w-none rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
               {skill.instructions}
@@ -373,9 +373,9 @@ export default function SkillDetailPage() {
         />
 
         {/* Reviews */}
-        <section>
+        <section aria-labelledby="reviews-heading">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold">
+            <h2 id="reviews-heading" className="text-xl font-bold">
               Reviews ({skill.reviewCount})
             </h2>
             {isAuthenticated && !showReviewForm && !reviewList?.some((r) => r.author.username === authUser?.username) && (
