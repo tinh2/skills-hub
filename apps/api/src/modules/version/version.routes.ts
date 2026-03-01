@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createVersionSchema } from "@skills-hub/shared";
-import { requireAuth } from "../../common/auth.js";
+import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { writeRateLimit } from "../../config/rate-limits.js";
 import * as versionService from "./version.service.js";
@@ -8,14 +8,16 @@ import * as versionService from "./version.service.js";
 export async function versionRoutes(app: FastifyInstance) {
   // GET /api/v1/skills/:slug/versions
   app.get<{ Params: { slug: string } }>("/:slug/versions", async (request) => {
-    return versionService.listVersions(request.params.slug);
+    const user = await optionalAuth(request);
+    return versionService.listVersions(request.params.slug, user?.userId ?? null);
   });
 
   // GET /api/v1/skills/:slug/versions/:version
   app.get<{ Params: { slug: string; version: string } }>(
     "/:slug/versions/:version",
     async (request) => {
-      return versionService.getVersion(request.params.slug, request.params.version);
+      const user = await optionalAuth(request);
+      return versionService.getVersion(request.params.slug, request.params.version, user?.userId ?? null);
     },
   );
 
@@ -31,10 +33,12 @@ export async function versionRoutes(app: FastifyInstance) {
   app.get<{ Params: { slug: string; from: string; to: string } }>(
     "/:slug/versions/:from/diff/:to",
     async (request) => {
+      const user = await optionalAuth(request);
       return versionService.getVersionDiff(
         request.params.slug,
         request.params.from,
         request.params.to,
+        user?.userId ?? null,
       );
     },
   );

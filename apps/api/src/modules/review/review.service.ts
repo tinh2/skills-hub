@@ -16,7 +16,6 @@ export async function listReviews(
     take: limit,
     include: {
       author: { select: { username: true, avatarUrl: true } },
-      _count: { select: { votes: true } },
       response: true,
     },
   });

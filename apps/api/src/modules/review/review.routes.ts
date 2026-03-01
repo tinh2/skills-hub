@@ -31,7 +31,7 @@ export async function reviewRoutes(app: FastifyInstance) {
   });
 
   // PATCH /api/v1/reviews/:id
-  app.patch<{ Params: { id: string } }>("/reviews/:id", async (request) => {
+  app.patch<{ Params: { id: string } }>("/reviews/:id", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     const parsed = updateReviewSchema.safeParse(request.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
@@ -40,7 +40,7 @@ export async function reviewRoutes(app: FastifyInstance) {
   });
 
   // DELETE /api/v1/reviews/:id
-  app.delete<{ Params: { id: string } }>("/reviews/:id", async (request) => {
+  app.delete<{ Params: { id: string } }>("/reviews/:id", writeRateLimit, async (request) => {
     const { userId } = await requireAuth(request);
     await reviewService.deleteReview(userId, request.params.id);
     return { success: true };

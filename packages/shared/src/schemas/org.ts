@@ -81,7 +81,7 @@ export const createSkillFromTemplateSchema = z.object({
   categorySlug: z.string().optional(),
   platforms: z.array(z.enum(PLATFORMS)).optional(),
   instructions: z.string().max(50000).optional(),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/).optional(),
+  version: z.string().regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, "Version must follow semver (e.g., 1.0.0)").optional(),
 });
 
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;

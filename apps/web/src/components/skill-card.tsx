@@ -68,7 +68,7 @@ export function SkillCard({
             )}
             {skill.visibility !== "PUBLIC" && (
               <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                {skill.visibility === "PRIVATE" ? "Private" : "Unlisted"}
+                {skill.visibility === "PRIVATE" ? "Private" : skill.visibility === "ORG" ? "Org" : "Unlisted"}
               </span>
             )}
           </div>
