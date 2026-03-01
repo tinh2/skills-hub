@@ -54,4 +54,6 @@ COPY --from=builder /app/pnpm-workspace.yaml ./
 EXPOSE 3000
 
 WORKDIR /app/apps/api
-CMD ["node", "dist/server.js"]
+
+# Run migrations then start server
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

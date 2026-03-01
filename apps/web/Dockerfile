@@ -8,6 +8,7 @@ FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
+COPY packages/skill-parser/package.json packages/skill-parser/
 RUN pnpm install --frozen-lockfile
 
 # Build
@@ -15,13 +16,16 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps /app/packages/skill-parser/node_modules ./packages/skill-parser/node_modules
 
 COPY tsconfig.base.json ./
 COPY packages/shared/ packages/shared/
+COPY packages/skill-parser/ packages/skill-parser/
 COPY apps/web/ apps/web/
 
-# Build shared package first
+# Build shared packages first
 RUN pnpm --filter @skills-hub/shared build
+RUN pnpm --filter @skills-hub/skill-parser build
 
 # Build Next.js app (standalone output)
 RUN pnpm --filter @skills-hub/web build

@@ -12,14 +12,16 @@ import type { SkillQuery } from "@skills-hub/shared";
 export async function searchSkills(query: SkillQuery, requesterId?: string | null) {
   const where: Prisma.SkillWhereInput = { status: "PUBLISHED", visibility: "PUBLIC" };
 
-  // Org-scoped search
+  // Org-scoped search: show both PUBLIC and ORG-visible skills for members
   if (query.org && requesterId) {
     const org = await prisma.organization.findUnique({ where: { slug: query.org } });
     if (org) {
       const member = await isOrgMember(requesterId, org.id);
       if (member) {
-        where.visibility = "ORG";
-        where.orgId = org.id;
+        delete where.visibility;
+        where.AND = [
+          { OR: [{ visibility: "PUBLIC" }, { visibility: "ORG", orgId: org.id }] },
+        ];
       }
     }
   }
@@ -48,10 +50,13 @@ export async function searchSkills(query: SkillQuery, requesterId?: string | nul
       .join(" & ");
 
     if (tsQuery) {
+      // Determine which visibility to filter in the raw query
+      const visFilter = query.org ? "ORG" : "PUBLIC";
       const tsvectorResults = await prisma.$queryRaw<{ id: string }[]>`
         SELECT id FROM "Skill"
         WHERE "searchVector" @@ to_tsquery('english', ${tsQuery + ":*"})
           AND status = 'PUBLISHED'
+          AND visibility = ${visFilter}
         ORDER BY ts_rank("searchVector", to_tsquery('english', ${tsQuery + ":*"})) DESC
         LIMIT 200
       `;

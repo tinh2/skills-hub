@@ -12,6 +12,9 @@ const mockPrisma = vi.hoisted(() => ({
     create: vi.fn(),
     updateMany: vi.fn(),
   },
+  category: {
+    findUnique: vi.fn(),
+  },
   $transaction: vi.fn(),
 }));
 
@@ -21,6 +24,7 @@ vi.mock("../../common/db.js", () => ({
 
 vi.mock("../org/org.auth.js", () => ({
   isOrgMember: vi.fn().mockResolvedValue(false),
+  requireOrgRole: vi.fn().mockResolvedValue({ org: { id: "org1", slug: "test-org" } }),
 }));
 
 vi.mock("../validation/validation.service.js", () => ({
@@ -139,12 +143,13 @@ describe("createVersion", () => {
   it("creates a new version with isLatest flag management", async () => {
     mockPrisma.skill.findUnique.mockResolvedValue({
       id: "s1", authorId: "u1", name: "Test Skill", description: "desc",
-      platforms: ["CLAUDE_CODE"],
+      platforms: ["CLAUDE_CODE"], categoryId: "cat1", org: null,
     });
     mockPrisma.skillVersion.findUnique.mockResolvedValue(null); // no duplicate
     mockPrisma.skillVersion.findFirst.mockResolvedValue({
       version: "1.0.0",
     });
+    mockPrisma.category.findUnique.mockResolvedValue({ id: "cat1", slug: "code-quality" });
 
     const createdVersion = {
       id: "v2",
@@ -178,7 +183,7 @@ describe("createVersion", () => {
 
   it("rejects if not the skill author", async () => {
     mockPrisma.skill.findUnique.mockResolvedValue({
-      id: "s1", authorId: "other-user",
+      id: "s1", authorId: "other-user", org: null,
     });
     await expect(
       createVersion("u1", "test-skill", { version: "1.0.0", instructions: "test" }),
@@ -186,7 +191,7 @@ describe("createVersion", () => {
   });
 
   it("rejects duplicate version", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", authorId: "u1" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", authorId: "u1", org: null });
     mockPrisma.skillVersion.findUnique.mockResolvedValue({ id: "existing" });
 
     await expect(
@@ -195,7 +200,7 @@ describe("createVersion", () => {
   });
 
   it("rejects version lower than current latest", async () => {
-    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", authorId: "u1" });
+    mockPrisma.skill.findUnique.mockResolvedValue({ id: "s1", authorId: "u1", org: null });
     mockPrisma.skillVersion.findUnique.mockResolvedValue(null); // no duplicate
     mockPrisma.skillVersion.findFirst.mockResolvedValue({ version: "2.0.0" });
 

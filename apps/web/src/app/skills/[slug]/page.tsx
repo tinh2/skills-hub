@@ -13,6 +13,7 @@ import type { Platform, SkillDetail } from "@skills-hub/shared";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 import { zipSync, strToU8 } from "fflate";
 import { buildSkillMd, triggerFileDownload, triggerBlobDownload } from "@/lib/download";
 
@@ -358,7 +359,7 @@ export default function SkillDetailPage() {
         <section className="mb-8">
           <h2 className="mb-4 text-xl font-bold">Instructions</h2>
           <div className="prose max-w-none rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-6">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
               {skill.instructions}
             </ReactMarkdown>
           </div>

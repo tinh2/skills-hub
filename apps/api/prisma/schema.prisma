@@ -70,7 +70,7 @@ model Skill {
   authorId      String
   author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   orgId         String?
-  org           Organization? @relation(fields: [orgId], references: [id])
+  org           Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
   status        SkillStatus @default(DRAFT)
   visibility    Visibility  @default(PUBLIC)
   platforms     Platform[]
@@ -124,7 +124,7 @@ model CompositionSkill {
   compositionId String
   composition   Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
   childSkillId  String
-  childSkill    Skill   @relation("ChildSkill", fields: [childSkillId], references: [id])
+  childSkill    Skill   @relation("ChildSkill", fields: [childSkillId], references: [id], onDelete: Cascade)
   sortOrder     Int     @default(0)
   isParallel    Boolean @default(false)
 
@@ -162,8 +162,6 @@ model Tag {
   id     String     @id @default(cuid())
   name   String     @unique
   skills SkillTag[]
-
-  @@index([name])
 }
 
 model SkillTag {
@@ -220,7 +218,7 @@ model Install {
   skillId   String
   skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   version   String
   platform  Platform
   createdAt DateTime @default(now())
@@ -304,7 +302,7 @@ model OrgInvite {
   invitedBy       User         @relation("InviteSender", fields: [invitedByUserId], references: [id], onDelete: Cascade)
   inviteeUsername String?
   inviteeUserId   String?
-  invitee         User?        @relation("InviteRecipient", fields: [inviteeUserId], references: [id])
+  invitee         User?        @relation("InviteRecipient", fields: [inviteeUserId], references: [id], onDelete: SetNull)
   role            OrgRole      @default(MEMBER)
   status          InviteStatus @default(PENDING)
   token           String       @unique
@@ -313,7 +311,6 @@ model OrgInvite {
 
   @@index([orgId])
   @@index([inviteeUserId])
-  @@index([token])
 }
 
 model OrgSkillTemplate {

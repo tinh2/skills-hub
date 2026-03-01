@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, ConflictError } from "../../common/error
 import { computeQualityScore } from "../validation/validation.service.js";
 import { compareSemver } from "@skills-hub/skill-parser";
 import { isOrgMember } from "../org/org.auth.js";
+import { requireOrgRole } from "../org/org.auth.js";
 import type { VersionSummary, VersionDetail, VersionDiff } from "@skills-hub/shared";
 
 /** Enforce visibility rules — private/org skills only visible to authorized users */
@@ -25,6 +26,7 @@ export async function listVersions(slug: string, requesterId?: string | null): P
   const versions = await prisma.skillVersion.findMany({
     where: { skillId: skill.id },
     orderBy: { createdAt: "desc" },
+    select: { id: true, version: true, changelog: true, qualityScore: true, createdAt: true },
   });
 
   return versions.map((v) => ({
@@ -61,9 +63,20 @@ export async function createVersion(
   slug: string,
   input: { version: string; instructions: string; changelog?: string },
 ): Promise<VersionSummary> {
-  const skill = await prisma.skill.findUnique({ where: { slug } });
+  const skill = await prisma.skill.findUnique({
+    where: { slug },
+    include: { org: { select: { slug: true } } },
+  });
   if (!skill) throw new NotFoundError("Skill");
-  if (skill.authorId !== userId) throw new ForbiddenError("You can only create versions for your own skills");
+
+  // Allow author OR org PUBLISHER+ to create versions
+  if (skill.authorId !== userId) {
+    if (skill.org) {
+      await requireOrgRole(userId, skill.org.slug, "PUBLISHER");
+    } else {
+      throw new ForbiddenError("You can only create versions for your own skills");
+    }
+  }
 
   // Check version doesn't already exist
   const existing = await prisma.skillVersion.findUnique({
@@ -79,10 +92,12 @@ export async function createVersion(
     throw new ConflictError(`Version ${input.version} must be higher than current ${latest.version}`);
   }
 
+  // Fetch actual category slug for quality scoring
+  const category = await prisma.category.findUnique({ where: { id: skill.categoryId } });
   const qualityScore = computeQualityScore({
     name: skill.name,
     description: skill.description,
-    categorySlug: "build", // category already validated
+    categorySlug: category?.slug ?? "other",
     platforms: skill.platforms as any,
     instructions: input.instructions,
     version: input.version,
