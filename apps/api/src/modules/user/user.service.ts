@@ -1,7 +1,9 @@
 import { prisma } from "../../common/db.js";
 import { hashApiKey } from "../../common/auth.js";
-import { NotFoundError } from "../../common/errors.js";
+import { NotFoundError, ValidationError } from "../../common/errors.js";
 import type { PublicUser, PrivateUser, ApiKeyResponse, ApiKeyCreatedResponse } from "@skills-hub/shared";
+
+const MAX_API_KEYS_PER_USER = 10;
 
 export async function getPublicProfile(username: string): Promise<PublicUser> {
   const user = await prisma.user.findUnique({
@@ -69,6 +71,11 @@ export async function createApiKey(
   name: string,
   expiresInDays?: number,
 ): Promise<ApiKeyCreatedResponse> {
+  const existingCount = await prisma.apiKey.count({ where: { userId } });
+  if (existingCount >= MAX_API_KEYS_PER_USER) {
+    throw new ValidationError(`Maximum ${MAX_API_KEYS_PER_USER} API keys per user`);
+  }
+
   const rawKey = `sh_${crypto.randomUUID().replace(/-/g, "")}`;
   const keyHash = await hashApiKey(rawKey);
   const keyPrefix = rawKey.slice(0, 10) + "...";
