@@ -70,7 +70,7 @@ export async function requireAuth(request: FastifyRequest): Promise<{ userId: st
       prisma.apiKey.update({
         where: { id: apiKey.id },
         data: { lastUsedAt: new Date() },
-      }).catch(() => {}); // fire-and-forget, non-critical
+      }).catch((err) => console.warn("[auth] Failed to update API key lastUsedAt:", err instanceof Error ? err.message : err));
     }
 
     return { userId: apiKey.user.id, username: apiKey.user.username };

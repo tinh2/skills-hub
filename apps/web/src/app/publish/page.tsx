@@ -67,27 +67,32 @@ export default function PublishPage() {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const content = reader.result as string;
-      const result = parseSkillMd(content);
+      try {
+        const content = reader.result as string;
+        const result = parseSkillMd(content);
 
-      if (!result.success || !result.skill) {
-        setFileMsg(result.errors.map((err) => `${err.field}: ${err.message}`).join("; "));
-        return;
+        if (!result.success || !result.skill) {
+          setFileMsg(result.errors.map((err) => `${err.field}: ${err.message}`).join("; "));
+          return;
+        }
+
+        const { skill } = result;
+        setForm({
+          name: skill.name,
+          description: skill.description,
+          categorySlug: skill.category || "",
+          platforms: skill.platforms.length > 0 ? skill.platforms : ["CLAUDE_CODE"],
+          visibility: "PUBLIC",
+          instructions: skill.instructions,
+          version: skill.version,
+          tags: "",
+        });
+        setFileMsg("SKILL.md parsed successfully");
+      } catch {
+        setFileMsg("Failed to parse SKILL.md file");
       }
-
-      const { skill } = result;
-      setForm({
-        name: skill.name,
-        description: skill.description,
-        categorySlug: skill.category || "",
-        platforms: skill.platforms.length > 0 ? skill.platforms : ["CLAUDE_CODE"],
-        visibility: "PUBLIC",
-        instructions: skill.instructions,
-        version: skill.version,
-        tags: "",
-      });
-      setFileMsg("SKILL.md parsed successfully");
     };
+    reader.onerror = () => setFileMsg("Failed to read file");
     reader.readAsText(file);
     e.target.value = "";
   }
