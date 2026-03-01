@@ -3,7 +3,9 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { skills as skillsApi, versions as versionsApi, reviews as reviewsApi, installs, likes, media as mediaApi } from "@/lib/api";
+import { skills as skillsApi, versions as versionsApi, reviews as reviewsApi, installs, likes } from "@/lib/api";
+import { ReviewCard } from "@/components/review-card";
+import { MediaGallery } from "@/components/media-gallery";
 import { useAuthStore } from "@/lib/auth-store";
 import { PLATFORM_LABELS } from "@skills-hub/shared";
 import type { Platform, SkillDetail } from "@skills-hub/shared";
@@ -11,6 +13,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { zipSync, strToU8 } from "fflate";
+import { buildSkillMd, triggerFileDownload, triggerBlobDownload } from "@/lib/download";
 
 export default function SkillDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -53,34 +56,6 @@ export default function SkillDetailPage() {
     },
   });
 
-  // Media management
-  const [showMediaForm, setShowMediaForm] = useState(false);
-  const [mediaForm, setMediaForm] = useState({ type: "SCREENSHOT" as "SCREENSHOT" | "YOUTUBE", url: "", caption: "" });
-  const [mediaError, setMediaError] = useState("");
-
-  const addMedia = useMutation({
-    mutationFn: () =>
-      mediaApi.add(slug, {
-        type: mediaForm.type,
-        url: mediaForm.url,
-        caption: mediaForm.caption || undefined,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
-      setShowMediaForm(false);
-      setMediaForm({ type: "SCREENSHOT", url: "", caption: "" });
-      setMediaError("");
-    },
-    onError: (err: Error) => setMediaError(err.message),
-  });
-
-  const removeMedia = useMutation({
-    mutationFn: (mediaId: string) => mediaApi.remove(slug, mediaId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skill", slug] });
-    },
-  });
-
   // Download state
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -93,46 +68,6 @@ export default function SkillDetailPage() {
     const cmd = `npx skills-hub install ${skill?.slug}`;
     navigator.clipboard.writeText(cmd);
     trackInstall.mutate();
-  }
-
-  function buildSkillMd(s: SkillDetail) {
-    const frontmatter = [
-      "---",
-      `name: ${s.name}`,
-      `version: ${s.latestVersion}`,
-      `category: ${s.category.slug}`,
-      `platforms: [${s.platforms.join(", ")}]`,
-    ];
-    if (s.tags.length > 0) {
-      frontmatter.push(`tags: [${s.tags.join(", ")}]`);
-    }
-    frontmatter.push(`description: |`);
-    frontmatter.push(`  ${s.description}`);
-    frontmatter.push("---", "");
-    return frontmatter.join("\n") + s.instructions;
-  }
-
-  function triggerFileDownload(content: string, filename: string) {
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  function triggerBlobDownload(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   }
 
   function handleDownloadSkillMd() {
@@ -214,6 +149,14 @@ export default function SkillDetailPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {skill.author.username === authUser?.username && (
+              <Link
+                href={`/skills/${slug}/edit`}
+                className="rounded-full border border-[var(--card-border)] px-3 py-1 text-sm hover:bg-[var(--accent)]"
+              >
+                Edit
+              </Link>
+            )}
             {isAuthenticated && (
               <button
                 onClick={() => toggleLike.mutate()}
@@ -334,114 +277,11 @@ export default function SkillDetailPage() {
         </section>
 
         {/* Media */}
-        {(skill.media.length > 0 || skill.author.username === authUser?.username) && (
-          <section className="mb-8">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">Media</h2>
-              {skill.author.username === authUser?.username && !showMediaForm && (
-                <button
-                  onClick={() => setShowMediaForm(true)}
-                  className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)]"
-                >
-                  Add Media
-                </button>
-              )}
-            </div>
-
-            {showMediaForm && (
-              <div className="mb-6 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4">
-                {mediaError && <p className="mb-3 text-sm text-red-600">{mediaError}</p>}
-                <div className="mb-3">
-                  <label className="mb-1 block text-sm font-medium">Type</label>
-                  <select
-                    value={mediaForm.type}
-                    onChange={(e) => setMediaForm({ ...mediaForm, type: e.target.value as "SCREENSHOT" | "YOUTUBE" })}
-                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
-                  >
-                    <option value="SCREENSHOT">Screenshot</option>
-                    <option value="YOUTUBE">YouTube Video</option>
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="mb-1 block text-sm font-medium">URL</label>
-                  <input
-                    type="url"
-                    value={mediaForm.url}
-                    onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
-                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
-                    placeholder={mediaForm.type === "SCREENSHOT" ? "https://i.imgur.com/example.png" : "https://www.youtube.com/watch?v=..."}
-                  />
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    {mediaForm.type === "SCREENSHOT"
-                      ? "Allowed: imgur.com, raw.githubusercontent.com, user-images.githubusercontent.com"
-                      : "Allowed: youtube.com, youtu.be"}
-                  </p>
-                </div>
-                <div className="mb-3">
-                  <label className="mb-1 block text-sm font-medium">Caption (optional)</label>
-                  <input
-                    type="text"
-                    value={mediaForm.caption}
-                    onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })}
-                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
-                    placeholder="Brief description"
-                    maxLength={200}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => addMedia.mutate()}
-                    disabled={addMedia.isPending || !mediaForm.url}
-                    className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm text-[var(--primary-foreground)] disabled:opacity-50"
-                  >
-                    {addMedia.isPending ? "Adding..." : "Add Media"}
-                  </button>
-                  <button
-                    onClick={() => { setShowMediaForm(false); setMediaError(""); }}
-                    className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {skill.media.length > 0 && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {skill.media.map((m) => (
-                  <div key={m.id} className="relative rounded-lg border border-[var(--card-border)] bg-[var(--card)] overflow-hidden">
-                    {skill.author.username === authUser?.username && (
-                      <button
-                        onClick={() => removeMedia.mutate(m.id)}
-                        className="absolute right-2 top-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white hover:bg-black/70"
-                        aria-label="Remove media"
-                      >
-                        x
-                      </button>
-                    )}
-                    {m.type === "SCREENSHOT" ? (
-                      <img src={m.url} alt={m.caption || "Skill screenshot"} className="w-full" loading="lazy" />
-                    ) : (
-                      <div className="sm:col-span-2">
-                        <iframe
-                          src={m.url}
-                          className="aspect-video w-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          sandbox="allow-scripts allow-same-origin allow-popups"
-                          allowFullScreen
-                          title={m.caption || "Skill video"}
-                        />
-                      </div>
-                    )}
-                    {m.caption && (
-                      <p className="p-2 text-xs text-[var(--muted)]">{m.caption}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
+        <MediaGallery
+          mediaItems={skill.media}
+          slug={slug}
+          isAuthor={skill.author.username === authUser?.username}
+        />
 
         {/* Reviews */}
         <section>
@@ -523,38 +363,14 @@ export default function SkillDetailPage() {
             <p className="text-[var(--muted)]">No reviews yet. Be the first to review this skill.</p>
           )}
           {reviewList?.map((review) => (
-            <div
+            <ReviewCard
               key={review.id}
-              className="mb-4 rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4"
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    {review.author.username}
-                  </span>
-                  <span className="text-sm text-[var(--muted)]">
-                    {review.rating}/5
-                  </span>
-                </div>
-                <span className="text-xs text-[var(--muted)]">
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-              {review.title && (
-                <p className="mb-1 font-medium">{review.title}</p>
-              )}
-              {review.body && (
-                <p className="text-sm text-[var(--muted)]">{review.body}</p>
-              )}
-              {review.response && (
-                <div className="mt-3 rounded bg-[var(--accent)] p-3">
-                  <p className="text-xs font-medium">Author response:</p>
-                  <p className="text-sm text-[var(--muted)]">
-                    {review.response.body}
-                  </p>
-                </div>
-              )}
-            </div>
+              review={review}
+              slug={slug}
+              isReviewAuthor={review.author.username === authUser?.username}
+              isSkillAuthor={skill.author.username === authUser?.username}
+              isAuthenticated={isAuthenticated}
+            />
           ))}
         </section>
       </div>
