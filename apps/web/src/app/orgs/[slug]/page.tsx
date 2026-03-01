@@ -91,19 +91,19 @@ export default function OrgDetailPage() {
 
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-4">
-        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4 text-center">
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5 text-center">
           <p className="text-xl font-bold">{org.memberCount}</p>
           <p className="text-xs text-[var(--muted)]">Members</p>
         </div>
-        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4 text-center">
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5 text-center">
           <p className="text-xl font-bold">{org.skillCount}</p>
           <p className="text-xs text-[var(--muted)]">Skills</p>
         </div>
-        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4 text-center">
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5 text-center">
           <p className="text-xl font-bold">{org.totalInstalls.toLocaleString()}</p>
           <p className="text-xs text-[var(--muted)]">Total Installs</p>
         </div>
-        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-4 text-center">
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] p-5 text-center">
           <p className="text-xl font-bold">{org.currentUserRole ?? "—"}</p>
           <p className="text-xs text-[var(--muted)]">Your Role</p>
         </div>
