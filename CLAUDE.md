@@ -1,6 +1,6 @@
 # skills-hub.ai
 
-Claude Code skill marketplace — full-stack TypeScript monorepo.
+Open platform for AI coding skills — full-stack TypeScript monorepo supporting Claude Code, Cursor, Codex CLI, and any MCP-compatible tool.
 
 ## Architecture
 

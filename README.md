@@ -1,6 +1,6 @@
 # skills-hub.ai
 
-The marketplace for Claude Code skills -- discover, share, install, and rate quality-scored skills for AI coding assistants.
+The open platform for AI coding skills — discover, publish, test, deploy, and collaborate across Claude Code, Cursor, Codex CLI, and any MCP-compatible tool.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Fastify](https://img.shields.io/badge/Fastify-5-000?logo=fastify&logoColor=white)](https://fastify.dev/)
@@ -10,7 +10,39 @@ The marketplace for Claude Code skills -- discover, share, install, and rate qua
 
 ## Overview
 
-skills-hub.ai is a full-stack platform where developers publish, discover, and install reusable skills (structured instruction sets) for AI coding assistants. Every skill receives an automated 0--100 quality score. Users authenticate with GitHub, browse a curated category taxonomy, leave star ratings and reviews, organize skills within teams, and install with a single CLI command.
+skills-hub.ai is a full-stack platform for publishing, discovering, and running reusable skills (structured instruction sets) across AI coding assistants. Skills are portable SKILL.md files that work in Claude Code, Cursor, Codex CLI, or any MCP-compatible tool.
+
+The platform goes beyond a simple directory. Every skill receives an automated quality score. Users authenticate with GitHub, browse a curated category taxonomy, leave ratings and reviews, organize skills within teams, chain skills into compositions, test them in sandboxes, and deploy them as persistent agents — all installable with a single CLI command.
+
+## Key Features
+
+### Discovery and Publishing
+- **Browse and Search** — Filter by category, platform, quality score, tags, and author with full-text search (tsvector/GIN)
+- **Quality Scoring** — Automated 0–100 score based on schema completeness and instruction quality
+- **AI-Powered Skill Generation** — Describe what you want and generate name, description, category, tags, and instructions via OpenRouter (Claude Sonnet 4, Claude Haiku 4, GPT-4o, Gemini 2.0 Flash). Per-field "Suggest" buttons for targeted regeneration. Client-side only — your API key stays in the browser
+- **Version Management** — Semver versioning, changelogs, and version diffs
+- **Media Showcase** — Screenshots and YouTube embeds with URL allowlisting
+- **Visibility Controls** — Public, Private, Unlisted, and Organization-scoped skills
+
+### Installation and Execution
+- **One-Command Install** — `npx skills-hub install <slug>` with automatic dependency resolution for compositions
+- **Multi-Platform Targets** — Install for Claude Code, Cursor, Codex CLI, or custom paths
+- **Skill Compositions** — Chain multiple skills into pipelines with sequential or parallel execution
+- **Sandbox Testing** — Run skills in sandboxed environments with defined test cases, capturing input/output and execution time
+- **Agent Deployment** — Deploy skills as persistent agents triggered manually, on a schedule, via webhooks, or through channels
+
+### Community and Collaboration
+- **Ratings and Reviews** — Star ratings, text reviews, helpfulness voting, and creator responses
+- **Organizations** — Team workspaces with GitHub org sync, roles (admin/publisher/member), skill templates, and analytics
+- **Community Reporting** — Users can flag skills as malicious, spam, inappropriate, copyright-infringing, or misleading
+- **Trust Tiers** — Automatically computed trust levels (New, Established, Trusted) based on account age, published skill count, and quality scores
+- **Moderation Queue** — Admin workflow to review flagged skills, approve or reject pending submissions, and resolve reports
+- **Security Scanning** — Automated pattern scanning in the skill validation pipeline to detect dangerous content
+
+### Cross-Platform Distribution
+- **MCP Server** — Serve installed skills as prompts in any MCP-compatible AI tool (Claude Code, Cursor, Windsurf, Copilot, etc.)
+- **CLI** — Full-featured command-line tool for search, install, publish, org management, and more
+- **API Key Auth** — Named API keys with optional expiry for programmatic access
 
 ## Tech Stack
 
@@ -30,7 +62,7 @@ skills-hub.ai is a full-stack platform where developers publish, discover, and i
 
 ## Architecture
 
-The API follows a domain-driven module structure. Each module under `apps/api/src/modules/` encapsulates routes, a service layer, and co-located tests. Routes handle HTTP concerns (parsing, auth guards, rate limits), services contain business logic, and Prisma handles data access directly in the service layer. All endpoints are prefixed with `/api/v1/` and accept `Authorization: Bearer <jwt>` or `ApiKey <key>` headers.
+The API follows a domain-driven module structure with 17 modules. Each module under `apps/api/src/modules/` encapsulates routes, a service layer, and co-located tests. Routes handle HTTP concerns (parsing, auth guards, rate limits), services contain business logic, and Prisma handles data access directly in the service layer. All endpoints are prefixed with `/api/v1/` and accept `Authorization: Bearer <jwt>` or `ApiKey <key>` headers.
 
 The frontend uses Next.js 15 App Router with server components for initial page loads and TanStack Query for client-side data fetching. Zustand manages local UI state (auth, toasts). All API types and validation schemas live in `packages/shared`, keeping frontend and backend in sync.
 
@@ -51,15 +83,15 @@ Key patterns: cursor-based pagination, Prisma atomic `increment` for denormalize
 ```
 skills-hub/
   apps/
-    api/                 Fastify REST API (15 domain modules)
+    api/                 Fastify REST API (17 domain modules)
       src/modules/       auth, user, skill, version, review, search,
                          install, like, category, tag, media, org,
-                         sandbox, agent, validation
+                         sandbox, agent, validation, report, moderation
       prisma/            Schema, migrations, seeds
     web/                 Next.js frontend
-      src/app/           App Router: browse, skills, dashboard,
-                         publish, settings, orgs, categories, docs
-    cli/                 CLI tool (15 commands + org subcommands)
+      src/app/           App Router: browse, skills, dashboard, publish,
+                         settings, orgs, categories, docs, about, u/
+    cli/                 CLI tool (15+ commands + org subcommands)
       src/commands/      login, search, install, publish, org, etc.
     mcp/                 MCP server (skills as prompts for any AI tool)
   packages/
@@ -163,6 +195,71 @@ pnpm --filter @skills-hub/api test:integration
 
 Integration tests use serialized forks (single database) with a 30-second timeout per test. CI runs both suites on every push and PR to `main` via GitHub Actions with a PostgreSQL 16 service container.
 
+## CLI Usage
+
+```bash
+npx skills-hub login                             # GitHub OAuth
+npx skills-hub search "code review"              # search skills
+npx skills-hub install review-code               # install a skill
+npx skills-hub install review-code --target cursor  # install for Cursor
+npx skills-hub list                              # list installed skills
+npx skills-hub update                            # update all installed
+npx skills-hub publish ./SKILL.md                # publish a skill
+npx skills-hub unpublish review-code             # unpublish a skill
+npx skills-hub info review-code                  # skill details
+npx skills-hub diff review-code 1.0.0 2.0.0     # version diff
+npx skills-hub categories                        # browse categories
+npx skills-hub org list                          # list organizations
+npx skills-hub org create my-team                # create an organization
+npx skills-hub org invite my-team user@email     # invite a member
+```
+
+Config is stored at `~/.skills-hub/config.json`.
+
+## MCP Server
+
+The MCP server exposes installed skills as prompts in any MCP-compatible AI tool.
+
+### Setup
+
+**Claude Code:**
+
+```bash
+claude mcp add skills-hub -- npx @skills-hub-ai/mcp
+```
+
+**Cursor** (add to `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "skills-hub": { "command": "npx", "args": ["@skills-hub-ai/mcp"] }
+  }
+}
+```
+
+**Any MCP client:** Run `npx @skills-hub-ai/mcp` as a stdio server.
+
+The server scans `~/.claude/skills/` and `~/.cursor/skills/` for installed SKILL.md files and serves each as an MCP prompt. Skills show up as slash commands in your AI tool.
+
+## SKILL.md Format
+
+```markdown
+---
+name: My Skill
+description: What this skill does in one sentence
+version: 1.0.0
+category: review
+platforms:
+  - CLAUDE_CODE
+  - CURSOR
+---
+
+Skill instructions go here...
+```
+
+Fields: `name` (required, 1–100 chars), `description` (required, 10–1,000 chars), `version` (required, semver), `category` (required), `platforms` (`CLAUDE_CODE`, `CURSOR`, `CODEX_CLI`, `OTHER`).
+
 ## Building for Production
 
 ```bash
@@ -170,11 +267,11 @@ pnpm build        # builds all packages and apps via Turborepo
 ```
 
 This produces:
-- `apps/api/dist/` -- compiled Fastify server
-- `apps/web/.next/` -- Next.js build
-- `packages/shared/dist/` -- compiled types and schemas
-- `apps/mcp/dist/` -- compiled MCP server
-- `packages/skill-parser/dist/` -- compiled parser
+- `apps/api/dist/` — compiled Fastify server
+- `apps/web/.next/` — Next.js build
+- `packages/shared/dist/` — compiled types and schemas
+- `apps/mcp/dist/` — compiled MCP server
+- `packages/skill-parser/dist/` — compiled parser
 
 Both apps have multi-stage Dockerfiles (`apps/api/Dockerfile`, `apps/web/Dockerfile`) based on Node.js 22 Alpine. Build context is the repository root:
 
@@ -213,84 +310,6 @@ terraform init && terraform apply -var-file=secrets.tfvars
 ```
 
 CI/CD: Pushes to `main` trigger GitHub Actions to build, test, push Docker images to Amazon ECR, and deploy. Set `AWS_DEPLOY_ROLE_ARN` as a GitHub Actions secret.
-
-## Key Features
-
-- **Skill Discovery** -- Browse and search by category, platform, quality score, tags, and author
-- **Quality Scoring** -- Automated 0--100 score based on schema completeness and instruction quality
-- **One-Command Install** -- `npx skills-hub install <slug>` with automatic dependency resolution for composition skills
-- **Version Management** -- Semver versioning, changelogs, and version diffs
-- **Ratings and Reviews** -- Star ratings, text reviews, helpfulness voting, creator responses
-- **Skill Compositions** -- Chain multiple skills into pipelines with sequential or parallel execution
-- **Organizations** -- Team workspaces with GitHub org sync, roles (admin/publisher/member), templates, and analytics
-- **Media Showcase** -- Screenshots and YouTube embeds with URL allowlisting
-- **Sandbox Testing** -- Run skills in sandboxed environments with test cases
-- **Agent Deployment** -- Deploy skills as persistent agents with manual, scheduled, webhook, or channel triggers
-- **AI-Powered Skill Generation** -- Describe what you want on the publish page and generate name, description, category, tags, and instructions via OpenRouter (supports Claude Sonnet 4, Claude Haiku 4, GPT-4o, Gemini 2.0 Flash). Per-field "Suggest" buttons for targeted regeneration. Client-side only -- your API key stays in the browser
-- **MCP Server** -- Serve installed skills as prompts in any MCP-compatible AI tool (Claude Code, Cursor, Windsurf, Copilot, etc.)
-- **Visibility Controls** -- Public, Private, Unlisted, and Organization-scoped skills
-- **API Key Auth** -- Named API keys with optional expiry for CLI and programmatic access
-
-## CLI Usage
-
-```bash
-npx skills-hub login                             # GitHub OAuth
-npx skills-hub search "code review"              # search skills
-npx skills-hub install review-code               # install a skill
-npx skills-hub install review-code --target cursor  # install for Cursor
-npx skills-hub list                              # list installed skills
-npx skills-hub update                            # update all installed
-npx skills-hub publish ./SKILL.md                # publish a skill
-npx skills-hub info review-code                  # skill details
-npx skills-hub diff review-code 1.0.0 2.0.0     # version diff
-npx skills-hub categories                        # browse categories
-npx skills-hub org list                          # list organizations
-```
-
-Config is stored at `~/.skills-hub/config.json`.
-
-## MCP Server
-
-The MCP server exposes installed skills as prompts in any MCP-compatible AI tool -- not just Claude Code and Cursor.
-
-### Setup
-
-**Claude Code:**
-
-```bash
-claude mcp add skills-hub -- npx @skills-hub-ai/mcp
-```
-
-**Cursor** (add to `.cursor/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "skills-hub": { "command": "npx", "args": ["@skills-hub-ai/mcp"] }
-  }
-}
-```
-
-**Any MCP client:** Run `npx @skills-hub-ai/mcp` as a stdio server.
-
-The server scans `~/.claude/skills/` and `~/.cursor/skills/` for installed SKILL.md files and serves each as an MCP prompt. Skills show up as slash commands in your AI tool.
-
-## SKILL.md Format
-
-```markdown
----
-name: My Skill
-description: What this skill does in one sentence
-version: 1.0.0
-category: review
-platforms:
-  - CLAUDE_CODE
----
-
-Skill instructions go here...
-```
-
-Fields: `name` (required, 1--100 chars), `description` (required, 10--1,000 chars), `version` (required, semver), `category` (required), `platforms` (`CLAUDE_CODE`, `CURSOR`, `CODEX_CLI`, `OTHER`).
 
 ## Contributing
 
