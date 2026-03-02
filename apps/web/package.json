@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@sentry/nextjs": "^10.40.0",
-    "@skills-hub/shared": "workspace:*",
-    "@skills-hub/skill-parser": "workspace:*",
+    "@skills-hub-ai/shared": "workspace:*",
+    "@skills-hub-ai/skill-parser": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
     "fflate": "^0.8.2",
     "next": "^15.0.0",

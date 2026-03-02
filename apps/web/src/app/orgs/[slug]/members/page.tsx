@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orgs as orgsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
-import { ORG_ROLES } from "@skills-hub/shared";
+import { ORG_ROLES } from "@skills-hub-ai/shared";
 import Image from "next/image";
 
 export default function OrgMembersPage() {

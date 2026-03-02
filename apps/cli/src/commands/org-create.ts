@@ -3,7 +3,7 @@ import chalk from "chalk";
 import ora from "ora";
 import { ensureAuth } from "../lib/config.js";
 import { apiRequest } from "../lib/api-client.js";
-import type { OrgDetail } from "@skills-hub/shared";
+import type { OrgDetail } from "@skills-hub-ai/shared";
 
 export const orgCreateCommand = new Command("create")
   .description("Create a new organization")

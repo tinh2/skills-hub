@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { CATEGORIES } from "@skills-hub/shared";
+import { CATEGORIES } from "@skills-hub-ai/shared";
 import { categories as categoriesApi } from "@/lib/api";
 
 export default function CategoriesPage() {

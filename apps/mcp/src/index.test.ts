@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { ParsedSkill } from "@skills-hub/skill-parser";
+import type { ParsedSkill } from "@skills-hub-ai/skill-parser";
 
 vi.mock("./discover.js", () => ({
   discoverSkills: vi.fn(),

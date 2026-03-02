@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { versions as versionsApi } from "@/lib/api";
-import type { SkillDetail, VersionDiff } from "@skills-hub/shared";
+import type { SkillDetail, VersionDiff } from "@skills-hub-ai/shared";
 import { buildSkillMd, triggerFileDownload } from "@/lib/download";
 
 export function VersionHistory({ skill }: { skill: SkillDetail }) {

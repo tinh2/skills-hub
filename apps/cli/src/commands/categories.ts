@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { CATEGORIES } from "@skills-hub/shared";
+import { CATEGORIES } from "@skills-hub-ai/shared";
 
 export const categoriesCommand = new Command("categories")
   .description("List all skill categories")

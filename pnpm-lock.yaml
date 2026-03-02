@@ -35,10 +35,10 @@ importers:
       '@sentry/node':
         specifier: ^10.40.0
         version: 10.40.0
-      '@skills-hub/shared':
+      '@skills-hub-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@skills-hub/skill-parser':
+      '@skills-hub-ai/skill-parser':
         specifier: workspace:*
         version: link:../../packages/skill-parser
       bullmq:
@@ -72,10 +72,10 @@ importers:
 
   apps/cli:
     dependencies:
-      '@skills-hub/shared':
+      '@skills-hub-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@skills-hub/skill-parser':
+      '@skills-hub-ai/skill-parser':
         specifier: workspace:*
         version: link:../../packages/skill-parser
       chalk:
@@ -109,7 +109,7 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.27.1
         version: 1.27.1(zod@3.25.76)
-      '@skills-hub/skill-parser':
+      '@skills-hub-ai/skill-parser':
         specifier: workspace:*
         version: link:../../packages/skill-parser
     devDependencies:
@@ -131,10 +131,10 @@ importers:
       '@sentry/nextjs':
         specifier: ^10.40.0
         version: 10.40.0(@opentelemetry/context-async-hooks@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(webpack@5.105.3)
-      '@skills-hub/shared':
+      '@skills-hub-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@skills-hub/skill-parser':
+      '@skills-hub-ai/skill-parser':
         specifier: workspace:*
         version: link:../../packages/skill-parser
       '@tanstack/react-query':
@@ -226,7 +226,7 @@ importers:
 
   packages/skill-parser:
     dependencies:
-      '@skills-hub/shared':
+      '@skills-hub-ai/shared':
         specifier: workspace:*
         version: link:../shared
       yaml:

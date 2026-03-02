@@ -5,9 +5,9 @@ import chalk from "chalk";
 import ora from "ora";
 import { apiRequest } from "../lib/api-client.js";
 import { detectInstallTarget } from "../lib/install-path.js";
-import { compareSemver } from "@skills-hub/skill-parser";
+import { compareSemver } from "@skills-hub-ai/skill-parser";
 import { installSkill } from "./install.js";
-import type { SkillDetail } from "@skills-hub/shared";
+import type { SkillDetail } from "@skills-hub-ai/shared";
 
 export const updateCommand = new Command("update")
   .description("Update installed skills to latest versions")

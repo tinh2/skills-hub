@@ -1,6 +1,9 @@
 {
-  "name": "@skills-hub/shared",
-  "version": "0.1.0",
+  "name": "@skills-hub-ai/shared",
+  "version": "0.1.2",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

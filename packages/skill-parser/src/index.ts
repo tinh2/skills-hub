@@ -1,6 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
-import { CATEGORY_SLUGS, PLATFORMS } from "@skills-hub/shared";
+import { CATEGORY_SLUGS, PLATFORMS } from "@skills-hub-ai/shared";
 
 const frontmatterSchema = z.object({
   name: z.string().min(1),

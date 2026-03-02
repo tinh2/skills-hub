@@ -2,7 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { ensureAuth, getConfig } from "../lib/config.js";
 import { apiRequest } from "../lib/api-client.js";
-import type { PrivateUser } from "@skills-hub/shared";
+import type { PrivateUser } from "@skills-hub-ai/shared";
 
 export const whoamiCommand = new Command("whoami")
   .description("Show current authenticated user")

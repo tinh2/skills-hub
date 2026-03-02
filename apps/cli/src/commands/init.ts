@@ -14,7 +14,7 @@ export const initCommand = new Command("init")
   .action(async () => {
     console.log("");
     console.log(chalk.bold("  Welcome to skills-hub.ai"));
-    console.log(chalk.dim("  The marketplace for AI coding skills"));
+    console.log(chalk.dim("  The open platform for AI coding skills"));
     console.log("");
 
     // 1. Detect platform

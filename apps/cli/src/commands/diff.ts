@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { apiRequest } from "../lib/api-client.js";
-import type { VersionDiff } from "@skills-hub/shared";
+import type { VersionDiff } from "@skills-hub-ai/shared";
 
 export const diffCommand = new Command("diff")
   .description("Show diff between two versions of a skill")

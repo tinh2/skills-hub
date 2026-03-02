@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { PublicUser } from "@skills-hub/shared";
+import type { PublicUser } from "@skills-hub-ai/shared";
 import { setAccessToken } from "./api";
 
 interface AuthState {

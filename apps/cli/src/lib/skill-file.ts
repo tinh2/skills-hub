@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import chalk from "chalk";
-import { parseSkillMd, type ParsedSkill } from "@skills-hub/skill-parser";
+import { parseSkillMd, type ParsedSkill } from "@skills-hub-ai/skill-parser";
 
 export function readAndParseSkillMd(path: string): ParsedSkill {
   const resolved = resolve(path);

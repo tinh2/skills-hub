@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import type { SkillDetail } from "@skills-hub/shared";
-import { PLATFORM_LABELS, VISIBILITY_LABELS } from "@skills-hub/shared";
-import type { Platform, Visibility } from "@skills-hub/shared";
+import type { SkillDetail } from "@skills-hub-ai/shared";
+import { PLATFORM_LABELS, VISIBILITY_LABELS } from "@skills-hub-ai/shared";
+import type { Platform, Visibility } from "@skills-hub-ai/shared";
 import { VersionHistory } from "./version-history";
 
 export function SkillSidebar({ skill }: { skill: SkillDetail }) {

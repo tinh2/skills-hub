@@ -1,4 +1,4 @@
-import type { SkillSummary, SkillDetail } from "@skills-hub/shared";
+import type { SkillSummary, SkillDetail } from "@skills-hub-ai/shared";
 
 export const mockSkillSummary: SkillSummary = {
   id: "skill-1",

@@ -4,7 +4,7 @@ import ora from "ora";
 import { ensureAuth } from "../lib/config.js";
 import { apiRequest } from "../lib/api-client.js";
 import { readAndParseSkillMd } from "../lib/skill-file.js";
-import type { VersionSummary } from "@skills-hub/shared";
+import type { VersionSummary } from "@skills-hub-ai/shared";
 
 export const versionCreateCommand = new Command("version")
   .description("Create a new version of a published skill")

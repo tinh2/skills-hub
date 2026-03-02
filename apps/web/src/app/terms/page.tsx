@@ -21,8 +21,9 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold">2. Description of Service</h2>
         <p className="leading-relaxed text-[var(--muted)]">
-          skills-hub.ai is a marketplace for discovering, sharing, and installing Claude Code skills.
-          We provide tools for publishing, versioning, and distributing skill packages.
+          skills-hub.ai is a platform for discovering, publishing, testing, and deploying AI coding skills.
+          We provide tools for publishing, versioning, testing, and distributing skill packages across
+          Claude Code, Cursor, Codex CLI, and other MCP-compatible tools.
         </p>
       </section>
 

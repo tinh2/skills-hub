@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { apiRequest } from "../lib/api-client.js";
-import type { OrgDetail, OrgMember, PaginatedResponse } from "@skills-hub/shared";
+import type { OrgDetail, OrgMember, PaginatedResponse } from "@skills-hub-ai/shared";
 
 export const orgInfoCommand = new Command("info")
   .description("Show organization details")

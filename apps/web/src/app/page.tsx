@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CATEGORIES } from "@skills-hub/shared";
+import { CATEGORIES } from "@skills-hub-ai/shared";
 import { TerminalDemo } from "@/components/terminal-demo";
 
 const API_BASE = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";

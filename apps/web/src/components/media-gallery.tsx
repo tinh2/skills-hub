@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { media as mediaApi } from "@/lib/api";
-import type { MediaItem } from "@skills-hub/shared";
+import type { MediaItem } from "@skills-hub-ai/shared";
 
 export function MediaGallery({
   mediaItems,

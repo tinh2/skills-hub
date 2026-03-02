@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { likes } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
-import type { SkillSummary } from "@skills-hub/shared";
+import type { SkillSummary } from "@skills-hub-ai/shared";
 
 export function SkillCard({
   skill,

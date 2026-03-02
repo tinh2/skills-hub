@@ -1,6 +1,7 @@
 {
-  "name": "@skills-hub/skill-parser",
+  "name": "@skills-hub-ai/skill-parser",
   "version": "0.1.0",
+  "files": ["dist"],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +22,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@skills-hub/shared": "workspace:*",
+    "@skills-hub-ai/shared": "workspace:*",
     "yaml": "^2.6.0",
     "zod": "^3.23.0"
   },

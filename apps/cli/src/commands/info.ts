@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { apiRequest } from "../lib/api-client.js";
-import type { SkillDetail } from "@skills-hub/shared";
+import type { SkillDetail } from "@skills-hub-ai/shared";
 
 export const infoCommand = new Command("info")
   .description("Show detailed information about a skill")

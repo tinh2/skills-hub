@@ -6,7 +6,7 @@ import chalk from "chalk";
 import ora from "ora";
 import { apiRequest } from "../lib/api-client.js";
 import { detectInstallTarget } from "../lib/install-path.js";
-import type { SkillDetail } from "@skills-hub/shared";
+import type { SkillDetail } from "@skills-hub-ai/shared";
 
 /** Escape a string for safe inclusion in YAML frontmatter values */
 function yamlEscape(value: string): string {

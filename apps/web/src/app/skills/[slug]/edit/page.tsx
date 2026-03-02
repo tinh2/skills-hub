@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { skills as skillsApi, versions } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
-import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
-import type { Platform } from "@skills-hub/shared";
+import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub-ai/shared";
+import type { Platform } from "@skills-hub-ai/shared";
 
 export default function EditSkillPage() {
   const { slug } = useParams<{ slug: string }>();

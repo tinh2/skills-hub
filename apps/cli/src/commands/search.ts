@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { apiRequest } from "../lib/api-client.js";
-import type { PaginatedResponse, SkillSummary } from "@skills-hub/shared";
+import type { PaginatedResponse, SkillSummary } from "@skills-hub-ai/shared";
 
 export const searchCommand = new Command("search")
   .description("Search for skills")

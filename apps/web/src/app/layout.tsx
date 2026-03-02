@@ -5,15 +5,15 @@ import { Footer } from "@/components/footer";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "skills-hub.ai — Claude Code Skill Marketplace",
+  title: "skills-hub.ai — AI Coding Skills Platform",
   description:
-    "Discover, share, and install Claude Code skills. Browse quality-scored skills from the community.",
+    "Discover, publish, test, and deploy reusable AI coding skills for Claude Code, Cursor, Codex CLI, and any MCP-compatible tool.",
   icons: {
     icon: "/favicon.svg",
   },
   openGraph: {
     title: "skills-hub.ai",
-    description: "The marketplace for Claude Code skills",
+    description: "The open platform for AI coding skills",
     type: "website",
     siteName: "skills-hub.ai",
   },

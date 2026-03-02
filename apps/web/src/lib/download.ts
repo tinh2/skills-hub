@@ -1,4 +1,4 @@
-import type { SkillDetail } from "@skills-hub/shared";
+import type { SkillDetail } from "@skills-hub-ai/shared";
 
 function yamlEscape(value: string): string {
   if (/[:\-#{}\[\]&*!|>'"%@`]/.test(value) || value.includes("\n")) {

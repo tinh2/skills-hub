@@ -2,7 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { ensureAuth } from "../lib/config.js";
 import { apiRequest } from "../lib/api-client.js";
-import type { UserOrgMembership } from "@skills-hub/shared";
+import type { UserOrgMembership } from "@skills-hub-ai/shared";
 
 export const orgListCommand = new Command("list")
   .alias("ls")

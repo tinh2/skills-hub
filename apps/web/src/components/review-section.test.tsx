@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderWithProviders, screen } from "@/test/render";
 import { ReviewSection } from "./review-section";
-import type { ReviewSummary } from "@skills-hub/shared";
+import type { ReviewSummary } from "@skills-hub-ai/shared";
 
 vi.mock("@/lib/api", () => ({
   reviews: { create: vi.fn() },

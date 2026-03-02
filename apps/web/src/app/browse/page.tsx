@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { skills as skillsApi, categories as categoriesApi, search as searchApi } from "@/lib/api";
 import { SkillCard } from "@/components/skill-card";
-import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub/shared";
+import { CATEGORIES, PLATFORMS, PLATFORM_LABELS } from "@skills-hub-ai/shared";
 import { useState, useCallback, useEffect, useRef, useId, Suspense } from "react";
 import Link from "next/link";
 

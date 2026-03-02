@@ -7,7 +7,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
-import type { SkillSummary, VersionSummary } from "@skills-hub/shared";
+import type { SkillSummary, VersionSummary } from "@skills-hub-ai/shared";
 
 function StarRating({ rating }: { rating: number | null }) {
   if (rating === null) return <span className="text-[var(--muted)]">No ratings</span>;

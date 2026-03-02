@@ -4,7 +4,7 @@ import ora from "ora";
 import { ensureAuth } from "../lib/config.js";
 import { apiRequest } from "../lib/api-client.js";
 import { readAndParseSkillMd } from "../lib/skill-file.js";
-import type { SkillDetail, Visibility } from "@skills-hub/shared";
+import type { SkillDetail, Visibility } from "@skills-hub-ai/shared";
 
 export const publishCommand = new Command("publish")
   .description("Publish a skill from a SKILL.md file")

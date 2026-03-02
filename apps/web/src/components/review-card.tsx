@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reviews as reviewsApi } from "@/lib/api";
-import type { ReviewSummary } from "@skills-hub/shared";
+import type { ReviewSummary } from "@skills-hub-ai/shared";
 
 export function ReviewCard({
   review,

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { parseSkillMd, type ParsedSkill } from "@skills-hub/skill-parser";
+import { parseSkillMd, type ParsedSkill } from "@skills-hub-ai/skill-parser";
 
 const CACHE_TTL_MS = 30_000;
 

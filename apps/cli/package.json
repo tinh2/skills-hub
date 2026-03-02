@@ -1,6 +1,6 @@
 {
   "name": "@skills-hub-ai/cli",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "CLI for skills-hub.ai — discover, install, and publish AI coding skills",
   "license": "MIT",
   "keywords": [
@@ -33,8 +33,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@skills-hub/shared": "workspace:*",
-    "@skills-hub/skill-parser": "workspace:*",
+    "@skills-hub-ai/shared": "workspace:*",
+    "@skills-hub-ai/skill-parser": "workspace:*",
     "chalk": "^5.0.0",
     "commander": "^12.0.0",
     "open": "^10.0.0",

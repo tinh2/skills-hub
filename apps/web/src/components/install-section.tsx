@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { installs } from "@/lib/api";
-import type { SkillDetail } from "@skills-hub/shared";
+import type { SkillDetail } from "@skills-hub-ai/shared";
 import { buildSkillMd, triggerFileDownload, triggerBlobDownload } from "@/lib/download";
 import { skills as skillsApi, versions as versionsApi } from "@/lib/api";
 import { zipSync, strToU8 } from "fflate";
