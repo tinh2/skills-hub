@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES } from "@skills-hub/shared";
+import { TerminalDemo } from "@/components/terminal-demo";
 
 const API_BASE = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -89,12 +90,12 @@ export default async function HomePage({
       {/* Hero */}
       <section className="py-16 text-center">
         <h1 className="text-5xl font-bold tracking-tight">
-          The marketplace for{" "}
-          <span className="text-[var(--primary)]">Claude Code skills</span>
+          The open platform for{" "}
+          <span className="text-[var(--primary)]">AI coding skills</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--muted)]">
-          Discover, share, and install quality-scored skills for Claude Code,
-          Cursor, and Codex CLI. Built by the community, for the community.
+          Discover, publish, test, and deploy reusable skills for Claude Code,
+          Cursor, Codex CLI, and any MCP-compatible tool.
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
           <Link
@@ -116,6 +117,11 @@ export default async function HomePage({
             npx @skills-hub-ai/cli install &lt;skill-name&gt;
           </code>
         </p>
+      </section>
+
+      {/* Terminal Demo */}
+      <section className="py-8">
+        <TerminalDemo />
       </section>
 
       {/* Trending Skills */}
