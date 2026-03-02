@@ -62,6 +62,11 @@ textarea {
   min-height: 44px;
 }
 
+/* Give native select chevron breathing room */
+select {
+  padding-right: 2rem;
+}
+
 /* Focus indicators for a11y */
 a:focus-visible,
 button:focus-visible,
