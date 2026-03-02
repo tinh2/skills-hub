@@ -24,9 +24,9 @@ export default function GettingStartedPage() {
       <h1 className="mb-4 text-3xl font-bold">Getting Started</h1>
 
       <p className="mb-8 leading-relaxed text-[var(--muted)]">
-        skills-hub.ai is a marketplace for AI coding skills — reusable instruction sets you
-        can install into Claude Code, Cursor, or any MCP-compatible AI tool. Get up and running
-        in under a minute.
+        skills-hub.ai is an open platform for AI coding skills — reusable instruction sets you
+        can install into Claude Code, Cursor, Codex CLI, or any MCP-compatible AI tool. Get up
+        and running in under a minute.
       </p>
 
       <section className="mb-10">
@@ -188,6 +188,7 @@ npx skills-hub publish        # publishes ./SKILL.md`}</CodeBlock>
         <h2 className="mb-4 text-2xl font-semibold">Next steps</h2>
         <ul className="space-y-2">
           <li><Link href="/browse" className="text-[var(--primary)] hover:underline">Browse the skill catalog</Link></li>
+          <li><Link href="/docs/integrations" className="text-[var(--primary)] hover:underline">Set up Windsurf, Copilot, Cline, and more</Link></li>
           <li><Link href="/docs/cli" className="text-[var(--primary)] hover:underline">CLI reference</Link></li>
           <li><Link href="/publish" className="text-[var(--primary)] hover:underline">Publish your first skill</Link></li>
           <li><a href="https://github.com/tinh2/skills-hub" target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">View the source on GitHub</a></li>

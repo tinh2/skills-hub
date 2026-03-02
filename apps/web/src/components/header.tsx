@@ -42,6 +42,12 @@ export function Header() {
             >
               Categories
             </Link>
+            <Link
+              href="/docs/getting-started"
+              className="inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+            >
+              Docs
+            </Link>
           </nav>
         </div>
 
@@ -145,6 +151,9 @@ export function Header() {
             </Link>
             <Link href="/categories" className="flex min-h-[44px] items-center rounded-lg px-3 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]" onClick={() => setMobileOpen(false)}>
               Categories
+            </Link>
+            <Link href="/docs/getting-started" className="flex min-h-[44px] items-center rounded-lg px-3 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]" onClick={() => setMobileOpen(false)}>
+              Docs
             </Link>
             {isAuthenticated ? (
               <>
