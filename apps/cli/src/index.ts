@@ -16,6 +16,7 @@ import { categoriesCommand } from "./commands/categories.js";
 import { diffCommand } from "./commands/diff.js";
 import { unpublishCommand } from "./commands/unpublish.js";
 import { orgCommand } from "./commands/org.js";
+import { initCommand } from "./commands/init.js";
 
 const program = new Command()
   .name("skills-hub")
@@ -37,5 +38,6 @@ program.addCommand(categoriesCommand);
 program.addCommand(diffCommand);
 program.addCommand(unpublishCommand);
 program.addCommand(orgCommand);
+program.addCommand(initCommand);
 
 program.parse();
