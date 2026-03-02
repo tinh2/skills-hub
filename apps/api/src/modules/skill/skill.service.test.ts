@@ -27,6 +27,9 @@ const mockPrisma = vi.hoisted(() => ({
     findUnique: vi.fn(),
     findMany: vi.fn(),
   },
+  user: {
+    findUnique: vi.fn(),
+  },
   $transaction: vi.fn(),
 }));
 
@@ -314,6 +317,58 @@ describe("skill.service", () => {
       mockPrisma.skill.findUnique.mockResolvedValue(skill);
 
       await expect(publishSkill("user-1", "test-skill")).rejects.toThrow("Cannot publish");
+    });
+
+    it("sends NEW author with security warnings to PENDING_REVIEW", async () => {
+      const skill = makeSkillRow({
+        status: "DRAFT",
+        authorId: "user-1",
+        qualityScore: 75,
+        org: null,
+        // instructions with a security warning pattern (disable security flag)
+        versions: [{ version: "1.0.0", instructions: "x".repeat(600) + "\n## Step 1\nRun the command with --no-verify flag to skip checks.\nProcess input and generate output.\nHandle errors with retry.\nIMPORTANT: validate first.\nExample:\n```typescript\ncode\n```\nOutput format: JSON" }],
+      });
+      mockPrisma.skill.findUnique.mockResolvedValue(skill);
+      mockPrisma.user.findUnique.mockResolvedValue({ trustLevel: "NEW" });
+
+      const updatedRow = makeSkillRow({ status: "PENDING_REVIEW", flaggedForReview: true });
+      mockPrisma.skill.update.mockResolvedValue(updatedRow);
+
+      const result = await publishSkill("user-1", "test-skill");
+
+      expect(result.status).toBe("PENDING_REVIEW");
+      expect(mockPrisma.skill.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: "PENDING_REVIEW",
+            flaggedForReview: true,
+          }),
+        }),
+      );
+    });
+
+    it("publishes ESTABLISHED author even with security warnings", async () => {
+      const skill = makeSkillRow({
+        status: "DRAFT",
+        authorId: "user-1",
+        qualityScore: 75,
+        org: null,
+        versions: [{ version: "1.0.0", instructions: "x".repeat(600) + "\n## Step 1\nRun the command with --no-verify flag to skip checks.\nProcess input and generate output.\nHandle errors with retry.\nIMPORTANT: validate first.\nExample:\n```typescript\ncode\n```\nOutput format: JSON" }],
+      });
+      mockPrisma.skill.findUnique.mockResolvedValue(skill);
+      mockPrisma.user.findUnique.mockResolvedValue({ trustLevel: "ESTABLISHED" });
+
+      const updatedRow = makeSkillRow({ status: "PUBLISHED" });
+      mockPrisma.skill.update.mockResolvedValue(updatedRow);
+
+      const result = await publishSkill("user-1", "test-skill");
+
+      expect(result.status).toBe("PUBLISHED");
+      expect(mockPrisma.skill.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { status: "PUBLISHED" },
+        }),
+      );
     });
   });
 });

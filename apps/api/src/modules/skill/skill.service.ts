@@ -412,11 +412,38 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
       ...report.checks.schema,
       ...report.checks.content,
       ...report.checks.structure,
+      ...report.checks.security,
     ].filter((c) => !c.passed && c.severity === "error");
     const reasons = failedChecks.map((c) => c.message).join("; ");
     throw new ValidationError(
       `Cannot publish (score: ${report.qualityScore}): ${reasons || `Quality score must be at least ${QUALITY_SCORE.THRESHOLDS.MIN_PUBLISH_SCORE}`}`,
     );
+  }
+
+  // Check for security warnings (non-blocking but may trigger review)
+  const securityWarnings = report.checks.security.filter((c) => !c.passed && c.severity === "warning");
+
+  // Determine if skill needs moderation review
+  const author = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { trustLevel: true },
+  });
+  const trustLevel = author?.trustLevel ?? "NEW";
+
+  // NEW authors with security warnings go to review queue
+  const needsReview = trustLevel === "NEW" && securityWarnings.length > 0;
+
+  if (needsReview) {
+    const updated = await prisma.skill.update({
+      where: { slug },
+      data: {
+        status: "PENDING_REVIEW",
+        flaggedForReview: true,
+        reviewReason: `Security warnings: ${securityWarnings.map((c) => c.label).join(", ")}`,
+      },
+      select: skillSummarySelect,
+    });
+    return formatSkillSummary(updated);
   }
 
   const updated = await prisma.skill.update({

@@ -20,6 +20,8 @@ import { orgRoutes } from "./modules/org/org.routes.js";
 import { inviteRoutes } from "./modules/org/invite.routes.js";
 import { sandboxRoutes } from "./modules/sandbox/sandbox.routes.js";
 import { agentRoutes } from "./modules/agent/agent.routes.js";
+import { reportRoutes } from "./modules/report/report.routes.js";
+import { moderationRoutes } from "./modules/moderation/moderation.routes.js";
 
 export async function buildApp(opts?: { logger?: boolean }) {
   const env = getEnv();
@@ -98,6 +100,8 @@ export async function buildApp(opts?: { logger?: boolean }) {
       await api.register(inviteRoutes, { prefix: "/invites" });
       await api.register(sandboxRoutes, { prefix: "/skills" });
       await api.register(agentRoutes, { prefix: "/agents" });
+      await api.register(reportRoutes);
+      await api.register(moderationRoutes, { prefix: "/admin" });
     },
     { prefix: "/api/v1" },
   );
