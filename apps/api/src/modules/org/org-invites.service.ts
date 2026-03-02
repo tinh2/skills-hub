@@ -6,9 +6,9 @@ import {
   ValidationError,
 } from "../../common/errors.js";
 import { requireOrgRole } from "./org.auth.js";
-import { ORG_LIMITS } from "@skills-hub/shared";
-import type { InviteMemberInput } from "@skills-hub/shared";
-import type { OrgInviteData } from "@skills-hub/shared";
+import { ORG_LIMITS } from "@skills-hub-ai/shared";
+import type { InviteMemberInput } from "@skills-hub-ai/shared";
+import type { OrgInviteData } from "@skills-hub-ai/shared";
 
 export async function inviteMember(
   userId: string,

@@ -2,7 +2,7 @@ import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../common/errors.js";
 import { requireOrgRole } from "../org/org.auth.js";
 import { validateMediaUrl } from "./media.validation.js";
-import type { AddMediaInput, ReorderMediaInput } from "@skills-hub/shared";
+import type { AddMediaInput, ReorderMediaInput } from "@skills-hub-ai/shared";
 
 const MAX_MEDIA_PER_SKILL = 10;
 

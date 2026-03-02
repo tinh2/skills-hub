@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { NotFoundError } from "../../common/errors.js";
-import type { RecordInstallInput } from "@skills-hub/shared";
+import type { RecordInstallInput } from "@skills-hub-ai/shared";
 
 // Simple in-memory dedup for anonymous installs (IP + skill slug hash)
 const anonDedup = new Map<string, number>();

@@ -8,11 +8,11 @@ import { requireOrgRole } from "./org.auth.js";
 import type {
   CreateOrgInput,
   UpdateOrgInput,
-} from "@skills-hub/shared";
+} from "@skills-hub-ai/shared";
 import type {
   OrgDetail,
   UserOrgMembership,
-} from "@skills-hub/shared";
+} from "@skills-hub-ai/shared";
 
 export async function createOrg(userId: string, input: CreateOrgInput): Promise<OrgDetail> {
   const existing = await prisma.organization.findUnique({ where: { slug: input.slug } });

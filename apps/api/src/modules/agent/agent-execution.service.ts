@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ConflictError } from "../../common/errors.js";
-import { AGENT_LIMITS } from "@skills-hub/shared";
-import type { ExecuteAgentInput, AgentExecutionSummary } from "@skills-hub/shared";
+import { AGENT_LIMITS } from "@skills-hub-ai/shared";
+import type { ExecuteAgentInput, AgentExecutionSummary } from "@skills-hub-ai/shared";
 import { getOpenFangClient } from "./openfang.client.js";
 import { isQueueAvailable, getQueue, AGENT_QUEUE } from "../../common/queue.js";
 import type { AgentJobData } from "./agent.worker.js";

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { updateProfileSchema, createApiKeySchema } from "@skills-hub/shared";
+import { updateProfileSchema, createApiKeySchema } from "@skills-hub-ai/shared";
 import { requireAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { writeRateLimit } from "../../config/rate-limits.js";

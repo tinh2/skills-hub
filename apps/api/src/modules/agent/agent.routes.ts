@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createAgentSchema, updateAgentSchema, agentQuerySchema, executeAgentSchema } from "@skills-hub/shared";
+import { createAgentSchema, updateAgentSchema, agentQuerySchema, executeAgentSchema } from "@skills-hub-ai/shared";
 import { requireAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { agentRateLimit } from "../../config/rate-limits.js";

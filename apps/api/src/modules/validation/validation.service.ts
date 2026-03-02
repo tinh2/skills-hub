@@ -1,6 +1,6 @@
-import { QUALITY_SCORE, CATEGORY_SLUGS } from "@skills-hub/shared";
-import type { ValidationCheck, ValidationReport } from "@skills-hub/shared";
-import { validateSemver } from "@skills-hub/skill-parser";
+import { QUALITY_SCORE, CATEGORY_SLUGS } from "@skills-hub-ai/shared";
+import type { ValidationCheck, ValidationReport } from "@skills-hub-ai/shared";
+import { validateSemver } from "@skills-hub-ai/skill-parser";
 
 interface ScoreInput {
   name: string;

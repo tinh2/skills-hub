@@ -4,11 +4,11 @@ import { uniqueSlug } from "../../common/slug.js";
 import { NotFoundError, ConflictError, ForbiddenError, ValidationError } from "../../common/errors.js";
 import { computeQualityScore, validateSkill } from "../validation/validation.service.js";
 import { requireOrgRole, isOrgMember } from "../org/org.auth.js";
-import { QUALITY_SCORE } from "@skills-hub/shared";
+import { QUALITY_SCORE } from "@skills-hub-ai/shared";
 import { batchHasUserLiked, hasUserLiked } from "../like/like.service.js";
 import { refreshTrustLevel } from "../moderation/trust.service.js";
 import { skillSummarySelect, formatSkillSummary } from "./skill-summary.js";
-import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail, CompositionInput } from "@skills-hub/shared";
+import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail, CompositionInput } from "@skills-hub-ai/shared";
 
 export async function createSkill(authorId: string, input: CreateSkillInput): Promise<SkillSummary> {
   const category = await prisma.category.findUnique({ where: { slug: input.categorySlug } });

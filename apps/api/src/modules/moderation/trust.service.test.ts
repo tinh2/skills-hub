@@ -19,7 +19,7 @@ vi.mock("../../common/db.js", () => ({
 }));
 
 import { computeTrustLevel, refreshTrustLevel } from "./trust.service.js";
-import { TRUST_THRESHOLDS } from "@skills-hub/shared";
+import { TRUST_THRESHOLDS } from "@skills-hub-ai/shared";
 
 describe("trust.service", () => {
   beforeEach(() => {

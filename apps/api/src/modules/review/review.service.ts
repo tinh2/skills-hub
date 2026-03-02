@@ -1,6 +1,6 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ConflictError, ForbiddenError } from "../../common/errors.js";
-import type { CreateReviewInput, UpdateReviewInput, ReviewSummary, ReviewStats } from "@skills-hub/shared";
+import type { CreateReviewInput, UpdateReviewInput, ReviewSummary, ReviewStats } from "@skills-hub-ai/shared";
 
 export async function listReviews(
   slug: string,

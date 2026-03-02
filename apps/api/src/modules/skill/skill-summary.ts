@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import type { SkillSummary } from "@skills-hub/shared";
+import type { SkillSummary } from "@skills-hub-ai/shared";
 
 export const skillSummarySelect = {
   id: true,

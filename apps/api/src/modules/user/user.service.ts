@@ -1,7 +1,7 @@
 import { prisma } from "../../common/db.js";
 import { hashApiKey } from "../../common/auth.js";
 import { NotFoundError, ValidationError } from "../../common/errors.js";
-import type { PublicUser, PrivateUser, ApiKeyResponse, ApiKeyCreatedResponse } from "@skills-hub/shared";
+import type { PublicUser, PrivateUser, ApiKeyResponse, ApiKeyCreatedResponse } from "@skills-hub-ai/shared";
 
 const MAX_API_KEYS_PER_USER = 10;
 

@@ -4,7 +4,7 @@ import { fetchWithTimeout } from "../../common/fetch.js";
 import { decryptToken } from "../../common/crypto.js";
 import { getEnv } from "../../config/env.js";
 import { requireOrgRole } from "./org.auth.js";
-import type { SyncGithubOrgInput } from "@skills-hub/shared";
+import type { SyncGithubOrgInput } from "@skills-hub-ai/shared";
 
 interface GithubOrgMember {
   id: number;

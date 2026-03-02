@@ -4,8 +4,8 @@ import {
   ValidationError,
 } from "../../common/errors.js";
 import { requireOrgRole } from "./org.auth.js";
-import type { OrgQuery } from "@skills-hub/shared";
-import type { OrgMember } from "@skills-hub/shared";
+import type { OrgQuery } from "@skills-hub-ai/shared";
+import type { OrgMember } from "@skills-hub-ai/shared";
 
 export async function listMembers(
   slug: string,

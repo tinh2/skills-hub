@@ -1,10 +1,10 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ConflictError } from "../../common/errors.js";
 import { computeQualityScore } from "../validation/validation.service.js";
-import { compareSemver } from "@skills-hub/skill-parser";
+import { compareSemver } from "@skills-hub-ai/skill-parser";
 import { isOrgMember } from "../org/org.auth.js";
 import { requireOrgRole } from "../org/org.auth.js";
-import type { VersionSummary, VersionDetail, VersionDiff } from "@skills-hub/shared";
+import type { VersionSummary, VersionDetail, VersionDiff } from "@skills-hub-ai/shared";
 
 /** Enforce visibility rules — private/org skills only visible to authorized users */
 async function checkSkillVisibility(skill: any, requesterId?: string | null): Promise<void> {

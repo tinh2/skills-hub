@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createReportSchema } from "@skills-hub/shared";
+import { createReportSchema } from "@skills-hub-ai/shared";
 import { createReport } from "./report.service.js";
 import { requireAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";

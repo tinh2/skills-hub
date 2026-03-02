@@ -69,7 +69,7 @@ vi.mock("./openfang.client.js", () => ({
   }),
 }));
 
-vi.mock("@skills-hub/skill-parser/openfang", () => ({
+vi.mock("@skills-hub-ai/skill-parser/openfang", () => ({
   translateToHand: vi.fn().mockReturnValue({ hand: {}, instructions: {}, model: {}, limits: {}, metadata: {} }),
   serializeHandToml: vi.fn().mockReturnValue("[hand]\nname = \"test\""),
 }));

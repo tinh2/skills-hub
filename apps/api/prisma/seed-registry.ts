@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { parseSkillMd } from "@skills-hub/skill-parser";
+import { parseSkillMd } from "@skills-hub-ai/skill-parser";
 import { readFileSync, readdirSync, statSync, existsSync } from "fs";
 import { join, resolve } from "path";
 

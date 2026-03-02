@@ -1,6 +1,6 @@
 import { prisma } from "../../common/db.js";
-import { TRUST_THRESHOLDS } from "@skills-hub/shared";
-import type { TrustLevel } from "@skills-hub/shared";
+import { TRUST_THRESHOLDS } from "@skills-hub-ai/shared";
+import type { TrustLevel } from "@skills-hub-ai/shared";
 
 /**
  * Compute the trust level for a user based on:

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createSkillSchema, updateSkillSchema, skillQuerySchema, compositionSchema } from "@skills-hub/shared";
+import { createSkillSchema, updateSkillSchema, skillQuerySchema, compositionSchema } from "@skills-hub-ai/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { writeRateLimit } from "../../config/rate-limits.js";

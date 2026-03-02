@@ -5,9 +5,9 @@ import {
   ConflictError,
   ValidationError,
 } from "../../common/errors.js";
-import { REPORT_LIMITS } from "@skills-hub/shared";
-import type { CreateReportInput } from "@skills-hub/shared";
-import type { SkillReportSummary } from "@skills-hub/shared";
+import { REPORT_LIMITS } from "@skills-hub-ai/shared";
+import type { CreateReportInput } from "@skills-hub-ai/shared";
+import type { SkillReportSummary } from "@skills-hub-ai/shared";
 import { refreshTrustLevel } from "../moderation/trust.service.js";
 
 export async function createReport(

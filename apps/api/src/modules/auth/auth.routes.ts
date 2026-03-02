@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { githubCallbackSchema } from "@skills-hub/shared";
+import { githubCallbackSchema } from "@skills-hub-ai/shared";
 import { exchangeGithubCode, refreshAccessToken, revokeRefreshToken } from "./auth.service.js";
 import { getPublicProfile } from "../user/user.service.js";
 import { getEnv } from "../../config/env.js";

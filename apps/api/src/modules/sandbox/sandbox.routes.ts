@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { runSandboxSchema, createTestCaseSchema, updateTestCaseSchema } from "@skills-hub/shared";
+import { runSandboxSchema, createTestCaseSchema, updateTestCaseSchema } from "@skills-hub-ai/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { sandboxRateLimit } from "../../config/rate-limits.js";

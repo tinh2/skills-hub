@@ -1,6 +1,6 @@
 import type { Job } from "bullmq";
 import { prisma } from "../../common/db.js";
-import { SANDBOX_LIMITS } from "@skills-hub/shared";
+import { SANDBOX_LIMITS } from "@skills-hub-ai/shared";
 import { captureException } from "../../common/sentry.js";
 
 export interface SandboxJobData {

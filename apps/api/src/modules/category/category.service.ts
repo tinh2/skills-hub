@@ -1,7 +1,7 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError } from "../../common/errors.js";
 import { skillSummarySelect, formatSkillSummary } from "../skill/skill-summary.js";
-import type { SkillSummary } from "@skills-hub/shared";
+import type { SkillSummary } from "@skills-hub-ai/shared";
 
 export async function listCategories() {
   return prisma.category.findMany({ orderBy: { sortOrder: "asc" } });

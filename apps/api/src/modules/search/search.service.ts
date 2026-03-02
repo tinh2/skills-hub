@@ -3,7 +3,7 @@ import { prisma } from "../../common/db.js";
 import { isOrgMember } from "../org/org.auth.js";
 import { batchHasUserLiked } from "../like/like.service.js";
 import { skillSummarySelect, formatSkillSummary } from "../skill/skill-summary.js";
-import type { SkillQuery } from "@skills-hub/shared";
+import type { SkillQuery } from "@skills-hub-ai/shared";
 
 /**
  * Full-text search using PostgreSQL tsvector/GIN index.

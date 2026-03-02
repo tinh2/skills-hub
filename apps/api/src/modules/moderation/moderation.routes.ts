@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { resolveReportSchema } from "@skills-hub/shared";
+import { resolveReportSchema } from "@skills-hub-ai/shared";
 import { listPendingReports, resolveReport } from "../report/report.service.js";
 import { listFlaggedSkills, approveSkill, rejectSkill } from "./moderation.service.js";
 import { requireAuth } from "../../common/auth.js";

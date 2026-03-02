@@ -31,7 +31,7 @@ vi.mock("../validation/validation.service.js", () => ({
   computeQualityScore: vi.fn().mockReturnValue(75),
 }));
 
-vi.mock("@skills-hub/skill-parser", () => ({
+vi.mock("@skills-hub-ai/skill-parser", () => ({
   compareSemver: vi.fn((a: string, b: string) => {
     const [aMaj, aMin, aPatch] = a.split(".").map(Number);
     const [bMaj, bMin, bPatch] = b.split(".").map(Number);

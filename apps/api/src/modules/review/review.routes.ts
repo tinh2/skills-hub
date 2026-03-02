@@ -4,7 +4,7 @@ import {
   updateReviewSchema,
   reviewVoteSchema,
   reviewResponseSchema,
-} from "@skills-hub/shared";
+} from "@skills-hub-ai/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { writeRateLimit } from "../../config/rate-limits.js";

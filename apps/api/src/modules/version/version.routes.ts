@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createVersionSchema } from "@skills-hub/shared";
+import { createVersionSchema } from "@skills-hub-ai/shared";
 import { requireAuth, optionalAuth } from "../../common/auth.js";
 import { ValidationError } from "../../common/errors.js";
 import { writeRateLimit } from "../../config/rate-limits.js";

@@ -1,7 +1,7 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError } from "../../common/errors.js";
 import { requireOrgRole } from "./org.auth.js";
-import type { OrgAnalytics } from "@skills-hub/shared";
+import type { OrgAnalytics } from "@skills-hub-ai/shared";
 
 export async function getOrgAnalytics(
   userId: string,

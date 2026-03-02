@@ -2,7 +2,7 @@ import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError } from "../../common/errors.js";
 import { validateSkill } from "../validation/validation.service.js";
 import { isOrgMember } from "../org/org.auth.js";
-import type { ValidationReport } from "@skills-hub/shared";
+import type { ValidationReport } from "@skills-hub-ai/shared";
 
 export async function validateSkillBySlug(
   slug: string,

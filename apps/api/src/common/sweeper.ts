@@ -1,5 +1,5 @@
 import { prisma } from "./db.js";
-import { SANDBOX_LIMITS } from "@skills-hub/shared";
+import { SANDBOX_LIMITS } from "@skills-hub-ai/shared";
 
 // How long before a RUNNING/PENDING record is considered stuck
 const SANDBOX_STALE_MS = SANDBOX_LIMITS.PRO_TIMEOUT_MS * 2; // 4 minutes

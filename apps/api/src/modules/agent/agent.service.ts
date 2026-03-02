@@ -1,17 +1,17 @@
 import { Prisma, TriggerType } from "@prisma/client";
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ForbiddenError, ValidationError, ConflictError } from "../../common/errors.js";
-import { AGENT_LIMITS } from "@skills-hub/shared";
+import { AGENT_LIMITS } from "@skills-hub-ai/shared";
 import type {
   CreateAgentInput,
   UpdateAgentInput,
   AgentQuery,
   AgentSummary,
   AgentDetail,
-} from "@skills-hub/shared";
+} from "@skills-hub-ai/shared";
 import { isOrgMember } from "../org/org.auth.js";
 import { getOpenFangClient } from "./openfang.client.js";
-import { translateToHand, serializeHandToml } from "@skills-hub/skill-parser/openfang";
+import { translateToHand, serializeHandToml } from "@skills-hub-ai/skill-parser/openfang";
 import { formatExecution, executionSelect, type ExecutionRow } from "./agent-execution.service.js";
 
 export { executeAgent, getExecution } from "./agent-execution.service.js";
