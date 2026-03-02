@@ -10,6 +10,7 @@
     "directory": "apps/mcp"
   },
   "homepage": "https://skills-hub.ai",
+  "files": ["dist", "src"],
   "type": "module",
   "bin": {
     "skills-hub-mcp": "dist/index.js"
