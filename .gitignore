@@ -14,4 +14,4 @@ infra/terraform/**/*.tfstate.*
 infra/terraform/**/secrets.tfvars
 
 # Docs (internal planning/analysis)
-docs/
+/docs/

@@ -39,7 +39,10 @@ export default function CliReferencePage() {
 
       <section className="mb-10">
         <h2 className="mb-3 text-2xl font-semibold">Quick Start</h2>
-        <CodeBlock>{`# Authenticate with GitHub
+        <CodeBlock>{`# Guided setup — shows platform, auth status, and popular skills
+skills-hub init
+
+# Authenticate with GitHub
 skills-hub login
 
 # Search for skills
@@ -60,7 +63,8 @@ skills-hub install review-code`}</CodeBlock>
 Options:
   -v, --version <version>   Install a specific version
   -t, --target <target>     Install target: claude-code (default), cursor
-  --team <org-slug>         Install as an organization`}</CodeBlock>
+  --team <org-slug>         Install from an organization
+  --no-deps                 Skip installing composition dependencies`}</CodeBlock>
           <p className="mt-3 text-sm text-[var(--muted)]">
             Skills are saved to <InlineCode>.claude/skills/</InlineCode> for Claude Code
             or <InlineCode>.cursor/skills/</InlineCode> for Cursor.
@@ -243,6 +247,36 @@ Options:
   --github-org <slug>       GitHub org to sync from
   --default-role <role>     Role for new members (default: member)`}</CodeBlock>
         </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-2xl font-semibold">Setup</h2>
+
+        <div className="mb-6">
+          <h3 className="mb-2 text-lg font-semibold">init</h3>
+          <p className="mb-3 text-[var(--muted)]">Guided first-time setup. Shows your platform, auth status, installed skills, popular skills, and MCP setup instructions.</p>
+          <CodeBlock>skills-hub init</CodeBlock>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-2xl font-semibold">MCP Server</h2>
+        <p className="mb-3 text-[var(--muted)]">
+          Serve installed skills as prompts in any MCP-compatible AI tool.
+        </p>
+        <div className="mb-4">
+          <h3 className="mb-2 text-lg font-semibold">Claude Code</h3>
+          <CodeBlock>claude mcp add skills-hub -- npx @skills-hub-ai/mcp</CodeBlock>
+        </div>
+        <div className="mb-4">
+          <h3 className="mb-2 text-lg font-semibold">Cursor</h3>
+          <p className="mb-2 text-sm text-[var(--muted)]">Add to <InlineCode>.cursor/mcp.json</InlineCode>:</p>
+          <CodeBlock>{`{ "mcpServers": { "skills-hub": { "command": "npx", "args": ["@skills-hub-ai/mcp"] } } }`}</CodeBlock>
+        </div>
+        <p className="text-sm text-[var(--muted)]">
+          The server scans <InlineCode>~/.claude/skills/</InlineCode> and <InlineCode>~/.cursor/skills/</InlineCode> for
+          installed SKILL.md files and exposes each as an MCP prompt.
+        </p>
       </section>
 
       <section>
