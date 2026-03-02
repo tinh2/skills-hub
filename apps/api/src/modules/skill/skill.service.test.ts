@@ -86,6 +86,10 @@ vi.mock("../like/like.service.js", () => ({
   batchHasUserLiked: vi.fn().mockResolvedValue(new Set()),
 }));
 
+vi.mock("../moderation/trust.service.js", () => ({
+  refreshTrustLevel: vi.fn().mockResolvedValue("NEW"),
+}));
+
 import { createSkill, listSkills, getSkillBySlug, publishSkill } from "./skill.service.js";
 
 const NOW = new Date("2026-01-15T00:00:00Z");

@@ -28,6 +28,11 @@ vi.mock("../../common/errors.js", () => ({
   },
 }));
 
+const mockRefreshTrustLevel = vi.hoisted(() => vi.fn().mockResolvedValue("ESTABLISHED"));
+vi.mock("./trust.service.js", () => ({
+  refreshTrustLevel: mockRefreshTrustLevel,
+}));
+
 import { listFlaggedSkills, approveSkill, rejectSkill } from "./moderation.service.js";
 
 const NOW = new Date("2026-03-02T12:00:00Z");
@@ -92,10 +97,11 @@ describe("moderation.service", () => {
   });
 
   describe("approveSkill", () => {
-    it("approves a PENDING_REVIEW skill", async () => {
+    it("approves a PENDING_REVIEW skill and refreshes trust level", async () => {
       mockPrisma.skill.findUnique.mockResolvedValue({
         id: "skill-1",
         status: "PENDING_REVIEW",
+        authorId: "author-1",
       });
 
       await approveSkill("admin-1", "test-skill");
@@ -110,6 +116,7 @@ describe("moderation.service", () => {
           moderatedBy: "admin-1",
         },
       });
+      expect(mockRefreshTrustLevel).toHaveBeenCalledWith("author-1");
     });
 
     it("throws NotFoundError for missing skill", async () => {
@@ -122,6 +129,7 @@ describe("moderation.service", () => {
       mockPrisma.skill.findUnique.mockResolvedValue({
         id: "skill-1",
         status: "PUBLISHED",
+        authorId: "author-1",
       });
 
       await expect(approveSkill("admin-1", "test-skill")).rejects.toThrow(
@@ -131,10 +139,11 @@ describe("moderation.service", () => {
   });
 
   describe("rejectSkill", () => {
-    it("rejects a PENDING_REVIEW skill", async () => {
+    it("rejects a PENDING_REVIEW skill and refreshes trust level", async () => {
       mockPrisma.skill.findUnique.mockResolvedValue({
         id: "skill-1",
         status: "PENDING_REVIEW",
+        authorId: "author-1",
       });
 
       await rejectSkill("admin-1", "test-skill", "Contains malicious patterns");
@@ -149,12 +158,14 @@ describe("moderation.service", () => {
           moderatedBy: "admin-1",
         },
       });
+      expect(mockRefreshTrustLevel).toHaveBeenCalledWith("author-1");
     });
 
     it("uses default rejection reason when none provided", async () => {
       mockPrisma.skill.findUnique.mockResolvedValue({
         id: "skill-1",
         status: "PENDING_REVIEW",
+        authorId: "author-1",
       });
 
       await rejectSkill("admin-1", "test-skill");
@@ -173,6 +184,7 @@ describe("moderation.service", () => {
       mockPrisma.skill.findUnique.mockResolvedValue({
         id: "skill-1",
         status: "DRAFT",
+        authorId: "author-1",
       });
 
       await expect(rejectSkill("admin-1", "test-skill")).rejects.toThrow(

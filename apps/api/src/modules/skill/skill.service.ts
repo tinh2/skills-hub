@@ -6,6 +6,7 @@ import { computeQualityScore, validateSkill } from "../validation/validation.ser
 import { requireOrgRole, isOrgMember } from "../org/org.auth.js";
 import { QUALITY_SCORE } from "@skills-hub/shared";
 import { batchHasUserLiked, hasUserLiked } from "../like/like.service.js";
+import { refreshTrustLevel } from "../moderation/trust.service.js";
 import { skillSummarySelect, formatSkillSummary } from "./skill-summary.js";
 import type { CreateSkillInput, UpdateSkillInput, SkillQuery, SkillSummary, SkillDetail, CompositionInput } from "@skills-hub/shared";
 
@@ -451,6 +452,9 @@ export async function publishSkill(userId: string, slug: string): Promise<SkillS
     data: { status: "PUBLISHED" },
     select: skillSummarySelect,
   });
+
+  // Refresh trust level after publishing (affects published count)
+  await refreshTrustLevel(userId).catch(() => {});
 
   return formatSkillSummary(updated);
 }

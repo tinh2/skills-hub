@@ -1,5 +1,6 @@
 import { prisma } from "../../common/db.js";
 import { NotFoundError, ValidationError } from "../../common/errors.js";
+import { refreshTrustLevel } from "./trust.service.js";
 
 interface FlaggedSkillSummary {
   slug: string;
@@ -65,7 +66,7 @@ export async function listFlaggedSkills(
 export async function approveSkill(adminUserId: string, slug: string): Promise<void> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    select: { id: true, status: true },
+    select: { id: true, status: true, authorId: true },
   });
   if (!skill) throw new NotFoundError("Skill");
   if (skill.status !== "PENDING_REVIEW") {
@@ -82,6 +83,9 @@ export async function approveSkill(adminUserId: string, slug: string): Promise<v
       moderatedBy: adminUserId,
     },
   });
+
+  // Refresh author's trust level after publishing
+  await refreshTrustLevel(skill.authorId).catch(() => {});
 }
 
 export async function rejectSkill(
@@ -91,7 +95,7 @@ export async function rejectSkill(
 ): Promise<void> {
   const skill = await prisma.skill.findUnique({
     where: { slug },
-    select: { id: true, status: true },
+    select: { id: true, status: true, authorId: true },
   });
   if (!skill) throw new NotFoundError("Skill");
   if (skill.status !== "PENDING_REVIEW") {
@@ -108,4 +112,7 @@ export async function rejectSkill(
       moderatedBy: adminUserId,
     },
   });
+
+  // Refresh author's trust level after status change
+  await refreshTrustLevel(skill.authorId).catch(() => {});
 }

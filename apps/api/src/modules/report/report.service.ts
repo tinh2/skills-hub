@@ -8,6 +8,7 @@ import {
 import { REPORT_LIMITS } from "@skills-hub/shared";
 import type { CreateReportInput } from "@skills-hub/shared";
 import type { SkillReportSummary } from "@skills-hub/shared";
+import { refreshTrustLevel } from "../moderation/trust.service.js";
 
 export async function createReport(
   userId: string,
@@ -16,9 +17,12 @@ export async function createReport(
 ): Promise<SkillReportSummary> {
   const skill = await prisma.skill.findUnique({
     where: { slug: skillSlug },
-    select: { id: true, name: true, authorId: true },
+    select: { id: true, name: true, authorId: true, status: true },
   });
   if (!skill) throw new NotFoundError("Skill");
+
+  // Only published skills can be reported
+  if (skill.status !== "PUBLISHED") throw new NotFoundError("Skill");
 
   // Can't report your own skill
   if (skill.authorId === userId) {
@@ -108,7 +112,7 @@ export async function resolveReport(
 ): Promise<void> {
   const report = await prisma.skillReport.findUnique({
     where: { id: reportId },
-    select: { id: true, status: true, skillId: true },
+    select: { id: true, status: true, skillId: true, skill: { select: { authorId: true } } },
   });
   if (!report) throw new NotFoundError("Report");
   if (report.status !== "PENDING") throw new ValidationError("Report already resolved");
@@ -154,6 +158,9 @@ export async function resolveReport(
       }
     }
   });
+
+  // Refresh author's trust level after report resolution (affects unresolved report count)
+  await refreshTrustLevel(report.skill.authorId).catch(() => {});
 }
 
 const reportSelect = {

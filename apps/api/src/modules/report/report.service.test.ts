@@ -28,6 +28,11 @@ vi.mock("../../common/db.js", () => ({
   prisma: mockPrisma,
 }));
 
+const mockRefreshTrustLevel = vi.hoisted(() => vi.fn().mockResolvedValue("ESTABLISHED"));
+vi.mock("../moderation/trust.service.js", () => ({
+  refreshTrustLevel: mockRefreshTrustLevel,
+}));
+
 vi.mock("../../common/errors.js", () => ({
   NotFoundError: class NotFoundError extends Error {
     statusCode = 404;
@@ -83,6 +88,7 @@ describe("report.service", () => {
         id: "skill-1",
         name: "Test Skill",
         authorId: "author-1",
+        status: "PUBLISHED",
       });
       mockPrisma.skillReport.findUnique.mockResolvedValue(null);
       mockPrisma.skillReport.count
@@ -111,11 +117,25 @@ describe("report.service", () => {
       ).rejects.toThrow("Skill not found");
     });
 
+    it("throws NotFoundError for non-published skill", async () => {
+      mockPrisma.skill.findUnique.mockResolvedValue({
+        id: "skill-1",
+        name: "Draft Skill",
+        authorId: "author-1",
+        status: "DRAFT",
+      });
+
+      await expect(
+        createReport("user-1", "draft-skill", { reason: "SPAM" }),
+      ).rejects.toThrow("Skill not found");
+    });
+
     it("throws ForbiddenError when reporting own skill", async () => {
       mockPrisma.skill.findUnique.mockResolvedValue({
         id: "skill-1",
         name: "My Skill",
         authorId: "user-1",
+        status: "PUBLISHED",
       });
 
       await expect(
@@ -128,6 +148,7 @@ describe("report.service", () => {
         id: "skill-1",
         name: "Test Skill",
         authorId: "author-1",
+        status: "PUBLISHED",
       });
       mockPrisma.skillReport.findUnique.mockResolvedValue({ id: "existing" });
 
@@ -141,6 +162,7 @@ describe("report.service", () => {
         id: "skill-1",
         name: "Test Skill",
         authorId: "author-1",
+        status: "PUBLISHED",
       });
       mockPrisma.skillReport.findUnique.mockResolvedValue(null);
       mockPrisma.skillReport.count.mockResolvedValueOnce(10); // daily count at max
@@ -155,6 +177,7 @@ describe("report.service", () => {
         id: "skill-1",
         name: "Test Skill",
         authorId: "author-1",
+        status: "PUBLISHED",
       });
       mockPrisma.skillReport.findUnique.mockResolvedValue(null);
       mockPrisma.skillReport.count
@@ -171,6 +194,7 @@ describe("report.service", () => {
         id: "skill-1",
         name: "Test Skill",
         authorId: "author-1",
+        status: "PUBLISHED",
       });
       mockPrisma.skillReport.findUnique.mockResolvedValue(null);
       mockPrisma.skillReport.count
@@ -192,6 +216,7 @@ describe("report.service", () => {
         id: "skill-1",
         name: "Test Skill",
         authorId: "author-1",
+        status: "PUBLISHED",
       });
       mockPrisma.skillReport.findUnique.mockResolvedValue(null);
       mockPrisma.skillReport.count
@@ -240,6 +265,7 @@ describe("report.service", () => {
         id: "report-1",
         status: "PENDING",
         skillId: "skill-1",
+        skill: { authorId: "author-1" },
       });
       mockPrisma.$transaction.mockImplementation(async (cb: any) => {
         mockTx.skillReport.count.mockResolvedValue(0); // no more pending
@@ -260,6 +286,7 @@ describe("report.service", () => {
           data: expect.objectContaining({ flaggedForReview: false }),
         }),
       );
+      expect(mockRefreshTrustLevel).toHaveBeenCalledWith("author-1");
     });
 
     it("unpublishes a skill on UNPUBLISH action", async () => {
@@ -267,6 +294,7 @@ describe("report.service", () => {
         id: "report-1",
         status: "PENDING",
         skillId: "skill-1",
+        skill: { authorId: "author-1" },
       });
       mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(mockTx));
 
@@ -289,6 +317,7 @@ describe("report.service", () => {
         id: "report-1",
         status: "PENDING",
         skillId: "skill-1",
+        skill: { authorId: "author-1" },
       });
       mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(mockTx));
 
@@ -318,6 +347,7 @@ describe("report.service", () => {
         id: "report-1",
         status: "DISMISSED",
         skillId: "skill-1",
+        skill: { authorId: "author-1" },
       });
 
       await expect(
