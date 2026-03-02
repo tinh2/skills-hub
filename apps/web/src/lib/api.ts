@@ -31,7 +31,7 @@ import type {
   SandboxRunSummary,
   TestCaseData,
   ValidationReport,
-} from "@skills-hub/shared";
+} from "@skills-hub-ai/shared";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -484,4 +484,18 @@ export const sandbox = {
     }),
   deleteTestCase: (slug: string, testCaseId: string) =>
     apiFetch(`/api/v1/skills/${slug}/test-cases/${testCaseId}`, { method: "DELETE" }),
+};
+
+// AI Generation
+export const ai = {
+  generate: (prompt: string) =>
+    apiFetch<{ name: string; description: string; categorySlug: string; tags: string[]; instructions: string }>(
+      "/api/v1/ai/generate",
+      { method: "POST", body: JSON.stringify({ prompt }) },
+    ),
+  suggest: (field: "name" | "description" | "tags", context: { prompt?: string; name?: string; description?: string; instructions?: string }) =>
+    apiFetch<{ value: string }>(
+      "/api/v1/ai/suggest",
+      { method: "POST", body: JSON.stringify({ field, context }) },
+    ),
 };

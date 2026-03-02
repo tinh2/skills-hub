@@ -24,6 +24,7 @@ const envSchema = z.object({
       { message: "GITHUB_TOKEN_ENCRYPTION_KEY is required in production" },
     ),
 
+  OPENROUTER_API_KEY: z.string().optional(),
   REDIS_URL: z.string().url().optional(),
   S3_BUCKET_NAME: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),

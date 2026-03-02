@@ -6,7 +6,7 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@skills-hub/shared", "@skills-hub/skill-parser"],
+  transpilePackages: ["@skills-hub-ai/shared", "@skills-hub-ai/skill-parser"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
     const connectSrc = [
       "'self'",
       apiUrl,
-      "https://openrouter.ai",
       "https://*.sentry.io",
       ...(isDev ? ["http://localhost:*"] : []),
     ].join(" ");

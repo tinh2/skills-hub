@@ -22,6 +22,7 @@ import { sandboxRoutes } from "./modules/sandbox/sandbox.routes.js";
 import { agentRoutes } from "./modules/agent/agent.routes.js";
 import { reportRoutes } from "./modules/report/report.routes.js";
 import { moderationRoutes } from "./modules/moderation/moderation.routes.js";
+import { aiRoutes } from "./modules/ai/ai.routes.js";
 
 export async function buildApp(opts?: { logger?: boolean }) {
   const env = getEnv();
@@ -102,6 +103,7 @@ export async function buildApp(opts?: { logger?: boolean }) {
       await api.register(agentRoutes, { prefix: "/agents" });
       await api.register(reportRoutes);
       await api.register(moderationRoutes, { prefix: "/admin" });
+      await api.register(aiRoutes, { prefix: "/ai" });
     },
     { prefix: "/api/v1" },
   );
