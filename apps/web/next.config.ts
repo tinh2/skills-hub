@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@skills-hub/shared", "@skills-hub/skill-parser"],
@@ -10,6 +13,14 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const connectSrc = [
+      "'self'",
+      apiUrl,
+      "https://openrouter.ai",
+      "https://*.sentry.io",
+      ...(isDev ? ["http://localhost:*"] : []),
+    ].join(" ");
+
     return [
       {
         source: "/(.*)",
@@ -18,10 +29,14 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
-          },
+          ...(!isDev
+            ? [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=63072000; includeSubDomains; preload",
+                },
+              ]
+            : []),
           {
             key: "Content-Security-Policy",
             value: [
@@ -30,7 +45,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://avatars.githubusercontent.com",
               "font-src 'self'",
-              "connect-src 'self' https://openrouter.ai https://*.sentry.io",
+              `connect-src ${connectSrc}`,
               "frame-src https://www.youtube.com https://youtube.com",
               "object-src 'none'",
               "base-uri 'self'",
