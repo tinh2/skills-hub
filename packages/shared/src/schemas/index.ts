@@ -74,6 +74,13 @@ export {
 } from "./agent.js";
 
 export {
+  createReportSchema,
+  resolveReportSchema,
+  type CreateReportInput,
+  type ResolveReportInput,
+} from "./report.js";
+
+export {
   createOrgSchema,
   updateOrgSchema,
   inviteMemberSchema,

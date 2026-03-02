@@ -16,6 +16,7 @@ export interface ValidationReport {
     schema: ValidationCheck[];
     content: ValidationCheck[];
     structure: ValidationCheck[];
+    security: ValidationCheck[];
   };
   summary: {
     errors: number;

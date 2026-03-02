@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  githubId    Int      @unique
-  username    String   @unique
+  id          String     @id @default(cuid())
+  githubId    Int        @unique
+  username    String     @unique
   displayName String?
   avatarUrl   String?
   bio         String?
   githubUrl   String
   email       String?
   githubAccessToken String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  trustLevel  TrustLevel @default(NEW)
+  isAdmin     Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   skills           Skill[]
   reviews          Review[]
@@ -32,6 +34,7 @@ model User {
   invitesReceived  OrgInvite[]     @relation("InviteRecipient")
   sandboxRuns      SandboxRun[]
   agents           Agent[]
+  skillReports     SkillReport[]
 }
 
 model ApiKey {
@@ -84,6 +87,11 @@ model Skill {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
+  flaggedForReview Boolean    @default(false)
+  reviewReason     String?
+  moderatedAt      DateTime?
+  moderatedBy      String?
+
   versions           SkillVersion[]
   tags               SkillTag[]
   reviews            Review[]
@@ -95,6 +103,7 @@ model Skill {
   testCases          TestCase[]
   sandboxRuns        SandboxRun[]
   agents             Agent[]
+  reports            SkillReport[]
 
   @@index([categoryId])
   @@index([authorId])
@@ -106,6 +115,7 @@ model Skill {
   @@index([avgRating(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@index([updatedAt(sort: Desc)])
+  @@index([flaggedForReview])
 }
 
 model Composition {
@@ -476,4 +486,47 @@ enum ExecutionStatus {
   COMPLETED
   FAILED
   TIMEOUT
+}
+
+// --- Content Moderation ---
+
+enum TrustLevel {
+  NEW
+  ESTABLISHED
+  TRUSTED
+}
+
+enum ReportReason {
+  MALICIOUS
+  SPAM
+  INAPPROPRIATE
+  COPYRIGHT
+  MISLEADING
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+model SkillReport {
+  id          String       @id @default(cuid())
+  skillId     String
+  skill       Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  reporterId  String
+  reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason      ReportReason
+  description String
+  status      ReportStatus @default(PENDING)
+  resolvedAt  DateTime?
+  resolveNote String?
+  createdAt   DateTime     @default(now())
+
+  @@unique([skillId, reporterId])
+  @@index([skillId])
+  @@index([reporterId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
 }

@@ -55,3 +55,10 @@ export type {
   ValidationCheck,
   ValidationReport,
 } from "./validation.js";
+
+export type {
+  ReportReason,
+  ReportStatus,
+  SkillReportSummary,
+  TrustLevel,
+} from "./report.js";
