@@ -24,8 +24,8 @@ COPY packages/skill-parser/ packages/skill-parser/
 COPY apps/api/ apps/api/
 
 # Build shared packages first
-RUN pnpm --filter @skills-hub/shared build
-RUN pnpm --filter @skills-hub/skill-parser build
+RUN pnpm --filter @skills-hub-ai/shared build
+RUN pnpm --filter @skills-hub-ai/skill-parser build
 
 # Generate Prisma client and build API
 RUN pnpm --filter @skills-hub/api exec prisma generate

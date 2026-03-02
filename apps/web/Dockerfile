@@ -24,8 +24,8 @@ COPY packages/skill-parser/ packages/skill-parser/
 COPY apps/web/ apps/web/
 
 # Build shared packages first
-RUN pnpm --filter @skills-hub/shared build
-RUN pnpm --filter @skills-hub/skill-parser build
+RUN pnpm --filter @skills-hub-ai/shared build
+RUN pnpm --filter @skills-hub-ai/skill-parser build
 
 # Build Next.js app (NEXT_PUBLIC_* vars must be set at build time)
 ARG NEXT_PUBLIC_API_URL
