@@ -25,13 +25,24 @@ Claude Code skill marketplace — full-stack TypeScript monorepo.
 - Every interactive element needs: aria-label or visible text, 48px min touch target, focus-visible indicator
 - Run security audit once after each feature-complete phase, not incrementally per feature
 
+## Pre-Commit Verification (MANDATORY)
+
+Before EVERY commit, you MUST run the full verification suite and confirm it passes. No exceptions — this repo deploys to production on push to main.
+
+1. **Unit tests:** `pnpm test` (all packages — API, Web, CLI, shared, parser)
+2. **Integration tests:** `pnpm --filter @skills-hub/api test:integration`
+3. **Build:** `pnpm build` (all packages)
+
+If ANY step fails, fix the issue before committing. Never commit broken code — it will deploy to production automatically.
+
 ## Commands
 
 ```bash
 pnpm install                    # install all deps
 pnpm dev                        # start all apps in dev mode
 pnpm build                      # build all apps
-pnpm test                       # run all tests
+pnpm test                       # run all tests (unit)
+pnpm --filter @skills-hub/api test:integration  # integration tests
 pnpm db:migrate                 # run Prisma migrations
 pnpm db:seed                    # seed categories
 pnpm db:studio                  # open Prisma Studio
