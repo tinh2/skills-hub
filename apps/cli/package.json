@@ -1,6 +1,6 @@
 {
   "name": "@skills-hub-ai/cli",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "CLI for skills-hub.ai — discover, install, and publish AI coding skills",
   "license": "MIT",
   "keywords": [
