@@ -125,9 +125,10 @@ export function validateSkill(input: ValidateInput): ValidationReport {
     schema: runSchemaChecks(input),
     content: runContentChecks(input),
     structure: runStructureChecks(input.instructions),
+    security: runSecurityChecks(input.instructions),
   };
 
-  const all = [...checks.schema, ...checks.content, ...checks.structure];
+  const all = [...checks.schema, ...checks.content, ...checks.structure, ...checks.security];
   const errors = all.filter((c) => !c.passed && c.severity === "error").length;
   const warnings = all.filter((c) => !c.passed && c.severity === "warning").length;
   const passed = all.filter((c) => c.passed).length;
@@ -315,6 +316,99 @@ function runStructureChecks(instructions: string): ValidationCheck[] {
       ? "Instructions have substantive content"
       : "Instructions are too short to be useful (under 100 chars)",
   ));
+
+  return checks;
+}
+
+// --- Security Pattern Scanning ---
+
+/** Patterns that indicate potentially malicious skill instructions */
+const SECURITY_PATTERNS = {
+  // Shell injection / destructive commands
+  shellInjection: {
+    pattern: /(?:curl|wget|fetch)\s+[^\n]*\|\s*(?:bash|sh|zsh|exec)|rm\s+-rf\s+[\/~]|mkfs\s|dd\s+if=|>\s*\/dev\/sd/i,
+    label: "Destructive shell commands",
+    message: "Instructions contain destructive shell patterns (pipe to shell, rm -rf /, disk overwrite)",
+    severity: "error" as const,
+  },
+  // Data exfiltration - sending env vars or files to external URLs
+  dataExfiltration: {
+    pattern: /(?:curl|wget|fetch|nc|ncat)\s+(?:--data|--upload|-d|-F|-T)\s*[^\s]*(?:\$\{?\w*(?:KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL|API_KEY)\w*\}?|\/etc\/(?:passwd|shadow)|~\/\.(?:ssh|aws|env))/i,
+    label: "Data exfiltration",
+    message: "Instructions appear to exfiltrate sensitive data (secrets, credentials, private files) to external services",
+    severity: "error" as const,
+  },
+  // Environment variable dumping to external destination
+  envDumping: {
+    pattern: /(?:env|printenv|set)\s*(?:\||>).*(?:curl|wget|nc|tee\s+\/dev\/tcp)/i,
+    label: "Environment variable exfiltration",
+    message: "Instructions dump environment variables to external destinations",
+    severity: "error" as const,
+  },
+  // Suspicious external URLs with data sending
+  suspiciousUrls: {
+    pattern: /(?:curl|wget|fetch|nc)\s+(?:-X\s*POST\s+)?https?:\/\/(?:\d{1,3}\.){3}\d{1,3}|(?:curl|wget)\s+.*(?:pastebin|ngrok|requestbin|webhook\.site|pipedream|hookbin|burpcollaborator)/i,
+    label: "Suspicious external URLs",
+    message: "Instructions send data to IP addresses or known data collection services",
+    severity: "error" as const,
+  },
+  // Prompt injection attempts
+  promptInjection: {
+    pattern: /(?:ignore\s+(?:all\s+)?previous\s+instructions|you\s+are\s+now\s+(?:a\s+)?(?:different|new)|override\s+(?:your|all)\s+(?:safety|system)\s+(?:rules|instructions|prompt)|disregard\s+(?:all|your)\s+(?:previous|prior|safety)|jailbreak|DAN\s*mode)/i,
+    label: "Prompt injection",
+    message: "Instructions contain prompt injection attempts that try to override safety rules",
+    severity: "error" as const,
+  },
+  // Base64 encoded command execution
+  obfuscatedCommands: {
+    pattern: /(?:echo|printf)\s+\S+\s*\|\s*(?:base64\s+-d|openssl\s+(?:enc|base64))\s*\|\s*(?:bash|sh|eval)|eval\s*\(\s*(?:atob|Buffer\.from|base64)/i,
+    label: "Obfuscated commands",
+    message: "Instructions contain base64-encoded commands piped to shell execution",
+    severity: "error" as const,
+  },
+  // Crypto mining
+  cryptoMining: {
+    pattern: /(?:xmrig|minerd|cpuminer|cryptonight|stratum\+tcp|pool\.\w+\.(?:com|net|org):\d+|--algo\s+(?:cn|rx|randomx))/i,
+    label: "Cryptocurrency mining",
+    message: "Instructions reference cryptocurrency mining tools or pools",
+    severity: "error" as const,
+  },
+  // Reverse shell patterns
+  reverseShell: {
+    pattern: /(?:\/dev\/tcp\/|nc\s+-(?:e|lvp)|bash\s+-i\s+>&|python[23]?\s+-c\s+['"]import\s+(?:socket|os)|php\s+-r\s+.*fsockopen|perl\s+-e\s+.*socket)/i,
+    label: "Reverse shell",
+    message: "Instructions contain reverse shell patterns that could give remote access",
+    severity: "error" as const,
+  },
+  // Disable security features
+  disableSecurity: {
+    pattern: /(?:--no-verify|--no-check|git\s+config\s+.*(?:false|off)|chmod\s+777\s|chown\s+root|sudo\s+(?:chmod|chown|rm|bash|sh|su))/i,
+    label: "Security bypass",
+    message: "Instructions disable security features or escalate privileges",
+    severity: "warning" as const,
+  },
+  // Suspicious file system access
+  suspiciousFileAccess: {
+    pattern: /(?:cat|less|head|tail|cp|mv|tar)\s+(?:\/etc\/(?:passwd|shadow|sudoers)|~\/\.(?:ssh\/|gnupg\/|aws\/|env)|\/root\/|\/var\/log\/)/i,
+    label: "Sensitive file access",
+    message: "Instructions access sensitive system files (passwords, SSH keys, credentials)",
+    severity: "warning" as const,
+  },
+};
+
+export function runSecurityChecks(instructions: string): ValidationCheck[] {
+  const checks: ValidationCheck[] = [];
+
+  for (const [key, rule] of Object.entries(SECURITY_PATTERNS)) {
+    const matched = rule.pattern.test(instructions);
+    checks.push(check(
+      `security.${key}`,
+      rule.label,
+      !matched,
+      rule.severity,
+      matched ? rule.message : `No ${rule.label.toLowerCase()} detected`,
+    ));
+  }
 
   return checks;
 }
